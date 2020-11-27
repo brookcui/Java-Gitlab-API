@@ -10,45 +10,37 @@ import java.util.List;
 public class GitlabAPIClient {
     private final String endpoint;
     private AuthMethod authMethod;
-    private final String oauth2Token;
-    private final String accessToken;
+    private final String token;
     private final String username;
     private final String password;
-    private boolean useHeader;
 
     public static class Builder {
         private final String endpoint;
         private AuthMethod authMethod;
-        private String oauth2Token;
-        private String accessToken;
+        private String token;
         private String username;
         private String password;
-        private boolean useHeader;
 
         public Builder(String endpoint) {
             this.endpoint = endpoint;
         }
 
         public Builder withOAuth2Token(String oauth2Token) {
-            this.authMethod = AuthMethod.OAuth2;
-            this.oauth2Token = oauth2Token;
+            this.authMethod = AuthMethod.OAUTH2;
+            this.token = oauth2Token;
             return this;
         }
+
         public Builder withAccessToken(String accessToken) {
-            this.authMethod = AuthMethod.AccessToken;
-            this.accessToken = accessToken;
+            this.authMethod = AuthMethod.ACCESS_TOKEN;
+            this.token = accessToken;
             return this;
         }
 
         public Builder withPassword(String username, String password) {
-            this.authMethod = AuthMethod.Password;
+            this.authMethod = AuthMethod.PASSWORD;
             this.username = username;
             this.password = password;
-            return this;
-        }
-
-        public Builder useHeader() {
-            this.useHeader = true;
             return this;
         }
 
@@ -60,11 +52,9 @@ public class GitlabAPIClient {
     private GitlabAPIClient(Builder builder) {
         this.endpoint = builder.endpoint;
         this.authMethod = builder.authMethod;
-        this.oauth2Token = builder.oauth2Token;
-        this.accessToken = builder.accessToken;
+        this.token = builder.token;
         this.username = builder.username;
         this.password = builder.password;
-        this.useHeader = builder.useHeader;
     }
 
     /*
@@ -76,7 +66,12 @@ public class GitlabAPIClient {
         return null; // TODO
     }
 
-    public GitlabIssue getSingleIssue(int issueId) throws IOException {
+    // FIXME: expose this method here?
+    // FIXME: cannot get global issue id easily
+    // deprecate name getSingleIssue
+    // for admin
+    @Deprecated
+    public GitlabIssue getIssue(int issueId) throws IOException {
         return null; // TODO
     }
 
@@ -93,33 +88,87 @@ public class GitlabAPIClient {
         return null; // TODO
     }
 
+    // Change name getSingleProject -> getProject
+    @Deprecated
     public GitlabProject getSingleProject(int projectId) throws IOException {
         return null; // TODO
     }
 
+    /**
+     * GET /projects/:id
+     *
+     * @param projectId
+     * @return
+     * @throws IOException
+     */
+    public GitlabProject getProject(int projectId) throws IOException {
+        return null; // TODO
+    }
+
+    /**
+     * GET /projects/:id
+     *
+     * @param namespace   -
+     * @param projectPath - username%2FprojectPath
+     * @return
+     * @throws IOException
+     */
+    public GitlabProject getProject(String namespace, String projectPath) throws IOException {
+        return null; // TODO
+    }
+
+    // Deprecated. Instead, use newProject(). See below.
+    @Deprecated
     public void createProject(GitlabProject project) throws IOException {
         return; // TODO
     }
 
-    // FIXME: do we need to create a project like this?
-    // FIXME: also, naming here can be tricky, and we should not name it like createProject().
-    public GitlabProject.Builder buildProject(String projectName) throws IOException {
-        return new GitlabProject.Builder(projectName);
+    public GitlabProject newProject(String name) throws IOException {
+        return null; // TODO
     }
 
+    // FIXME: do we need to create a project like this?
+    // FIXME: also, naming here can be tricky, and we should not name it like createProject().
+    //
+    // Client Code:
+    //
+    // User might just want to obtain a project instance:
+    // GitlabProject project = client.newProject("abcd"); // newProject returns a newly created GitlabProject object
+    // project.withDescription("").create(); // withDescription is a setter GitlabProject
+    //
+    // User might also want to talk the the server and actually a create a project on gitlab
+    // GitlabProject project = client.newProject("abcd").withDescription("what a good project").create();
+    // project.withDescription("desc").update();
+    // project.delete();
+    // GitlabIssue issue = project.newIssue("a bug").withDescription("a big bug").create()
+    //
+
+    @Deprecated
+    public GitlabProject.Builder buildProject(String projectName) throws IOException {
+        return null; // TODO
+    }
+
+    @Deprecated
     public void createProjectForUser(GitlabProject project, GitlabUser user) throws IOException {
         return; // TODO
     }
 
+
+    @Deprecated
+    // Deprecated. Added to Project class, project.update()
     // "update" == "Edit" in Gitlab API
     public void updateProject(GitlabProject project) throws IOException {
         return; // TODO
     }
 
+    @Deprecated
+    // add this method to Project class, project.fork()
     public void forkProject(GitlabProject project) throws IOException {
         return; // TODO
     }
 
+    @Deprecated
+    // Deprecated, Added to Project class, project.delete()
     public void deleteProject(GitlabProject project) throws IOException {
         return; // TODO
     }
@@ -134,11 +183,14 @@ public class GitlabAPIClient {
      * API cannot have administrator access.
      */
 
+    // FIXME: do normal users need get all users?
+    // for admin
+    @Deprecated
     public List<GitlabUser> getAllUsers() throws IOException {
         return null; // TODO
     }
 
-    public GitlabUser getSingleUser(int userId) throws IOException {
+    public GitlabUser getUser(int userId) throws IOException {
         return null; // TODO
     }
 

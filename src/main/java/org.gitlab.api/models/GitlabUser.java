@@ -22,8 +22,15 @@ public class GitlabUser {
     private String organization;
     private String jobTitle;
 
+    // TODO: getters for all necessary public fields
+
     public List<GitlabProject> getUserProjects() {
         return null; // TODO
+    }
+
+    // TODO: Find a better way to maintain consistency between all other models
+    public static GitlabUser fromId(int id){
+        return null;
     }
 
     @Override
@@ -37,6 +44,7 @@ public class GitlabUser {
     }
 
     @Override
+    // TODO: compare all fields for equals
     public boolean equals(Object o) {
         if (o == this) {
             return true;

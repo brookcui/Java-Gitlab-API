@@ -1,5 +1,6 @@
 package models;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public class GitlabBranch {
@@ -11,6 +12,7 @@ public class GitlabBranch {
     private String webUrl;
     private GitlabCommit commit;
 
+    @Deprecated
     public static class Builder {
         private String branchName;
         private String ref;
@@ -25,10 +27,26 @@ public class GitlabBranch {
         }
     }
 
+    @Deprecated
     private GitlabBranch(Builder builder) {
         this.name = builder.branchName;
         // TODO: ref
     }
+
+    // TODO: getters for all necessary public fields
+    // TODO: public constructor
+    // TODO: withXXX() for all necessary public and modifiable fields
+    // GitlabBranch branch = project.newBranch("branch1","master").create();
+
+    public GitlabBranch create() throws IOException {
+        return this; // TODO
+    }
+
+    public GitlabBranch delete() throws IOException {
+        return this; // TODO
+    }
+
+
 
     @Override
     public String toString() {
@@ -41,6 +59,7 @@ public class GitlabBranch {
     }
 
     @Override
+    // TODO: compare all fields for equals
     public boolean equals(Object o) {
         if (o == this) {
             return true;

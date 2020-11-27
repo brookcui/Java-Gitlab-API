@@ -1,5 +1,7 @@
 package models;
 
+import core.Pagination;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -7,7 +9,6 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- *
  * @throws IllegalArgumentException
  * @throws NullPointerException
  * @throws UnsupportedOperationException
@@ -35,7 +36,7 @@ public class GitlabProject {
     private LocalDateTime createdAt;
     private LocalDateTime lastActivityAt;
     private int creatorId;
-    private GitlabPermission permissions;
+//    private GitlabPermission permissions; // FIXME: do we need permission?
     private boolean archived;
     private int forksCount;
     private int starCount;
@@ -129,9 +130,9 @@ public class GitlabProject {
         return creatorId;
     }
 
-    public GitlabPermission getPermissions() {
-        return permissions;
-    }
+//    public GitlabPermission getPermissions() {
+//        return permissions;
+//    }
 
     public boolean isArchived() {
         return archived;
@@ -149,6 +150,11 @@ public class GitlabProject {
         return publicJobs;
     }
 
+
+    // TODO: getters for all necessary public fields
+    // TODO: public constructor
+    // TODO: withXXX() for all necessary public and modifiable fields
+
     /*
      * Setters
      */
@@ -160,8 +166,7 @@ public class GitlabProject {
         return this;
     }
 
-    // TODO: all other setters
-
+    @Deprecated
     public static class Builder {
         private int id; // required but private
         private String description;
@@ -184,7 +189,7 @@ public class GitlabProject {
         private LocalDateTime createdAt;
         private LocalDateTime lastActivityAt;
         private int creatorId;
-        private GitlabPermission permissions;
+//        private GitlabPermission permissions;
         private boolean archived;
         private int forksCount;
         private int starCount;
@@ -290,10 +295,10 @@ public class GitlabProject {
             return this;
         }
 
-        public Builder permissions(GitlabPermission permissions) {
-            this.permissions = permissions;
-            return this;
-        }
+//        public Builder permissions(GitlabPermission permissions) {
+//            this.permissions = permissions;
+//            return this;
+//        }
 
         public Builder setArchived() {
             this.archived = true;
@@ -342,7 +347,7 @@ public class GitlabProject {
         this.createdAt = builder.createdAt;
         this.lastActivityAt = builder.lastActivityAt;
         this.creatorId = builder.creatorId;
-        this.permissions = builder.permissions;
+//        this.permissions = builder.permissions;
         this.archived = builder.archived;
         this.forksCount = builder.forksCount;
         this.starCount = builder.starCount;
@@ -352,7 +357,7 @@ public class GitlabProject {
     /*
      * Users
      */
-    public List<GitlabUser> getProjectUsers() throws  IOException {
+    public List<GitlabUser> getUsers() throws IOException {
         return null; // TODO
     }
 
@@ -360,22 +365,32 @@ public class GitlabProject {
      * Issues
      */
 
-    public List<GitlabIssue> getProjectIssues() throws IOException {
+    public List<GitlabIssue> getAllIssues() throws IOException {
         return null; // TODO
     }
 
-    public GitlabIssue getSingleProjectIssue(int issueId) throws IOException {
+    public List<GitlabIssue> getAllIssues(Pagination pagination) throws IOException {
         return null; // TODO
     }
 
+    public GitlabIssue getIssue(int issueId) throws IOException {
+        return null; // TODO
+    }
+
+    @Deprecated
+    // Added to Issue class
     public void createIssue(GitlabIssue issue) throws IOException {
         return; // TODO
     }
 
+    @Deprecated
+    // Added to Issue class
     public void updateIssue(GitlabIssue issue) throws IOException {
         return; // TODO
     }
 
+    @Deprecated
+    // Added to Issue class
     public void deleteIssue(int issueId) throws IOException {
         return; // TODO
     }
@@ -384,11 +399,15 @@ public class GitlabProject {
      * Commits
      */
 
-    public List<GitlabCommit> getCommits() throws IOException {
+    public List<GitlabCommit> getAllCommits() throws IOException {
         return null; // TODO
     }
 
-    public GitlabCommit GetSingleCommit(int commitId, int sha) throws IOException {
+    public List<GitlabCommit> getAllCommits(Pagination pagination) throws IOException {
+        return null; // TODO
+    }
+
+    public GitlabCommit getCommit(String sha) throws IOException {
         return null; // TODO
     }
 
@@ -400,10 +419,15 @@ public class GitlabProject {
         return null; // TODO
     }
 
-    public GitlabBranch getSingleBranch(String branchName) throws IOException {
+    public List<GitlabBranch> getAllBranches(Pagination pagination) throws IOException {
         return null; // TODO
     }
 
+    public GitlabBranch getBranch(String branchName) throws IOException {
+        return null; // TODO
+    }
+
+    @Deprecated
     public void createBranch(GitlabBranch branch) throws IOException {
         return; // TODO
     }
@@ -411,9 +435,42 @@ public class GitlabProject {
     /*
      * note that you cannot edit a branch within a repo
      */
-
+    @Deprecated
     public void deleteBranch(String branchName) throws IOException {
         return; // TODO
+    }
+
+    /**
+     * Fork the project into current user's repo
+     *
+     * @return
+     */
+
+    // only for GitlabProject
+    public GitlabProject fork() throws IOException {
+        return this; // TODO
+    }
+
+    // create a new gitlab project
+    public GitlabProject create() throws IOException {
+        return this; // TODO
+    }
+
+    // return GitlabProject for consistency
+    public GitlabProject delete() throws IOException {
+        return this; // TODO
+    }
+
+    public GitlabProject update() throws IOException {
+        return this; // TODO
+    }
+
+    public GitlabIssue newIssue(String name) {
+        return null;
+    }
+
+    public GitlabBranch newBranch(String name) {
+        return null;
     }
 
     @Override
@@ -427,6 +484,7 @@ public class GitlabProject {
     }
 
     @Override
+    // TODO: change equals to compare all the fields
     public boolean equals(Object o) {
         if (o == this) {
             return true;

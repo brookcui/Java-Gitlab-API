@@ -1,5 +1,6 @@
 package models;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,13 +8,13 @@ import java.util.Objects;
 
 public class GitlabIssue {
     private int id; // required
-    private GitlabMilestone milestone;
+//    private GitlabMilestone milestone;
     private GitlabUser author;
     private String description;
     private String state;
     private int iid; // required
     private List<GitlabUser> assignees;
-    private List<GitlabLabel> labels;
+//    private List<GitlabLabel> labels;
     private int upvotes;
     private int downvotes;
     private int mergeRequestCount;
@@ -28,15 +29,16 @@ public class GitlabIssue {
     private boolean hasTasks;
     private int epicId;
 
+    @Deprecated
     public static class Builder {
         private int id; // required
-        private GitlabMilestone milestone;
+//        private GitlabMilestone milestone;
         private GitlabUser author;
         private String description;
         private String state;
         private int iid; // required
         private List<GitlabUser> assignees;
-        private List<GitlabLabel> labels;
+//        private List<GitlabLabel> labels;
         private int upvotes;
         private int downvotes;
         private int mergeRequestCount;
@@ -58,10 +60,10 @@ public class GitlabIssue {
             this.createdAt = LocalDateTime.now();
         }
 
-        public Builder milestone(GitlabMilestone milestone) {
-            this.milestone = milestone;
-            return this;
-        }
+//        public Builder milestone(GitlabMilestone milestone) {
+//            this.milestone = milestone;
+//            return this;
+//        }
 
         public Builder author(GitlabUser author) {
             this.author = author;
@@ -83,10 +85,10 @@ public class GitlabIssue {
             return this;
         }
 
-        public Builder labels(List<GitlabLabel> labels) {
-            this.labels = new ArrayList<>(labels);
-            return this;
-        }
+//        public Builder labels(List<GitlabLabel> labels) {
+//            this.labels = new ArrayList<>(labels);
+//            return this;
+//        }
 
         public Builder upvotes(int upvotes) {
             this.upvotes = upvotes;
@@ -158,15 +160,16 @@ public class GitlabIssue {
         }
     }
 
+    @Deprecated
     private GitlabIssue(Builder builder) {
         this.id = builder.id; // required
-        this.milestone = builder.milestone;
+//        this.milestone = builder.milestone;
         this.author = builder.author;
         this.description = builder.description;
         this.state = builder.state;
         this.iid = builder.iid; // required
         this.assignees = builder.assignees;
-        this.labels = builder.labels;
+//        this.labels = builder.labels;
         this.upvotes = builder.upvotes;
         this.downvotes = builder.downvotes;
         this.mergeRequestCount = builder.mergeRequestCount;
@@ -182,6 +185,27 @@ public class GitlabIssue {
         this.epicId = builder.epicId;
     }
 
+    // TODO: public constructor
+    // TODO: withXXX() for all necessary public and modifiable fields
+
+
+    // create a new gitlab issue
+    public GitlabIssue create() throws IOException {
+        return this; // TODO
+    }
+
+    public GitlabIssue delete() throws IOException {
+        return this; // TODO
+    }
+
+    public GitlabIssue update() throws IOException {
+        return this; // TODO
+    }
+
+
+    // TODO: Add note and PR feature later?
+
+
     @Override
     public String toString() {
         return title;
@@ -193,6 +217,7 @@ public class GitlabIssue {
     }
 
     @Override
+    // TODO: compare all fields for equals
     public boolean equals(Object o) {
         if (o == this) {
             return true;

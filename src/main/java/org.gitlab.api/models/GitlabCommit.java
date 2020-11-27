@@ -19,6 +19,10 @@ public class GitlabCommit {
     private List<String> parentIds;
     private String status;
 
+    // TODO: getters for all necessary public fields
+    // TODO: public constructor
+    // TODO: withXXX() for all necessary public and modifiable fields
+
     @Override
     public String toString() {
         return title;
@@ -30,6 +34,7 @@ public class GitlabCommit {
     }
 
     @Override
+    // TODO: compare all fields for equals
     public boolean equals(Object o) {
         if (o == this) {
             return true;
