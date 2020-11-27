@@ -7,12 +7,13 @@ import java.util.List;
 import java.util.Objects;
 
 public class GitlabIssue {
-    private int id; // required
+    private int projectId; // required, project id
+    private int id; // required, issue id
+
 //    private GitlabMilestone milestone;
     private GitlabUser author;
     private String description;
     private String state;
-    private int iid; // required
     private List<GitlabUser> assignees;
 //    private List<GitlabLabel> labels;
     private int upvotes;
@@ -29,165 +30,17 @@ public class GitlabIssue {
     private boolean hasTasks;
     private int epicId;
 
-    @Deprecated
-    public static class Builder {
-        private int id; // required
-//        private GitlabMilestone milestone;
-        private GitlabUser author;
-        private String description;
-        private String state;
-        private int iid; // required
-        private List<GitlabUser> assignees;
-//        private List<GitlabLabel> labels;
-        private int upvotes;
-        private int downvotes;
-        private int mergeRequestCount;
-        private String title; // required
-        private LocalDateTime updatedAt;
-        private LocalDateTime createdAt;
-        private LocalDateTime closedAt;
-        private GitlabUser closedBy;
-        private boolean subscribed;
-        private LocalDateTime dueDate;
-        private String webUrl;
-        private boolean hasTasks;
-        private int epicId;
-
-        public Builder(String title) {
-            this.id = 0; // FIXME
-            this.iid = 0; // FIXME
-            this.title = title;
-            this.createdAt = LocalDateTime.now();
-        }
-
-//        public Builder milestone(GitlabMilestone milestone) {
-//            this.milestone = milestone;
-//            return this;
-//        }
-
-        public Builder author(GitlabUser author) {
-            this.author = author;
-            return this;
-        }
-
-        public Builder description(String description) {
-            this.description = description;
-            return this;
-        }
-
-        public Builder state(String state) {
-            this.state = state;
-            return this;
-        }
-
-        public Builder assignees(List<GitlabUser> assignees) {
-            this.assignees = new ArrayList<>(assignees);
-            return this;
-        }
-
-//        public Builder labels(List<GitlabLabel> labels) {
-//            this.labels = new ArrayList<>(labels);
-//            return this;
-//        }
-
-        public Builder upvotes(int upvotes) {
-            this.upvotes = upvotes;
-            return this;
-        }
-
-        public Builder downvotes(int downvotes) {
-            this.downvotes = downvotes;
-            return this;
-        }
-
-        public Builder mergeRequestCount(int mergeRequestCount) {
-            this.mergeRequestCount = mergeRequestCount;
-            return this;
-        }
-
-        public Builder title(String title) {
-            this.title = title;
-            return this;
-        }
-
-        public Builder updatedAt(LocalDateTime updatedAt) {
-            this.updatedAt = updatedAt;
-            return this;
-        }
-
-        public Builder createdAt(LocalDateTime createdAt) {
-            this.createdAt = createdAt;
-            return this;
-        }
-
-        public Builder closedAt(LocalDateTime closedAt) {
-            this.closedAt = closedAt;
-            return this;
-        }
-
-        public Builder closedBy(GitlabUser closedBy) {
-            this.closedBy = closedBy;
-            return this;
-        }
-
-        public Builder setSubscribed() {
-            this.subscribed = true;
-            return this;
-        }
-
-        public Builder dueDate(LocalDateTime dueDate) {
-            this.dueDate = dueDate;
-            return this;
-        }
-
-        public Builder webUrl(String webUrl) {
-            this.webUrl = webUrl;
-            return this;
-        }
-
-        public Builder setHasTasks() {
-            this.hasTasks = true;
-            return this;
-        }
-
-        public Builder epicId(int epicId) {
-            this.epicId = epicId;
-            return this;
-        }
-
-        public GitlabIssue build() {
-            return new GitlabIssue(this);
-        }
-    }
-
-    @Deprecated
-    private GitlabIssue(Builder builder) {
-        this.id = builder.id; // required
-//        this.milestone = builder.milestone;
-        this.author = builder.author;
-        this.description = builder.description;
-        this.state = builder.state;
-        this.iid = builder.iid; // required
-        this.assignees = builder.assignees;
-//        this.labels = builder.labels;
-        this.upvotes = builder.upvotes;
-        this.downvotes = builder.downvotes;
-        this.mergeRequestCount = builder.mergeRequestCount;
-        this.title = builder.title; // required
-        this.updatedAt = builder.updatedAt;
-        this.createdAt = builder.createdAt;
-        this.closedAt = builder.closedAt;
-        this.closedBy = builder.closedBy;
-        this.subscribed = builder.subscribed;
-        this.dueDate = builder.dueDate;
-        this.webUrl = builder.webUrl;
-        this.hasTasks = builder.hasTasks;
-        this.epicId = builder.epicId;
-    }
-
-    // TODO: public constructor
     // TODO: withXXX() for all necessary public and modifiable fields
 
+    /**
+     * Construct the issue with name
+     * TODO: package private or protected
+     *
+     * @param title
+     */
+    public GitlabIssue(String title) {
+        this.title = title;
+    }
 
     // create a new gitlab issue
     public GitlabIssue create() throws IOException {
@@ -202,6 +55,79 @@ public class GitlabIssue {
         return this; // TODO
     }
 
+    /*
+     * Getters
+     */
+    public int getProjectId() {
+        return projectId;
+    }
+
+    public int getId() { return id; }
+
+    public GitlabUser getAuthor() { return author; }
+
+    public String getDescription() { return description; }
+
+    public String getState() { return state; }
+
+    public List<GitlabUser> getAssignees() { return assignees; }
+
+    public int getUpvotes() { return upvotes; }
+
+    public int getDownvotes() { return downvotes; }
+
+    public int getMergeRequestCount() { return mergeRequestCount; }
+
+    public String getTitle() { return title; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public LocalDateTime getClosedAt() { return closedAt; }
+
+    public GitlabUser getClosedBy() { return closedBy; }
+
+    public boolean isSubscribed() { return subscribed; }
+
+    public LocalDateTime getDueDate() { return dueDate; }
+
+    public String getWebUrl() { return webUrl; }
+
+    public boolean hasTasks() { return hasTasks; }
+
+    public int getEpicId() { return epicId; }
+
+    /*
+     * Setters
+     * There will be no setter for projectId, id, author, upvotes, downvotes, mergeRequestCount, updatedAt, createdAt,
+     * closedAt, closedBy, subscribed, webUrl, hasTasks, epicId
+     *
+     */
+    public GitlabIssue withDescription(String description) {
+        this.description = description;
+        return this;
+    }
+
+    public GitlabIssue withState(String state) {
+        this.state = state;
+        return this;
+    }
+
+    public GitlabIssue withAssignees(List<GitlabUser> assignees) {
+        this.assignees = assignees;
+        return this;
+    }
+
+    public GitlabIssue withTitle(String title) {
+        this.title = title;
+        return this;
+    }
+
+    public GitlabIssue withDueDate(LocalDateTime dueDate) {
+        this.dueDate = dueDate;
+        return this;
+    }
 
     // TODO: Add note and PR feature later?
 
@@ -213,7 +139,7 @@ public class GitlabIssue {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, iid);
+        return Objects.hash(projectId, id);
     }
 
     @Override
@@ -225,7 +151,25 @@ public class GitlabIssue {
         if (!(o instanceof GitlabIssue)) {
             return false;
         }
-        GitlabIssue issue = (GitlabIssue) o;
-        return issue.id == this.id && issue.iid == this.iid;
+        GitlabIssue that = (GitlabIssue) o;
+        return projectId == that.projectId &&
+                id == that.id &&
+                upvotes == that.upvotes &&
+                downvotes == that.downvotes &&
+                mergeRequestCount == that.mergeRequestCount &&
+                epicId == that.epicId &&
+                subscribed == that.subscribed &&
+                hasTasks == that.hasTasks &&
+                Objects.equals(author, that.author) &&
+                Objects.equals(description, that.description) &&
+                Objects.equals(state, that.state) &&
+                Objects.equals(title, that.title) &&
+                Objects.equals(assignees, that.assignees) &&
+                Objects.equals(updatedAt, that.updatedAt) &&
+                Objects.equals(createdAt, that.createdAt) &&
+                Objects.equals(closedAt, that.closedAt) &&
+                Objects.equals(closedBy, that.closedBy) &&
+                Objects.equals(dueDate, that.dueDate) &&
+                Objects.equals(webUrl, that.webUrl);
     }
 }
