@@ -22,8 +22,6 @@ public class GitlabUser {
     private String organization;
     private String jobTitle;
 
-    // TODO: getters for all necessary public fields
-
     public List<GitlabProject> getUserProjects() {
         return null; // TODO
     }
@@ -32,6 +30,40 @@ public class GitlabUser {
     public static GitlabUser fromId(int id){
         return null;
     }
+
+
+    /*
+     * Getters
+     */
+    public int getId() { return id; }
+
+    public String getUsername() { return username; }
+
+    public String getState() { return state; }
+
+    public String getAvatarUrl() { return avatarUrl; }
+
+    public String getWebUrl() { return webUrl; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public String getBio() { return bio; }
+
+    public String getBioHtml() { return bioHtml; }
+
+    public String getPublicEmail() { return publicEmail; }
+
+    public String getSkype() { return skype; }
+
+    public String getLinkedin() { return linkedin; }
+
+    public String getTwitter() { return twitter; }
+
+    public String getWebsiteUrl() { return websiteUrl; }
+
+    public String getOrganization() { return organization; }
+
+    public String getJobTitle() { return jobTitle; }
 
     @Override
     public String toString() {
@@ -52,7 +84,21 @@ public class GitlabUser {
         if (!(o instanceof GitlabUser)) {
             return false;
         }
-        GitlabUser user = (GitlabUser) o;
-        return user.id == this.id;
+        GitlabUser that = (GitlabUser) o;
+        return id == that.id &&
+                Objects.equals(username, that.username) &&
+                Objects.equals(state, that.state) &&
+                Objects.equals(avatarUrl, that.avatarUrl) &&
+                Objects.equals(webUrl, that.webUrl) &&
+                Objects.equals(createdAt, that.createdAt) &&
+                Objects.equals(bio, that.bio) &&
+                Objects.equals(bioHtml, that.bioHtml) &&
+                Objects.equals(publicEmail, that.publicEmail) &&
+                Objects.equals(skype, that.skype) &&
+                Objects.equals(linkedin, that.linkedin) &&
+                Objects.equals(twitter, that.twitter) &&
+                Objects.equals(websiteUrl, that.websiteUrl) &&
+                Objects.equals(organization, that.organization) &&
+                Objects.equals(jobTitle, that.jobTitle);
     }
 }
