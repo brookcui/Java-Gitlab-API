@@ -50,9 +50,6 @@ public class GitlabProject {
         this.name = name;
     }
 
-    /*
-     * Users
-     */
 
     /**
      * Get the users list of this project, using the default pagination
@@ -66,9 +63,6 @@ public class GitlabProject {
         return null; // TODO
     }
 
-    /*
-     * Issues
-     */
 
     /**
      * Get all the issues of this project, using the default pagination
@@ -119,9 +113,7 @@ public class GitlabProject {
         return null;
     }
 
-    /*
-     * Commits
-     */
+
     // TODO: branch.getAllCommits()? project.getAllCommits("branch1")?
 
     /**
@@ -162,10 +154,6 @@ public class GitlabProject {
     public GitlabCommit getCommit(String sha) throws IOException {
         return null; // TODO
     }
-
-    /*
-     * Branches
-     */
 
     /**
      * Get a list of repository branches from a project, sorted by name alphabetically, using the default pagination
@@ -260,9 +248,6 @@ public class GitlabProject {
     }
 
 
-    /*
-     * Getters
-     */
     public int getId() {
         return id;
     }
@@ -464,11 +449,6 @@ public class GitlabProject {
 
     @Override
     public int hashCode() {
-        return Objects
-                .hash(id, description, nameWithNamespace, defaultBranch, visibility,
-                        sshUrlToRepo, httpUrlToRepo, webUrl, readmeUrl, tagList, owner,
-                        name, path, issuesEnabled, openIssuesCount, mergeRequestsEnabled,
-                        jobsEnabled, wikiEnabled, createdAt, lastActivityAt, creatorId, archived,
-                        forksCount, starCount, publicJobs);
+        return Objects.hash(id);
     }
 }
