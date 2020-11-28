@@ -7,15 +7,13 @@ import java.util.List;
 import java.util.Objects;
 
 public class GitlabIssue {
-    private int projectId; // required, project id
-    private int id; // required, issue id
+    private int projectId; // required, project id === id
+    private int id; // required, issue id === iid
 
-//    private GitlabMilestone milestone;
     private GitlabUser author;
     private String description;
     private String state;
     private List<GitlabUser> assignees;
-//    private List<GitlabLabel> labels;
     private int upvotes;
     private int downvotes;
     private int mergeRequestCount;
@@ -30,7 +28,6 @@ public class GitlabIssue {
     private boolean hasTasks;
     private int epicId;
 
-    // TODO: withXXX() for all necessary public and modifiable fields
 
     /**
      * Construct the issue with name
