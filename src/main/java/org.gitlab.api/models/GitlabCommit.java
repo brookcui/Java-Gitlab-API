@@ -32,11 +32,7 @@ public class GitlabCommit {
 
     @Override
     public int hashCode() {
-        return Objects.
-                hash(id, shortId, title, authorName, authorEmail,
-                        committerName, committerEmail, createdAt,
-                        message, committedDate, parentIds, status,
-                        webUrl);
+        return Objects.hash(id);
     }
 
     @Override
@@ -64,9 +60,6 @@ public class GitlabCommit {
                 Objects.equals(commit.webUrl, webUrl);
     }
 
-    /*
-     * Getters
-     */
     public String getId() {
         return id;
     }
