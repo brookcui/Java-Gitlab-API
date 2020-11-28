@@ -364,10 +364,6 @@ public class GitlabProject {
         return this;
     }
 
-    public GitlabProject withNameWithNamespace(String nameWithNamespace) {
-        this.nameWithNamespace = nameWithNamespace;
-        return this;
-    }
 
     public GitlabProject withDefaultBranch(String defaultBranch) {
         this.defaultBranch = defaultBranch;
