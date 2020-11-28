@@ -4,39 +4,66 @@ import java.io.IOException;
 import java.util.Objects;
 
 public class GitlabBranch {
-    private String name;
-    private boolean merged;
+    private final String name;
+    private boolean merged; // note that this can not be set
     private boolean isProtected; // for "protected"
     private boolean isDefault; // for "default"
     private boolean canPush;
     private String webUrl;
-    private GitlabCommit commit;
+    private GitlabCommit commit; // corresponds to branch name or commit SHA to create branch from
 
-    @Deprecated
-    public static class Builder {
-        private String branchName;
-        private String ref;
-
-        public Builder(String branchName, String ref) {
-            this.branchName = branchName;
-            this.ref = ref;
-        }
-
-        public GitlabBranch build() {
-            return new GitlabBranch(this);
-        }
+    public GitlabBranch(String name, String ref) {
+        this.name = name;
+        // TODO: convert ref to GitlabCommit and initialize field commit
     }
 
-    @Deprecated
-    private GitlabBranch(Builder builder) {
-        this.name = builder.branchName;
-        // TODO: ref
+    public String getName() {
+        return name;
     }
 
-    // TODO: getters for all necessary public fields
-    // TODO: public constructor
-    // TODO: withXXX() for all necessary public and modifiable fields
-    // GitlabBranch branch = project.newBranch("branch1","master").create();
+    public boolean isMerged() {
+        return merged;
+    }
+
+    public boolean isProtected() {
+        return isProtected;
+    }
+
+    public boolean isDefault() {
+        return isDefault;
+    }
+
+    public boolean isCanPush() {
+        return canPush;
+    }
+
+    public String getWebUrl() {
+        return webUrl;
+    }
+
+    public GitlabCommit getCommit() {
+        return commit;
+    }
+
+    public GitlabBranch withProtectedSet() {
+        this.isProtected = true;
+        return this;
+    }
+
+    public GitlabBranch withDefaultSet() {
+        this.isDefault = true;
+        return this;
+    }
+
+    public GitlabBranch withCanPushSet() {
+        this.canPush = true;
+        return this;
+    }
+
+    public GitlabBranch withWebUrl(String webUrl) {
+        this.webUrl = webUrl;
+        return this;
+    }
 
     public GitlabBranch create() throws IOException {
         return this; // TODO
@@ -45,8 +72,6 @@ public class GitlabBranch {
     public GitlabBranch delete() throws IOException {
         return this; // TODO
     }
-
-
 
     @Override
     public String toString() {
@@ -59,15 +84,20 @@ public class GitlabBranch {
     }
 
     @Override
-    // TODO: compare all fields for equals
     public boolean equals(Object o) {
-        if (o == this) {
+        if (this == o) {
             return true;
         }
         if (!(o instanceof GitlabBranch)) {
             return false;
         }
-        GitlabBranch branch = (GitlabBranch) o;
-        return branch.name.equals(this.name);
+        GitlabBranch that = (GitlabBranch) o;
+        return merged == that.merged &&
+                       isProtected == that.isProtected &&
+                       isDefault == that.isDefault &&
+                       canPush == that.canPush &&
+                       name.equals(that.name) &&
+                       webUrl.equals(that.webUrl) &&
+                       commit.equals(that.commit);
     }
 }
