@@ -1,32 +1,57 @@
 package org.gitlab.api.models;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.gitlab.api.http.GitlabHTTPRequestor;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class GitlabIssue {
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
+        getterVisibility = JsonAutoDetect.Visibility.NONE
+)
+public class GitlabIssue extends GitlabComponent{
     private int projectId; // required, project id === id
     private int id; // required, issue id === iid
 
+    @JsonProperty(value = "author", access = JsonProperty.Access.WRITE_ONLY)
     private GitlabUser author;
+    @JsonProperty("description")
     private String description;
+    @JsonProperty("state")
     private String state;
+    @JsonProperty("assignees")
     private List<GitlabUser> assignees;
+    @JsonProperty(value = "upvotes", access = JsonProperty.Access.WRITE_ONLY)
     private int upvotes;
+    @JsonProperty(value = "downvotes", access = JsonProperty.Access.WRITE_ONLY)
     private int downvotes;
+    @JsonProperty(value = "merge_requests_count", access = JsonProperty.Access.WRITE_ONLY)
     private int mergeRequestCount;
     private String title; // required
+    @JsonProperty(value = "updated_at", access = JsonProperty.Access.WRITE_ONLY)
     private LocalDateTime updatedAt;
+    @JsonProperty(value = "created_at", access = JsonProperty.Access.WRITE_ONLY)
     private LocalDateTime createdAt;
+    @JsonProperty(value = "closed_at", access = JsonProperty.Access.WRITE_ONLY)
     private LocalDateTime closedAt;
+    @JsonProperty(value = "closed_by", access = JsonProperty.Access.WRITE_ONLY)
     private GitlabUser closedBy;
+    @JsonProperty(value = "subscribed", access = JsonProperty.Access.WRITE_ONLY)
     private boolean subscribed;
+    @JsonProperty("due_date")
     private LocalDateTime dueDate;
+    @JsonProperty(value = "web_url", access = JsonProperty.Access.WRITE_ONLY)
     private String webUrl;
+    @JsonProperty(value = "has_tasks", access = JsonProperty.Access.WRITE_ONLY)
     private boolean hasTasks;
+    @JsonProperty(value = "epic_id", access = JsonProperty.Access.WRITE_ONLY)
     private int epicId;
+
+
 
 
     /**
@@ -35,8 +60,15 @@ public class GitlabIssue {
      *
      * @param title
      */
-    public GitlabIssue(String title) {
+    public GitlabIssue(@JsonProperty("title") String title) {
         this.title = title;
+    }
+
+
+    @Override
+    public GitlabIssue withHTTPRequestor(GitlabHTTPRequestor requestor) {
+        super.withHTTPRequestor(requestor);
+        return this;
     }
 
     // create a new gitlab issue
@@ -59,41 +91,77 @@ public class GitlabIssue {
         return projectId;
     }
 
-    public int getId() { return id; }
+    public int getId() {
+        return id;
+    }
 
-    public GitlabUser getAuthor() { return author; }
+    public GitlabUser getAuthor() {
+        return author;
+    }
 
-    public String getDescription() { return description; }
+    public String getDescription() {
+        return description;
+    }
 
-    public String getState() { return state; }
+    public String getState() {
+        return state;
+    }
 
-    public List<GitlabUser> getAssignees() { return assignees; }
+    public List<GitlabUser> getAssignees() {
+        return assignees;
+    }
 
-    public int getUpvotes() { return upvotes; }
+    public int getUpvotes() {
+        return upvotes;
+    }
 
-    public int getDownvotes() { return downvotes; }
+    public int getDownvotes() {
+        return downvotes;
+    }
 
-    public int getMergeRequestCount() { return mergeRequestCount; }
+    public int getMergeRequestCount() {
+        return mergeRequestCount;
+    }
 
-    public String getTitle() { return title; }
+    public String getTitle() {
+        return title;
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 
-    public LocalDateTime getClosedAt() { return closedAt; }
+    public LocalDateTime getClosedAt() {
+        return closedAt;
+    }
 
-    public GitlabUser getClosedBy() { return closedBy; }
+    public GitlabUser getClosedBy() {
+        return closedBy;
+    }
 
-    public boolean isSubscribed() { return subscribed; }
+    public boolean isSubscribed() {
+        return subscribed;
+    }
 
-    public LocalDateTime getDueDate() { return dueDate; }
+    public LocalDateTime getDueDate() {
+        return dueDate;
+    }
 
-    public String getWebUrl() { return webUrl; }
+    public String getWebUrl() {
+        return webUrl;
+    }
 
-    public boolean hasTasks() { return hasTasks; }
+    public boolean hasTasks() {
+        return hasTasks;
+    }
 
-    public int getEpicId() { return epicId; }
+    public int getEpicId() {
+        return epicId;
+    }
 
     /*
      * Setters
