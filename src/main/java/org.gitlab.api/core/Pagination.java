@@ -1,4 +1,4 @@
-package core;
+package org.gitlab.api.core;
 
 public final class Pagination {
     // By default, get requests return 20 results at a time.

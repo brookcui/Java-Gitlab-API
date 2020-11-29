@@ -1,4 +1,4 @@
-package models;
+package org.gitlab.api.models;
 
 import java.io.IOException;
 import java.util.Objects;

@@ -1,4 +1,4 @@
-package core;
+package org.gitlab.api.core;
 
 enum AuthMethod {
     OAUTH2,

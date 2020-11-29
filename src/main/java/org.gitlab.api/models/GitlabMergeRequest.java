@@ -1,6 +1,7 @@
-package models;
+package org.gitlab.api.models;
 
-import core.Pagination;
+
+import org.gitlab.api.core.Pagination;
 
 import java.io.IOException;
 import java.util.List;
