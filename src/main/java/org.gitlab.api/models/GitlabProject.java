@@ -4,7 +4,6 @@ import core.Pagination;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -17,6 +16,7 @@ import java.util.Objects;
 public class GitlabProject {
     private int id; // required
     private String description;
+    private String nameWithNamespace;
     private String defaultBranch;
     private String visibility;
     private String sshUrlToRepo;
@@ -32,19 +32,221 @@ public class GitlabProject {
     private boolean mergeRequestsEnabled;
     private boolean jobsEnabled;
     private boolean wikiEnabled;
-    private boolean snippetsEnabled;
     private LocalDateTime createdAt;
     private LocalDateTime lastActivityAt;
     private int creatorId;
-//    private GitlabPermission permissions; // FIXME: do we need permission?
     private boolean archived;
     private int forksCount;
     private int starCount;
     private boolean publicJobs;
 
-    /*
-     * Getters
+    /**
+     * Construct the project with name
+     * TODO: package private or protected
+     *
+     * @param name
      */
+    public GitlabProject(String name) {
+        this.name = name;
+    }
+
+
+    /**
+     * Get the users list of this project, using the default pagination
+     * GET /projects/:id/users
+     * https://docs.gitlab.com/ee/api/projects.html#get-project-users
+     *
+     * @return a list of {@link GitlabUser}s
+     * @throws IOException
+     */
+    public List<GitlabUser> getUsers() throws IOException {
+        return null; // TODO
+    }
+
+
+    /**
+     * Get all the issues of this project, using the default pagination
+     * https://docs.gitlab.com/ee/api/issues.html#list-project-issues
+     * GET /projects/:id/issues
+     *
+     * @return a list of {@link GitlabIssue}s
+     * @throws IOException
+     */
+    public List<GitlabIssue> getAllIssues() throws IOException {
+        return null; // TODO
+    }
+
+    /**
+     * Get all the issues of this project, using the given pagination
+     * https://docs.gitlab.com/ee/api/issues.html#list-project-issues
+     * GET /projects/:id/issues
+     *
+     * @param pagination - the given pagination
+     * @return a list of {@link GitlabIssue}s
+     * @throws IOException
+     */
+    public List<GitlabIssue> getAllIssues(Pagination pagination) throws IOException {
+        return null; // TODO
+    }
+
+    /**
+     * Get the issue based on the given issueIId (The internal ID of a project’s issue)
+     * https://docs.gitlab.com/ee/api/issues.html#single-project-issue
+     * GET /projects/:id/issues/:issue_iid
+     *
+     * @param issueIId - the given issueIId
+     * @return the {@link GitlabIssue} of the given issueIId
+     * @throws IOException
+     */
+    public GitlabIssue getIssue(int issueIId) throws IOException {
+        return null; // TODO
+    }
+
+    /**
+     * Construct a new issue from this project of the given name
+     * No HTTP request will be issued until you call {@link GitlabIssue#create()}
+     *
+     * @param name - the name of the issue
+     * @return the new issue from this project
+     */
+    public GitlabIssue newIssue(String name) {
+        return null;
+    }
+
+
+    // TODO: branch.getAllCommits()? project.getAllCommits("branch1")?
+
+    /**
+     * Get all the commits of this project in the default branch, using the default pagination
+     * https://docs.gitlab.com/ee/api/commits.html#list-repository-commits
+     * GET /projects/:id/repository/commits
+     *
+     * @return a list of {@link GitlabCommit}s
+     * @throws IOException
+     */
+    public List<GitlabCommit> getAllCommits() throws IOException {
+        return null; // TODO
+    }
+
+    /**
+     * Get all the commits of this project in the default branch, using the given pagination
+     * https://docs.gitlab.com/ee/api/commits.html#list-repository-commits
+     * GET /projects/:id/repository/commits
+     *
+     * @param pagination - the given pagination
+     * @return a list of {@link GitlabCommit}s
+     * @throws IOException
+     */
+    public List<GitlabCommit> getAllCommits(Pagination pagination) throws IOException {
+        return null; // TODO
+    }
+
+    /**
+     * TODO: rename sha?
+     * Get a single commit based on the given commit hash or name of a repository branch or tag
+     * https://docs.gitlab.com/ee/api/commits.html#get-a-single-commit
+     * GET /projects/:id/repository/commits/:sha
+     *
+     * @param sha - commit hash or name of a repository branch or tag
+     * @return
+     * @throws IOException
+     */
+    public GitlabCommit getCommit(String sha) throws IOException {
+        return null; // TODO
+    }
+
+    /**
+     * Get a list of repository branches from a project, sorted by name alphabetically, using the default pagination
+     * https://docs.gitlab.com/ee/api/branches.html#list-repository-branches
+     * GET /projects/:id/repository/branches
+     *
+     * @return the list of {@link GitlabBranch}s
+     * @throws IOException
+     */
+    public List<GitlabBranch> getAllBranches() throws IOException {
+        return null; // TODO
+    }
+
+    /**
+     * Get a list of repository branches from a project, sorted by name alphabetically, using the given pagination
+     * https://docs.gitlab.com/ee/api/branches.html#list-repository-branches
+     * GET /projects/:id/repository/branches
+     *
+     * @param pagination - the given pagination
+     * @return the list of {@link GitlabBranch}s
+     * @throws IOException
+     */
+    public List<GitlabBranch> getAllBranches(Pagination pagination) throws IOException {
+        return null; // TODO
+    }
+
+    /**
+     * Get a single project repository branch based on the branch name
+     * https://docs.gitlab.com/ee/api/branches.html#get-single-repository-branch
+     * GET /projects/:id/repository/branches/:branch
+     *
+     * @param branchName - the name of the branch
+     * @return the {@link GitlabBranch} of the given branch name
+     * @throws IOException
+     */
+    public GitlabBranch getBranch(String branchName) throws IOException {
+        return null; // TODO
+    }
+
+    /**
+     * Create a new branch from this project
+     * No HTTP request will be issued until you call {@link GitlabBranch#create()}
+     *
+     * @param name - the name of the new branch
+     * @param ref  - Branch name or commit SHA to create branch from.
+     * @return
+     */
+    public GitlabBranch newBranch(String name, String ref) {
+        return null;
+    }
+
+
+    /**
+     * Fork the project into current user's repo
+     * https://docs.gitlab.com/ee/api/projects.html#fork-project
+     * POST /projects/:id/fork
+     *
+     * @return the new GitlabProject which is the result of forking this project
+     */
+    public GitlabProject fork() throws IOException {
+        return this; // TODO
+    }
+
+    /**
+     * Create a new {@link GitlabProject} with the given fields
+     * It will send HTTP requests to the endpoint
+     *
+     * @return the new {@link GitlabProject} after creating
+     */
+    public GitlabProject create() throws IOException {
+        return this; // TODO
+    }
+
+    /**
+     * Delete this {@link GitlabProject}
+     * It will send HTTP requests to the endpoint
+     *
+     * @return the previous {@link GitlabProject} before deleting
+     */
+    public GitlabProject delete() throws IOException {
+        return this; // TODO
+    }
+
+    /**
+     * Update this {@link GitlabProject}
+     * It will send HTTP requests to the endpoint
+     *
+     * @return the updated {@link GitlabProject}
+     */
+    public GitlabProject update() throws IOException {
+        return this; // TODO
+    }
+
 
     public int getId() {
         return id;
@@ -52,6 +254,10 @@ public class GitlabProject {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getNameWithNamespace() {
+        return nameWithNamespace;
     }
 
     public String getDefaultBranch() {
@@ -114,9 +320,6 @@ public class GitlabProject {
         return wikiEnabled;
     }
 
-    public boolean isSnippetsEnabled() {
-        return snippetsEnabled;
-    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
@@ -129,10 +332,6 @@ public class GitlabProject {
     public int getCreatorId() {
         return creatorId;
     }
-
-//    public GitlabPermission getPermissions() {
-//        return permissions;
-//    }
 
     public boolean isArchived() {
         return archived;
@@ -151,348 +350,101 @@ public class GitlabProject {
     }
 
 
-    // TODO: getters for all necessary public fields
-    // TODO: public constructor
-    // TODO: withXXX() for all necessary public and modifiable fields
-
     /*
      * Setters
+     * There will be no setter for id, nameWithNamespace, ssh_url_to_repo, http_url_to_repo, web_url, readme_url,
+     * owner, with_issues_enabled, open_issues_count, with_merge_requests_enabled, created_at, last_activity_at,
+     * last_activity_at, archived, forks_count, star_count, public_jobs
+     *
      */
 
-    // FIXME: do we need to return self?
-    // FIXME: setX or withX?
+
     public GitlabProject withDescription(String description) {
         this.description = description;
         return this;
     }
 
-    @Deprecated
-    public static class Builder {
-        private int id; // required but private
-        private String description;
-        private String defaultBranch;
-        private String visibility;
-        private String sshUrlToRepo;
-        private String httpUrlToRepo;
-        private String webUrl;
-        private String readmeUrl;
-        private List<String> tagList;
-        private GitlabUser owner;
-        private String name; // required and public
-        private String path;
-        private boolean issuesEnabled;
-        private int openIssuesCount;
-        private boolean mergeRequestsEnabled;
-        private boolean jobsEnabled;
-        private boolean wikiEnabled;
-        private boolean snippetsEnabled;
-        private LocalDateTime createdAt;
-        private LocalDateTime lastActivityAt;
-        private int creatorId;
-//        private GitlabPermission permissions;
-        private boolean archived;
-        private int forksCount;
-        private int starCount;
-        private boolean publicJobs;
 
-        public Builder(String name) {
-            this.id = 0; // TODO
-            this.name = name;
-        }
-
-        public Builder description(String description) {
-            this.description = description;
-            return this;
-        }
-
-        public Builder defaultBranch(String defaultBranch) {
-            this.defaultBranch = defaultBranch;
-            return this;
-        }
-
-        public Builder visibility(String visibility) {
-            this.visibility = visibility;
-            return this;
-        }
-
-        public Builder sshUrlToRepo(String sshUrlToRepo) {
-            this.sshUrlToRepo = sshUrlToRepo;
-            return this;
-        }
-
-        public Builder httpUrlToRepo(String httpUrlToRepo) {
-            this.httpUrlToRepo = httpUrlToRepo;
-            return this;
-        }
-
-        public Builder webUrl(String webUrl) {
-            this.webUrl = webUrl;
-            return this;
-        }
-
-        public Builder readmeUrl(String readmeUrl) {
-            this.readmeUrl = readmeUrl;
-            return this;
-        }
-
-        public Builder tagList(List<String> tagList) {
-            this.tagList = new ArrayList<>(tagList);
-            return this;
-        }
-
-        public Builder owner(GitlabUser owner) {
-            this.owner = owner;
-            return this;
-        }
-
-        public Builder path(String path) {
-            this.path = path;
-            return this;
-        }
-
-        public Builder setIssuesEnabled() {
-            this.issuesEnabled = true;
-            return this;
-        }
-
-        public Builder openIssuesCount(int openIssuesCount) {
-            this.openIssuesCount = openIssuesCount;
-            return this;
-        }
-
-        public Builder setMergeRequestsEnabled() {
-            this.mergeRequestsEnabled = true;
-            return this;
-        }
-
-        public Builder setJobsEnabled() {
-            this.jobsEnabled = true;
-            return this;
-        }
-
-        public Builder setWikiEnabled() {
-            this.wikiEnabled = true;
-            return this;
-        }
-
-        public Builder setSnippetsEnabled() {
-            this.snippetsEnabled = true;
-            return this;
-        }
-
-        public Builder createdAt(LocalDateTime createdAt) {
-            this.createdAt = createdAt;
-            return this;
-        }
-
-        public Builder lastActivityAt(LocalDateTime lastActivityAt) {
-            this.lastActivityAt = lastActivityAt;
-            return this;
-        }
-
-        public Builder creatorId(int creatorId) {
-            this.creatorId = creatorId;
-            return this;
-        }
-
-//        public Builder permissions(GitlabPermission permissions) {
-//            this.permissions = permissions;
-//            return this;
-//        }
-
-        public Builder setArchived() {
-            this.archived = true;
-            return this;
-        }
-
-        public Builder forksCount(int forksCount) {
-            this.forksCount = forksCount;
-            return this;
-        }
-
-        public Builder starCount(int starCount) {
-            this.starCount = starCount;
-            return this;
-        }
-
-        public Builder setPublicJobs() {
-            this.publicJobs = true;
-            return this;
-        }
-
-        public GitlabProject build() {
-            return new GitlabProject(this);
-        }
+    public GitlabProject withDefaultBranch(String defaultBranch) {
+        this.defaultBranch = defaultBranch;
+        return this;
     }
 
-    private GitlabProject(Builder builder) {
-        this.id = builder.id; // required
-        this.description = builder.description;
-        this.defaultBranch = builder.defaultBranch;
-        this.visibility = builder.visibility;
-        this.sshUrlToRepo = builder.sshUrlToRepo;
-        this.httpUrlToRepo = builder.httpUrlToRepo;
-        this.webUrl = builder.webUrl;
-        this.readmeUrl = builder.readmeUrl;
-        this.tagList = builder.tagList;
-        this.owner = builder.owner;
-        this.name = builder.name; // required
-        this.path = builder.path;
-        this.issuesEnabled = builder.issuesEnabled;
-        this.openIssuesCount = builder.openIssuesCount;
-        this.mergeRequestsEnabled = builder.mergeRequestsEnabled;
-        this.jobsEnabled = builder.jobsEnabled;
-        this.wikiEnabled = builder.wikiEnabled;
-        this.snippetsEnabled = builder.snippetsEnabled;
-        this.createdAt = builder.createdAt;
-        this.lastActivityAt = builder.lastActivityAt;
-        this.creatorId = builder.creatorId;
-//        this.permissions = builder.permissions;
-        this.archived = builder.archived;
-        this.forksCount = builder.forksCount;
-        this.starCount = builder.starCount;
-        this.publicJobs = builder.publicJobs;
+    public GitlabProject withVisibility(String visibility) {
+        this.visibility = visibility;
+        return this;
     }
 
-    /*
-     * Users
-     */
-    public List<GitlabUser> getUsers() throws IOException {
-        return null; // TODO
+    public GitlabProject withTagList(List<String> tagList) {
+        this.tagList = tagList;
+        return this;
     }
 
-    /*
-     * Issues
-     */
-
-    public List<GitlabIssue> getAllIssues() throws IOException {
-        return null; // TODO
+    public GitlabProject withName(String name) {
+        Objects.requireNonNull(name);
+        this.name = name;
+        return this;
     }
 
-    public List<GitlabIssue> getAllIssues(Pagination pagination) throws IOException {
-        return null; // TODO
+    public GitlabProject withPath(String path) {
+        this.path = path;
+        return this;
     }
 
-    public GitlabIssue getIssue(int issueId) throws IOException {
-        return null; // TODO
+    public GitlabProject withJobsEnabled(boolean jobsEnabled) {
+        this.jobsEnabled = jobsEnabled;
+        return this;
     }
 
-    @Deprecated
-    // Added to Issue class
-    public void createIssue(GitlabIssue issue) throws IOException {
-        return; // TODO
-    }
-
-    @Deprecated
-    // Added to Issue class
-    public void updateIssue(GitlabIssue issue) throws IOException {
-        return; // TODO
-    }
-
-    @Deprecated
-    // Added to Issue class
-    public void deleteIssue(int issueId) throws IOException {
-        return; // TODO
-    }
-
-    /*
-     * Commits
-     */
-
-    public List<GitlabCommit> getAllCommits() throws IOException {
-        return null; // TODO
-    }
-
-    public List<GitlabCommit> getAllCommits(Pagination pagination) throws IOException {
-        return null; // TODO
-    }
-
-    public GitlabCommit getCommit(String sha) throws IOException {
-        return null; // TODO
-    }
-
-    /*
-     * Branches
-     */
-
-    public List<GitlabBranch> getAllBranches() throws IOException {
-        return null; // TODO
-    }
-
-    public List<GitlabBranch> getAllBranches(Pagination pagination) throws IOException {
-        return null; // TODO
-    }
-
-    public GitlabBranch getBranch(String branchName) throws IOException {
-        return null; // TODO
-    }
-
-    @Deprecated
-    public void createBranch(GitlabBranch branch) throws IOException {
-        return; // TODO
-    }
-
-    /*
-     * note that you cannot edit a branch within a repo
-     */
-    @Deprecated
-    public void deleteBranch(String branchName) throws IOException {
-        return; // TODO
+    public GitlabProject withWikiEnabled(boolean wikiEnabled) {
+        this.wikiEnabled = wikiEnabled;
+        return this;
     }
 
     /**
-     * Fork the project into current user's repo
+     * TODO: change the string representation form
      *
      * @return
      */
-
-    // only for GitlabProject
-    public GitlabProject fork() throws IOException {
-        return this; // TODO
-    }
-
-    // create a new gitlab project
-    public GitlabProject create() throws IOException {
-        return this; // TODO
-    }
-
-    // return GitlabProject for consistency
-    public GitlabProject delete() throws IOException {
-        return this; // TODO
-    }
-
-    public GitlabProject update() throws IOException {
-        return this; // TODO
-    }
-
-    public GitlabIssue newIssue(String name) {
-        return null;
-    }
-
-    public GitlabBranch newBranch(String name) {
-        return null;
-    }
-
     @Override
     public String toString() {
         return name;
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(id);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GitlabProject that = (GitlabProject) o;
+        return id == that.id &&
+                issuesEnabled == that.issuesEnabled &&
+                openIssuesCount == that.openIssuesCount &&
+                mergeRequestsEnabled == that.mergeRequestsEnabled &&
+                jobsEnabled == that.jobsEnabled &&
+                wikiEnabled == that.wikiEnabled &&
+                creatorId == that.creatorId &&
+                archived == that.archived &&
+                forksCount == that.forksCount &&
+                starCount == that.starCount &&
+                publicJobs == that.publicJobs &&
+                Objects.equals(description, that.description) &&
+                Objects.equals(nameWithNamespace, that.nameWithNamespace) &&
+                Objects.equals(defaultBranch, that.defaultBranch) &&
+                Objects.equals(visibility, that.visibility) &&
+                Objects.equals(sshUrlToRepo, that.sshUrlToRepo) &&
+                Objects.equals(httpUrlToRepo, that.httpUrlToRepo) &&
+                Objects.equals(webUrl, that.webUrl) &&
+                Objects.equals(readmeUrl, that.readmeUrl) &&
+                Objects.equals(tagList, that.tagList) &&
+                Objects.equals(owner, that.owner) &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(path, that.path) &&
+                Objects.equals(createdAt, that.createdAt) &&
+                Objects.equals(lastActivityAt, that.lastActivityAt);
     }
 
     @Override
-    // TODO: change equals to compare all the fields
-    public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        }
-        if (!(o instanceof GitlabProject)) {
-            return false;
-        }
-        GitlabProject project = (GitlabProject) o;
-        return project.id == this.id;
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
