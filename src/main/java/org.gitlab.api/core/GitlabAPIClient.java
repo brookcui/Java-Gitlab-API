@@ -1,5 +1,8 @@
 package org.gitlab.api.core;
 
+import org.gitlab.api.http.Config;
+import org.gitlab.api.http.GitlabHTTPRequestor;
+import org.gitlab.api.models.GitlabComponent;
 import org.gitlab.api.models.GitlabIssue;
 import org.gitlab.api.models.GitlabProject;
 import org.gitlab.api.models.GitlabUser;
@@ -7,19 +10,13 @@ import org.gitlab.api.models.GitlabUser;
 import java.io.IOException;
 import java.util.List;
 
-public class GitlabAPIClient {
-    private final String endpoint;
-    private AuthMethod authMethod;
-    private final String token;
-    private final String username;
-    private final String password;
+public class GitlabAPIClient extends GitlabComponent {
 
     public static class Builder {
         private final String endpoint;
         private AuthMethod authMethod;
         private String token;
-        private String username;
-        private String password;
+
 
         public Builder(String endpoint) {
             this.endpoint = endpoint;
@@ -37,12 +34,12 @@ public class GitlabAPIClient {
             return this;
         }
 
-        public Builder withPassword(String username, String password) {
-            this.authMethod = AuthMethod.PASSWORD;
-            this.username = username;
-            this.password = password;
-            return this;
-        }
+//        public Builder withPassword(String username, String password) {
+//            this.authMethod = AuthMethod.PASSWORD;
+//            this.username = username;
+//            this.password = password;
+//            return this;
+//        }
 
         public GitlabAPIClient build() {
             return new GitlabAPIClient(this);
@@ -50,11 +47,7 @@ public class GitlabAPIClient {
     }
 
     private GitlabAPIClient(Builder builder) {
-        this.endpoint = builder.endpoint;
-        this.authMethod = builder.authMethod;
-        this.token = builder.token;
-        this.username = builder.username;
-        this.password = builder.password;
+        super(new GitlabHTTPRequestor(new Config(builder.endpoint, builder.token, builder.authMethod)));
     }
 
     /*
@@ -102,7 +95,8 @@ public class GitlabAPIClient {
      * @throws IOException
      */
     public GitlabProject getProject(int projectId) throws IOException {
-        return null; // TODO
+        return getHTTPRequestor().get("/projects/" + projectId, GitlabProject.class)
+                                 .withHTTPRequestor(getHTTPRequestor());
     }
 
     /**
@@ -123,8 +117,8 @@ public class GitlabAPIClient {
         return; // TODO
     }
 
-    public GitlabProject newProject(String name) throws IOException {
-        return null; // TODO
+    public GitlabProject newProject(String name) {
+        return new GitlabProject(name).withHTTPRequestor(getHTTPRequestor());
     }
 
     // FIXME: do we need to create a project like this?

@@ -1,27 +1,52 @@
 
 package org.gitlab.api.models;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
-public class GitlabUser {
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
+        getterVisibility = JsonAutoDetect.Visibility.NONE
+)
+public class GitlabUser extends GitlabComponent {
     private int id;
+    @JsonProperty(value = "username", access = JsonProperty.Access.WRITE_ONLY)
     private String username;
+    @JsonProperty(value = "name", access = JsonProperty.Access.WRITE_ONLY)
     private String name;
+    @JsonProperty(value = "state", access = JsonProperty.Access.WRITE_ONLY)
     private String state;
+    @JsonProperty(value = "avatar_url", access = JsonProperty.Access.WRITE_ONLY)
     private String avatarUrl;
+    @JsonProperty(value = "web_url", access = JsonProperty.Access.WRITE_ONLY)
     private String webUrl;
+    @JsonProperty(value = "created_at", access = JsonProperty.Access.WRITE_ONLY)
     private LocalDateTime createdAt;
+    @JsonProperty(value = "bio", access = JsonProperty.Access.WRITE_ONLY)
     private String bio;
+    @JsonProperty(value = "bio_html", access = JsonProperty.Access.WRITE_ONLY)
     private String bioHtml;
+    @JsonProperty(value = "public_email", access = JsonProperty.Access.WRITE_ONLY)
     private String publicEmail;
+    @JsonProperty(value = "skype", access = JsonProperty.Access.WRITE_ONLY)
     private String skype;
+    @JsonProperty(value = "linkedin", access = JsonProperty.Access.WRITE_ONLY)
     private String linkedin;
+    @JsonProperty(value = "twitter", access = JsonProperty.Access.WRITE_ONLY)
     private String twitter;
+    @JsonProperty(value = "website_url", access = JsonProperty.Access.WRITE_ONLY)
     private String websiteUrl;
+    @JsonProperty(value = "organization", access = JsonProperty.Access.WRITE_ONLY)
     private String organization;
+    @JsonProperty(value = "job_title", access = JsonProperty.Access.WRITE_ONLY)
     private String jobTitle;
+
+    public GitlabUser(@JsonProperty("project") int id) {
+        this.id = id;
+    }
 
     public List<GitlabProject> getUserProjects() {
         return null; // TODO

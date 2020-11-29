@@ -1,27 +1,51 @@
 package org.gitlab.api.models;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.gitlab.api.http.LocalDateTimeDeserializer;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
-public class GitlabCommit {
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
+        getterVisibility = JsonAutoDetect.Visibility.NONE
+)
+public class GitlabCommit extends GitlabComponent {
 
     private String id;
+    @JsonProperty(value = "short_id", access = JsonProperty.Access.WRITE_ONLY)
     private String shortId;
+    @JsonProperty(value = "title", access = JsonProperty.Access.WRITE_ONLY)
     private String title;
+    @JsonProperty(value = "author_name", access = JsonProperty.Access.WRITE_ONLY)
     private String authorName;
+    @JsonProperty(value = "author_email", access = JsonProperty.Access.WRITE_ONLY)
     private String authorEmail;
+    @JsonProperty(value = "committer_name", access = JsonProperty.Access.WRITE_ONLY)
     private String committerName;
+    @JsonProperty(value = "committer_email", access = JsonProperty.Access.WRITE_ONLY)
     private String committerEmail;
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonProperty(value = "created_at", access = JsonProperty.Access.WRITE_ONLY)
     private LocalDateTime createdAt;
+    @JsonProperty(value = "message", access = JsonProperty.Access.WRITE_ONLY)
     private String message;
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonProperty(value = "committed_date", access = JsonProperty.Access.WRITE_ONLY)
     private LocalDateTime committedDate;
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonProperty(value = "authored_date", access = JsonProperty.Access.WRITE_ONLY)
     private LocalDateTime authoredDate;
+    @JsonProperty(value = "parent_ids", access = JsonProperty.Access.WRITE_ONLY)
     private List<String> parentIds;
+    @JsonProperty(value = "status", access = JsonProperty.Access.WRITE_ONLY)
     private String status;
+    @JsonProperty(value = "web_url", access = JsonProperty.Access.WRITE_ONLY)
     private String webUrl;
 
-    public GitlabCommit(String id) {
+    public GitlabCommit(@JsonProperty("id") String id) {
         this.id = id;
     }
 

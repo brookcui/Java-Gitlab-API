@@ -1,11 +1,16 @@
 package org.gitlab.api.models;
 
-
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.gitlab.api.core.Pagination;
+import org.gitlab.api.http.GitlabHTTPRequestor;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -14,43 +19,104 @@ import java.util.Objects;
  * @throws UnsupportedOperationException
  * @throws IOException
  */
-public class GitlabProject {
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
+        getterVisibility = JsonAutoDetect.Visibility.NONE
+)
+public class GitlabProject extends GitlabComponent {
     private int id; // required
     private String description;
+    @JsonProperty(value = "name_with_namespace", access = JsonProperty.Access.WRITE_ONLY)
     private String nameWithNamespace;
+
+    @JsonProperty(value = "path_with_namespace", access = JsonProperty.Access.WRITE_ONLY)
+    private String pathWithNamespace;
+
+    @JsonProperty(value = "default_branch", access = JsonProperty.Access.WRITE_ONLY)
     private String defaultBranch;
+
     private String visibility;
+
+    @JsonProperty(value = "ssh_url_to_repo", access = JsonProperty.Access.WRITE_ONLY)
     private String sshUrlToRepo;
+
+    @JsonProperty(value = "http_url_to_repo", access = JsonProperty.Access.WRITE_ONLY)
     private String httpUrlToRepo;
+
+    @JsonProperty(value = "web_url", access = JsonProperty.Access.WRITE_ONLY)
     private String webUrl;
+
+    @JsonProperty(value = "readme_url", access = JsonProperty.Access.WRITE_ONLY)
     private String readmeUrl;
-    private List<String> tagList;
+
+    @JsonProperty("tag_list")
+    private List<String> tagList = new ArrayList<>();
+
+    @JsonProperty(value = "owner", access = JsonProperty.Access.WRITE_ONLY)
     private GitlabUser owner;
+
+    @JsonProperty(value = "name", access = JsonProperty.Access.WRITE_ONLY)
     private String name; // required
+
+    @JsonProperty(value = "path", access = JsonProperty.Access.WRITE_ONLY)
     private String path;
+
+    @JsonProperty(value = "issues_enabled", access = JsonProperty.Access.WRITE_ONLY)
     private boolean issuesEnabled;
+
+    @JsonProperty(value = "open_issues_count", access = JsonProperty.Access.WRITE_ONLY)
     private int openIssuesCount;
+
+    @JsonProperty("merge_requests_enabled")
     private boolean mergeRequestsEnabled;
+
+    @JsonProperty("jobs_enabled")
     private boolean jobsEnabled;
+
+    @JsonProperty("wiki_enabled")
     private boolean wikiEnabled;
+
+    @JsonProperty(value = "created_at", access = JsonProperty.Access.WRITE_ONLY)
     private LocalDateTime createdAt;
+
+    @JsonProperty(value = "last_activity_at", access = JsonProperty.Access.WRITE_ONLY)
     private LocalDateTime lastActivityAt;
+
+    @JsonProperty(value = "creator_id", access = JsonProperty.Access.WRITE_ONLY)
     private int creatorId;
+
+    @JsonProperty(value = "archived", access = JsonProperty.Access.WRITE_ONLY)
     private boolean archived;
+
+    @JsonProperty(value = "forks_count", access = JsonProperty.Access.WRITE_ONLY)
     private int forksCount;
+
+    @JsonProperty(value = "star_count", access = JsonProperty.Access.WRITE_ONLY)
     private int starCount;
+
+    @JsonProperty(value = "public_jobs", access = JsonProperty.Access.WRITE_ONLY)
     private boolean publicJobs;
 
     /**
      * Construct the project with name
      * TODO: package private or protected
      *
-     * @param name
+     * @param name - the name of the new project
      */
-    public GitlabProject(String name) {
+    public GitlabProject(@JsonProperty("name") String name) {
         this.name = name;
     }
 
+    @Override
+    public GitlabProject withHTTPRequestor(GitlabHTTPRequestor requestor) {
+        super.withHTTPRequestor(requestor);
+        if (owner != null) {
+            owner.withHTTPRequestor(requestor);
+        }
+        return this;
+    }
+    /*
+     * Users
+     */
 
     /**
      * Get the users list of this project, using the default pagination
@@ -64,6 +130,9 @@ public class GitlabProject {
         return null; // TODO
     }
 
+    /*
+     * Issues
+     */
 
     /**
      * Get all the issues of this project, using the default pagination
@@ -114,7 +183,9 @@ public class GitlabProject {
         return null;
     }
 
-
+    /*
+     * Commits
+     */
     // TODO: branch.getAllCommits()? project.getAllCommits("branch1")?
 
     /**
@@ -156,6 +227,10 @@ public class GitlabProject {
         return null; // TODO
     }
 
+    /*
+     * Branches
+     */
+
     /**
      * Get a list of repository branches from a project, sorted by name alphabetically, using the default pagination
      * https://docs.gitlab.com/ee/api/branches.html#list-repository-branches
@@ -196,14 +271,13 @@ public class GitlabProject {
 
     /**
      * Create a new branch from this project
-     * No HTTP request will be issued until you call {@link GitlabBranch#create()}
+     * No HTTP request will be issued until you call {@link GitlabBranch#()}
      *
      * @param name - the name of the new branch
-     * @param ref  - Branch name or commit SHA to create branch from.
      * @return
      */
-    public GitlabBranch newBranch(String name, String ref) {
-        return null;
+    public GitlabBranch newBranch(String name) {
+        return new GitlabBranch(this, name).withHTTPRequestor(getHTTPRequestor());
     }
 
 
@@ -225,7 +299,10 @@ public class GitlabProject {
      * @return the new {@link GitlabProject} after creating
      */
     public GitlabProject create() throws IOException {
-        return this; // TODO
+        Map<String, String> map = new HashMap<String, String>() {{
+            put("name", name);
+        }};
+        return getHTTPRequestor().post("/projects", map, this);
     }
 
     /**
@@ -249,6 +326,9 @@ public class GitlabProject {
     }
 
 
+    /*
+     * Getters
+     */
     public int getId() {
         return id;
     }
@@ -259,6 +339,10 @@ public class GitlabProject {
 
     public String getNameWithNamespace() {
         return nameWithNamespace;
+    }
+
+    public String getPathWithNamespace() {
+        return pathWithNamespace;
     }
 
     public String getDefaultBranch() {
@@ -365,7 +449,6 @@ public class GitlabProject {
         return this;
     }
 
-
     public GitlabProject withDefaultBranch(String defaultBranch) {
         this.defaultBranch = defaultBranch;
         return this;
@@ -402,50 +485,74 @@ public class GitlabProject {
         return this;
     }
 
-    /**
-     * TODO: change the string representation form
-     *
-     * @return
-     */
     @Override
     public String toString() {
-        return name;
+        return "GitlabProject{" +
+                "id=" + id +
+                ", description=" + description +
+                ", nameWithNamespace=" + nameWithNamespace +
+                ", pathWithNamespace=" + pathWithNamespace +
+                ", defaultBranch=" + defaultBranch +
+                ", visibility=" + visibility +
+                ", sshUrlToRepo=" + sshUrlToRepo +
+                ", httpUrlToRepo=" + httpUrlToRepo +
+                ", webUrl=" + webUrl +
+                ", readmeUrl=" + readmeUrl +
+                ", tagList=" + tagList +
+                ", owner=" + owner +
+                ", name=" + name +
+                ", path=" + path +
+                ", issuesEnabled=" + issuesEnabled +
+                ", openIssuesCount=" + openIssuesCount +
+                ", mergeRequestsEnabled=" + mergeRequestsEnabled +
+                ", jobsEnabled=" + jobsEnabled +
+                ", wikiEnabled=" + wikiEnabled +
+                ", createdAt=" + createdAt +
+                ", lastActivityAt=" + lastActivityAt +
+                ", creatorId=" + creatorId +
+                ", archived=" + archived +
+                ", forksCount=" + forksCount +
+                ", starCount=" + starCount +
+                ", publicJobs=" + publicJobs +
+                '}';
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        GitlabProject that = (GitlabProject) o;
-        return id == that.id &&
-                issuesEnabled == that.issuesEnabled &&
-                openIssuesCount == that.openIssuesCount &&
-                mergeRequestsEnabled == that.mergeRequestsEnabled &&
-                jobsEnabled == that.jobsEnabled &&
-                wikiEnabled == that.wikiEnabled &&
-                creatorId == that.creatorId &&
-                archived == that.archived &&
-                forksCount == that.forksCount &&
-                starCount == that.starCount &&
-                publicJobs == that.publicJobs &&
-                Objects.equals(description, that.description) &&
-                Objects.equals(nameWithNamespace, that.nameWithNamespace) &&
-                Objects.equals(defaultBranch, that.defaultBranch) &&
-                Objects.equals(visibility, that.visibility) &&
-                Objects.equals(sshUrlToRepo, that.sshUrlToRepo) &&
-                Objects.equals(httpUrlToRepo, that.httpUrlToRepo) &&
-                Objects.equals(webUrl, that.webUrl) &&
-                Objects.equals(readmeUrl, that.readmeUrl) &&
-                Objects.equals(tagList, that.tagList) &&
-                Objects.equals(owner, that.owner) &&
-                Objects.equals(name, that.name) &&
-                Objects.equals(path, that.path) &&
-                Objects.equals(createdAt, that.createdAt) &&
-                Objects.equals(lastActivityAt, that.lastActivityAt);
+        GitlabProject project = (GitlabProject) o;
+        return id == project.id &&
+                issuesEnabled == project.issuesEnabled &&
+                openIssuesCount == project.openIssuesCount &&
+                mergeRequestsEnabled == project.mergeRequestsEnabled &&
+                jobsEnabled == project.jobsEnabled &&
+                wikiEnabled == project.wikiEnabled &&
+                creatorId == project.creatorId &&
+                archived == project.archived &&
+                forksCount == project.forksCount &&
+                starCount == project.starCount &&
+                publicJobs == project.publicJobs &&
+                Objects.equals(description, project.description) &&
+                Objects.equals(nameWithNamespace, project.nameWithNamespace) &&
+                Objects.equals(pathWithNamespace, project.pathWithNamespace) &&
+                Objects.equals(defaultBranch, project.defaultBranch) &&
+                Objects.equals(visibility, project.visibility) &&
+                Objects.equals(sshUrlToRepo, project.sshUrlToRepo) &&
+                Objects.equals(httpUrlToRepo, project.httpUrlToRepo) &&
+                Objects.equals(webUrl, project.webUrl) &&
+                Objects.equals(readmeUrl, project.readmeUrl) &&
+                Objects.equals(tagList, project.tagList) &&
+                Objects.equals(owner, project.owner) &&
+                Objects.equals(name, project.name) &&
+                Objects.equals(path, project.path) &&
+                Objects.equals(createdAt, project.createdAt) &&
+                Objects.equals(lastActivityAt, project.lastActivityAt);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id);
     }
+
 }
