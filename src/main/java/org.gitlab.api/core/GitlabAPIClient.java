@@ -1,8 +1,8 @@
-package core;
+package org.gitlab.api.core;
 
-import models.GitlabIssue;
-import models.GitlabProject;
-import models.GitlabUser;
+import org.gitlab.api.models.GitlabIssue;
+import org.gitlab.api.models.GitlabProject;
+import org.gitlab.api.models.GitlabUser;
 
 import java.io.IOException;
 import java.util.List;
@@ -143,10 +143,6 @@ public class GitlabAPIClient {
     // GitlabIssue issue = project.newIssue("a bug").withDescription("a big bug").create()
     //
 
-    @Deprecated
-    public GitlabProject.Builder buildProject(String projectName) throws IOException {
-        return null; // TODO
-    }
 
     @Deprecated
     public void createProjectForUser(GitlabProject project, GitlabUser user) throws IOException {

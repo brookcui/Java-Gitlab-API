@@ -1,4 +1,4 @@
-package models;
+package org.gitlab.api.models;
 
 import java.time.LocalDateTime;
 import java.util.List;
