@@ -17,7 +17,7 @@ class GitlabProjectTest {
     void getIssue() throws IOException {
         GitlabProject project = CLIENT.newProject("test").create();
         GitlabIssue issue = project.newIssue("new issue").create();
-        assertEquals("new issue", project.getIssue(issue.getId()).getTitle());
+        assertEquals("new issue", project.getIssue(issue.getIid()).getTitle());
         project.delete();
     }
 }

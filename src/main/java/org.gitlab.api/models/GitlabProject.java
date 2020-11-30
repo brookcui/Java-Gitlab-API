@@ -169,18 +169,20 @@ public class GitlabProject extends GitlabComponent {
      * @throws IOException
      */
     public GitlabIssue getIssue(int issueIId) throws IOException {
-        return null; // TODO
+        GitlabIssue issue = newIssue(null);
+        return getHTTPRequestor().get(String.format("/projects/%d/issues/%d", id, issueIId), issue)
+                                 .withHTTPRequestor(getHTTPRequestor());
     }
 
     /**
      * Construct a new issue from this project of the given name
      * No HTTP request will be issued until you call {@link GitlabIssue#create()}
      *
-     * @param name - the name of the issue
+     * @param title - the title of the issue
      * @return the new issue from this project
      */
-    public GitlabIssue newIssue(String name) {
-        return null;
+    public GitlabIssue newIssue(String title) {
+        return new GitlabIssue(this, title).withHTTPRequestor(getHTTPRequestor());
     }
 
     /*

@@ -140,6 +140,7 @@ public class GitlabHTTPRequestor {
 
     /**
      * Post request, update the instance inplace
+     *
      * @param tailAPIUrl
      * @param body
      * @param instance
@@ -164,6 +165,11 @@ public class GitlabHTTPRequestor {
      */
     public <T> T post(String tailAPIUrl, T body, Class<T> type) throws IOException {
         return to(POST, tailAPIUrl, body, null, type, null);
+
+    }
+
+    public void delete(String tailAPIUrl) throws IOException {
+        to(POST, tailAPIUrl, null, null, null, null);
 
     }
 

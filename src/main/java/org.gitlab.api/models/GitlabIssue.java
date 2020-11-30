@@ -1,21 +1,23 @@
 package org.gitlab.api.models;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.gitlab.api.http.GitlabHTTPRequestor;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
         getterVisibility = JsonAutoDetect.Visibility.NONE
 )
-public class GitlabIssue extends GitlabComponent{
-    private int projectId; // required, project id === id
-    private int id; // required, issue id === iid
+public class GitlabIssue extends GitlabComponent {
+    @JsonIgnore
+    private final GitlabProject project; // required, project id === id
+
+    private int iid; // required, issue id === iid
 
     @JsonProperty(value = "author", access = JsonProperty.Access.WRITE_ONLY)
     private GitlabUser author;
@@ -52,15 +54,15 @@ public class GitlabIssue extends GitlabComponent{
     private int epicId;
 
 
-
-
     /**
      * Construct the issue with name
      * TODO: package private or protected
      *
+     * @param project
      * @param title
      */
-    public GitlabIssue(@JsonProperty("title") String title) {
+    public GitlabIssue(@JsonProperty("project") GitlabProject project, @JsonProperty("title") String title) {
+        this.project = project;
         this.title = title;
     }
 
@@ -73,26 +75,27 @@ public class GitlabIssue extends GitlabComponent{
 
     // create a new gitlab issue
     public GitlabIssue create() throws IOException {
-        return this; // TODO
+        return getHTTPRequestor().post(String.format("/projects/%d/issues", project.getId()), this);
     }
 
     public GitlabIssue delete() throws IOException {
-        return this; // TODO
+        getHTTPRequestor().delete(String.format("/projects/%d/issues/%d", project.getId(), iid));
+        return this;
     }
 
     public GitlabIssue update() throws IOException {
-        return this; // TODO
+        return getHTTPRequestor().put(String.format("/projects/%d/issues/%d", project.getId(), iid), this);
     }
 
     /*
      * Getters
      */
-    public int getProjectId() {
-        return projectId;
+    public GitlabProject getProject() {
+        return project;
     }
 
-    public int getId() {
-        return id;
+    public int getIid() {
+        return iid;
     }
 
     public GitlabUser getAuthor() {
@@ -199,12 +202,31 @@ public class GitlabIssue extends GitlabComponent{
 
     @Override
     public String toString() {
-        return title;
+        return "GitlabIssue{" +
+                "iid=" + iid +
+                ", author=" + author +
+                ", description=" + description +
+                ", state=" + state +
+                ", assignees=" + assignees +
+                ", upvotes=" + upvotes +
+                ", downvotes=" + downvotes +
+                ", mergeRequestCount=" + mergeRequestCount +
+                ", title=" + title +
+                ", updatedAt=" + updatedAt +
+                ", createdAt=" + createdAt +
+                ", closedAt=" + closedAt +
+                ", closedBy=" + closedBy +
+                ", subscribed=" + subscribed +
+                ", dueDate=" + dueDate +
+                ", webUrl=" + webUrl +
+                ", hasTasks=" + hasTasks +
+                ", epicId=" + epicId +
+                '}';
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(projectId, id);
+        return Objects.hash(project, iid);
     }
 
     @Override
@@ -217,8 +239,8 @@ public class GitlabIssue extends GitlabComponent{
             return false;
         }
         GitlabIssue that = (GitlabIssue) o;
-        return projectId == that.projectId &&
-                id == that.id &&
+        return project == that.project &&
+                iid == that.iid &&
                 upvotes == that.upvotes &&
                 downvotes == that.downvotes &&
                 mergeRequestCount == that.mergeRequestCount &&
