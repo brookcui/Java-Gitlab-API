@@ -2,6 +2,7 @@ package org.gitlab.api.core;
 
 import org.gitlab.api.http.Config;
 import org.gitlab.api.http.GitlabHTTPRequestor;
+import org.gitlab.api.http.Query;
 import org.gitlab.api.models.GitlabComponent;
 import org.gitlab.api.models.GitlabIssue;
 import org.gitlab.api.models.GitlabProject;
@@ -9,6 +10,7 @@ import org.gitlab.api.models.GitlabUser;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.List;
 
 public class GitlabAPIClient extends GitlabComponent {
@@ -58,7 +60,7 @@ public class GitlabAPIClient extends GitlabComponent {
 
     // Returns all issues the authenticated user has access to.
     public List<GitlabIssue> getAllIssues() throws IOException {
-        return null; // TODO
+        return getHTTPRequestor().getList("/issues", GitlabIssue[].class);
     }
 
     /*
@@ -66,14 +68,29 @@ public class GitlabAPIClient extends GitlabComponent {
      */
 
     // "get" == "List" in Gitlab API
+
+    /**
+     * Get <b>ALL</b> projects on Gitlab on the first page
+     * It's not only the projects owned by the user, but also public projects accessible to the user
+     *
+     * @return
+     * @throws IOException
+     */
     public List<GitlabProject> getAllProjects() throws IOException {
-        return null; // TODO
+        return getHTTPRequestor().getList("/projects", GitlabProject[].class);
     }
 
-    public List<GitlabProject> getUserProjects(GitlabUser user) throws IOException {
-        return null; // TODO
+    public List<GitlabProject> getOwnedProjects() throws IOException {
+        Query query = new Query().append("owned", "true");
+        return getHTTPRequestor().getList("/projects" + query, GitlabProject[].class);
     }
 
+    public List<GitlabProject> getUserProjects(String username) throws IOException {
+        return getHTTPRequestor().getList(String.format("/users/%s/projects", username), GitlabProject[].class);
+    }
+    public List<GitlabProject> getGroupProjects(String username) throws IOException {
+        return getHTTPRequestor().getList(String.format("/groups/%s/projects", username), GitlabProject[].class);
+    }
     /**
      * GET /projects/:id
      *
@@ -82,8 +99,7 @@ public class GitlabAPIClient extends GitlabComponent {
      * @throws IOException
      */
     public GitlabProject getProject(int projectId) throws IOException {
-        return getHTTPRequestor().get("/projects/" + projectId, GitlabProject.class)
-                                 .withHTTPRequestor(getHTTPRequestor());
+        return getHTTPRequestor().get("/projects/" + projectId, GitlabProject.class);
     }
 
     /**
@@ -96,85 +112,20 @@ public class GitlabAPIClient extends GitlabComponent {
      */
     public GitlabProject getProject(String namespace, String projectPath) throws IOException {
         return getHTTPRequestor()
-                .get("/projects/" + URLEncoder.encode(namespace + "/" + projectPath, "UTF-8"), GitlabProject.class)
-                .withHTTPRequestor(getHTTPRequestor());
-    }
-
-    // Deprecated. Instead, use newProject(). See below.
-    @Deprecated
-    public void createProject(GitlabProject project) throws IOException {
-        return; // TODO
+                .get("/projects/" + URLEncoder.encode(namespace + "/" + projectPath, "UTF-8"), GitlabProject.class);
     }
 
     public GitlabProject newProject(String name) {
         return new GitlabProject(name).withHTTPRequestor(getHTTPRequestor());
     }
 
-    // FIXME: do we need to create a project like this?
-    // FIXME: also, naming here can be tricky, and we should not name it like createProject().
-    //
-    // Client Code:
-    //
-    // User might just want to obtain a project instance:
-    // GitlabProject project = client.newProject("abcd"); // newProject returns a newly created GitlabProject object
-    // project.withDescription("").create(); // withDescription is a setter GitlabProject
-    //
-    // User might also want to talk the the server and actually a create a project on gitlab
-    // GitlabProject project = client.newProject("abcd").withDescription("what a good project").create();
-    // project.withDescription("desc").update();
-    // project.delete();
-    // GitlabIssue issue = project.newIssue("a bug").withDescription("a big bug").create()
-    //
-
-
-    @Deprecated
-    public void createProjectForUser(GitlabProject project, GitlabUser user) throws IOException {
-        return; // TODO
-    }
-
-
-    @Deprecated
-    // Deprecated. Added to Project class, project.update()
-    // "update" == "Edit" in Gitlab API
-    public void updateProject(GitlabProject project) throws IOException {
-        return; // TODO
-    }
-
-    @Deprecated
-    // add this method to Project class, project.fork()
-    public void forkProject(GitlabProject project) throws IOException {
-        return; // TODO
-    }
-
-    @Deprecated
-    // Deprecated, Added to Project class, project.delete()
-    public void deleteProject(GitlabProject project) throws IOException {
-        return; // TODO
-    }
-
-    /*
-     * Users
-     */
-
-    /*
-     * methods for create/edit/delete users are intentionally left blank since
-     * they are only available for administrators, but normal users for this
-     * API cannot have administrator access.
-     */
-
-    // FIXME: do normal users need get all users?
-    // for admin
-    @Deprecated
-    public List<GitlabUser> getAllUsers() throws IOException {
-        return null; // TODO
-    }
 
     public GitlabUser getUser(int userId) throws IOException {
-        return getHTTPRequestor().get("/users/" + userId, GitlabUser.class).withHTTPRequestor(getHTTPRequestor());
+        return getHTTPRequestor().get("/users/" + userId, GitlabUser.class);
     }
 
     // FIXME: or name with getCurrentAuthenticatedUser
     public GitlabUser getCurrentUser() throws IOException {
-        return getHTTPRequestor().get("/user", GitlabUser.class).withHTTPRequestor(getHTTPRequestor());
+        return getHTTPRequestor().get("/user", GitlabUser.class);
     }
 }

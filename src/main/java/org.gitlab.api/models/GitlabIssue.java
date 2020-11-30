@@ -3,10 +3,13 @@ package org.gitlab.api.models;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.gitlab.api.http.Body;
 import org.gitlab.api.http.GitlabHTTPRequestor;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,44 +18,51 @@ import java.util.Objects;
 )
 public class GitlabIssue extends GitlabComponent {
     @JsonIgnore
-    private GitlabProject project; // required, project id === id
-    @JsonProperty(value = "iid", access = JsonProperty.Access.WRITE_ONLY)
+    private GitlabProject project;
+
+    @JsonProperty("id")
+    private int id; // required, issue id === iid
+    @JsonProperty("iid")
     private int iid; // required, issue id === iid
 
-    @JsonProperty(value = "author", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("project_id")
+    private int projectId;
+    @JsonProperty("author")
     private GitlabUser author;
     @JsonProperty("description")
     private String description;
     @JsonProperty("state")
     private String state;
     @JsonProperty("assignees")
-    private List<GitlabUser> assignees;
-    @JsonProperty(value = "upvotes", access = JsonProperty.Access.WRITE_ONLY)
+    private List<GitlabUser> assignees = new ArrayList<>();
+    @JsonProperty("upvotes")
     private int upvotes;
-    @JsonProperty(value = "downvotes", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("downvotes")
     private int downvotes;
-    @JsonProperty(value = "merge_requests_count", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("merge_requests_count")
     private int mergeRequestCount;
     private String title; // required
-    @JsonProperty(value = "updated_at", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("labels")
+    private List<String> labels = new ArrayList<>();
+    @JsonProperty("updated_at")
     private LocalDateTime updatedAt;
-    @JsonProperty(value = "created_at", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("created_at")
     private LocalDateTime createdAt;
-    @JsonProperty(value = "closed_at", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("closed_at")
     private LocalDateTime closedAt;
-    @JsonProperty(value = "closed_by", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("closed_by")
     private GitlabUser closedBy;
-    @JsonProperty(value = "subscribed", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("subscribed")
     private boolean subscribed;
     @JsonProperty("due_date")
-    private LocalDateTime dueDate;
-    @JsonProperty(value = "web_url", access = JsonProperty.Access.WRITE_ONLY)
+    //@JsonDeserialize(using = DateDeserializer.class)
+    private LocalDate dueDate;
+    @JsonProperty("web_url")
     private String webUrl;
-    @JsonProperty(value = "has_tasks", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("has_tasks")
     private boolean hasTasks;
-    @JsonProperty(value = "epic_id", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("epic_id")
     private int epicId;
-
 
     /**
      * Construct the issue with name
@@ -64,8 +74,13 @@ public class GitlabIssue extends GitlabComponent {
         this.title = title;
     }
 
+    public List<String> getLabels() {
+        return labels;
+    }
+
     GitlabIssue withProject(GitlabProject project) {
         this.project = project;
+        this.projectId = project.getId();
         return this;
     }
 
@@ -77,22 +92,50 @@ public class GitlabIssue extends GitlabComponent {
 
     // create a new gitlab issue
     public GitlabIssue create() throws IOException {
-        return getHTTPRequestor().post(String.format("/projects/%d/issues", project.getId()), this);
+        Body body = new Body()
+                .putString("title", title)
+                .putIntArray("assignee_ids", assignees.stream().mapToInt(GitlabUser::getId).toArray())
+                .putStringArray("labels", labels)
+                .putString("description", description)
+                .putDate("due_date", dueDate);
+        return getHTTPRequestor().post(String.format("/projects/%d/issues", projectId), body, this);
     }
 
     public GitlabIssue delete() throws IOException {
-        getHTTPRequestor().delete(String.format("/projects/%d/issues/%d", project.getId(), iid));
+        getHTTPRequestor().delete(String.format("/projects/%d/issues/%d", projectId, iid));
         return this;
     }
 
     public GitlabIssue update() throws IOException {
-        return getHTTPRequestor().put(String.format("/projects/%d/issues/%d", project.getId(), iid), this);
+        Body body = new Body()
+                .putString("title", title)
+                .putIntArray("assignee_ids", assignees.stream().mapToInt(GitlabUser::getId).toArray())
+                .putString("description", description)
+                .putStringArray("labels", labels)
+                .putDate("due_date", dueDate);
+        return getHTTPRequestor().put(String.format("/projects/%d/issues/%d", projectId, iid), body, this);
     }
 
-    /*
-     * Getters
+    public GitlabIssue close() throws IOException {
+        Body body = new Body().putString("state_event", "close");
+        return getHTTPRequestor().put(String.format("/projects/%d/issues/%d", projectId, iid), body, this);
+    }
+
+    public GitlabIssue reopen() throws IOException {
+        Body body = new Body().putString("state_event", "reopen");
+        return getHTTPRequestor().put(String.format("/projects/%d/issues/%d", projectId, iid), body, this);
+    }
+
+    /**
+     * Lazily initialized project field
+     *
+     * @return
+     * @throws IOException
      */
-    public GitlabProject getProject() {
+    public GitlabProject getProject() throws IOException {
+        if (project == null) {
+            project = GitlabProject.fromId(getHTTPRequestor(), projectId);
+        }
         return project;
     }
 
@@ -152,7 +195,7 @@ public class GitlabIssue extends GitlabComponent {
         return subscribed;
     }
 
-    public LocalDateTime getDueDate() {
+    public LocalDate getDueDate() {
         return dueDate;
     }
 
@@ -168,6 +211,14 @@ public class GitlabIssue extends GitlabComponent {
         return epicId;
     }
 
+    public int getProjectId() {
+        return projectId;
+    }
+
+    public boolean isHasTasks() {
+        return hasTasks;
+    }
+
     /*
      * Setters
      * There will be no setter for projectId, id, author, upvotes, downvotes, mergeRequestCount, updatedAt, createdAt,
@@ -176,11 +227,6 @@ public class GitlabIssue extends GitlabComponent {
      */
     public GitlabIssue withDescription(String description) {
         this.description = description;
-        return this;
-    }
-
-    public GitlabIssue withState(String state) {
-        this.state = state;
         return this;
     }
 
@@ -194,18 +240,24 @@ public class GitlabIssue extends GitlabComponent {
         return this;
     }
 
-    public GitlabIssue withDueDate(LocalDateTime dueDate) {
+    public GitlabIssue withDueDate(LocalDate dueDate) {
         this.dueDate = dueDate;
         return this;
     }
 
+    public GitlabIssue withLabels(List<String> labels) {
+        this.labels = labels;
+        return this;
+    }
     // TODO: Add note and PR feature later?
 
 
     @Override
     public String toString() {
         return "GitlabIssue{" +
-                "iid=" + iid +
+                "id=" + id +
+                ", iid=" + iid +
+                ", projectId=" + projectId +
                 ", author=" + author +
                 ", description=" + description +
                 ", state=" + state +
@@ -214,6 +266,7 @@ public class GitlabIssue extends GitlabComponent {
                 ", downvotes=" + downvotes +
                 ", mergeRequestCount=" + mergeRequestCount +
                 ", title=" + title +
+                ", labels=" + labels +
                 ", updatedAt=" + updatedAt +
                 ", createdAt=" + createdAt +
                 ", closedAt=" + closedAt +
@@ -260,5 +313,9 @@ public class GitlabIssue extends GitlabComponent {
                 Objects.equals(closedBy, that.closedBy) &&
                 Objects.equals(dueDate, that.dueDate) &&
                 Objects.equals(webUrl, that.webUrl);
+    }
+
+    public int getId() {
+        return id;
     }
 }

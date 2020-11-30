@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class Query {
 
-    private class Tuple<T1, T2> {
+    private static class Tuple<T1, T2> {
         T1 _1;
         T2 _2;
 
@@ -34,10 +34,11 @@ public class Query {
      * @param name  Parameter name
      * @param value Parameter value
      * @return this
-     * @throws java.io.UnsupportedEncodingException If the provided value cannot be URL Encoded
+     * @throws UnsupportedEncodingException If the provided value cannot be URL Encoded
      */
     public Query append(final String name, final String value) throws UnsupportedEncodingException {
-        params.add(new Tuple<String, Tuple<String, String>>(name, new Tuple<String, String>(value, URLEncoder.encode(value, "UTF-8"))));
+        params.add(new Tuple<String, Tuple<String, String>>(name, new Tuple<String, String>(value, URLEncoder
+                .encode(value, "UTF-8"))));
         return this;
     }
 
@@ -48,7 +49,7 @@ public class Query {
      * @param name  Parameter name
      * @param value Parameter value
      * @return this
-     * @throws java.io.UnsupportedEncodingException If the provided value cannot be URL Encoded
+     * @throws UnsupportedEncodingException If the provided value cannot be URL Encoded
      */
     public <T> Query appendIf(final String name, final T value) throws UnsupportedEncodingException {
         if (value != null) {

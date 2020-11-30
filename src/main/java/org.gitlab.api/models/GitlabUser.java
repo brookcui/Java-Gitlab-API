@@ -46,7 +46,7 @@ public class GitlabUser extends GitlabComponent {
     @JsonProperty(value = "job_title", access = JsonProperty.Access.WRITE_ONLY)
     private String jobTitle;
 
-    public GitlabUser(@JsonProperty("id") int id) {
+     GitlabUser(@JsonProperty("id") int id) {
         this.id = id;
     }
 
@@ -59,14 +59,14 @@ public class GitlabUser extends GitlabComponent {
         return null;
     }
 
-@Override
+    @Override
     public GitlabUser withHTTPRequestor(GitlabHTTPRequestor requestor) {
         super.withHTTPRequestor(requestor);
         return this;
     }
 
 
-//
+    //
 //     * Getters
 //     */
     public int getId() {

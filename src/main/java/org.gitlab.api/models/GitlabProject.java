@@ -3,14 +3,13 @@ package org.gitlab.api.models;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.gitlab.api.core.Pagination;
+import org.gitlab.api.http.Body;
 import org.gitlab.api.http.GitlabHTTPRequestor;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -25,45 +24,45 @@ import java.util.Objects;
 public class GitlabProject extends GitlabComponent {
     private int id; // required
     private String description;
-    @JsonProperty(value = "name_with_namespace", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("name_with_namespace")
     private String nameWithNamespace;
 
-    @JsonProperty(value = "path_with_namespace", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("path_with_namespace")
     private String pathWithNamespace;
 
-    @JsonProperty(value = "default_branch", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("default_branch")
     private String defaultBranch;
 
     private String visibility;
 
-    @JsonProperty(value = "ssh_url_to_repo", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("ssh_url_to_repo")
     private String sshUrlToRepo;
 
-    @JsonProperty(value = "http_url_to_repo", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("http_url_to_repo")
     private String httpUrlToRepo;
 
-    @JsonProperty(value = "web_url", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("web_url")
     private String webUrl;
 
-    @JsonProperty(value = "readme_url", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("readme_url")
     private String readmeUrl;
 
     @JsonProperty("tag_list")
     private List<String> tagList = new ArrayList<>();
 
-    @JsonProperty(value = "owner", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("owner")
     private GitlabUser owner;
 
-    @JsonProperty(value = "name")
+    @JsonProperty("name")
     private String name; // required
 
-    @JsonProperty(value = "path")
+    @JsonProperty("path")
     private String path;
 
-    @JsonProperty(value = "issues_enabled", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("issues_enabled")
     private boolean issuesEnabled;
 
-    @JsonProperty(value = "open_issues_count", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("open_issues_count")
     private int openIssuesCount;
 
     @JsonProperty("merge_requests_enabled")
@@ -75,25 +74,25 @@ public class GitlabProject extends GitlabComponent {
     @JsonProperty("wiki_enabled")
     private boolean wikiEnabled;
 
-    @JsonProperty(value = "created_at", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("created_at")
     private LocalDateTime createdAt;
 
-    @JsonProperty(value = "last_activity_at", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("last_activity_at")
     private LocalDateTime lastActivityAt;
 
-    @JsonProperty(value = "creator_id", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("creator_id")
     private int creatorId;
 
-    @JsonProperty(value = "archived", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("archived")
     private boolean archived;
 
-    @JsonProperty(value = "forks_count", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("forks_count")
     private int forksCount;
 
-    @JsonProperty(value = "star_count", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("star_count")
     private int starCount;
 
-    @JsonProperty(value = "public_jobs", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("public_jobs")
     private boolean publicJobs;
 
     /**
@@ -104,6 +103,10 @@ public class GitlabProject extends GitlabComponent {
      */
     public GitlabProject(@JsonProperty("name") String name) {
         this.name = name;
+    }
+
+    static GitlabProject fromId(GitlabHTTPRequestor requestor, int id) throws IOException {
+        return requestor.get("/projects/" + id, GitlabProject.class);
     }
 
     @Override
@@ -124,7 +127,7 @@ public class GitlabProject extends GitlabComponent {
      * @throws IOException
      */
     public List<GitlabUser> getUsers() throws IOException {
-        return null; // TODO
+        return getHTTPRequestor().getList(String.format("/projects/%d/users", id), GitlabUser[].class);
     }
 
     /**
@@ -136,7 +139,10 @@ public class GitlabProject extends GitlabComponent {
      * @throws IOException
      */
     public List<GitlabIssue> getAllIssues() throws IOException {
-        return null; // TODO
+        List<GitlabIssue> issues = getHTTPRequestor()
+                .getList(String.format("/projects/%d/issues", id), GitlabIssue[].class);
+        issues.forEach(i -> i.withProject(this));
+        return issues;
     }
 
     /**
@@ -162,8 +168,8 @@ public class GitlabProject extends GitlabComponent {
      * @throws IOException
      */
     public GitlabIssue getIssue(int issueIId) throws IOException {
-        GitlabIssue issue = newIssue(null);
-        return getHTTPRequestor().get(String.format("/projects/%d/issues/%d", id, issueIId), issue);
+        return getHTTPRequestor().get(String.format("/projects/%d/issues/%d", id, issueIId), GitlabIssue.class)
+                                 .withProject(this);
     }
 
     /**
@@ -191,7 +197,10 @@ public class GitlabProject extends GitlabComponent {
      * @throws IOException
      */
     public List<GitlabCommit> getAllCommits() throws IOException {
-        return null; // TODO
+        List<GitlabCommit> commits = getHTTPRequestor()
+                .getList(String.format("/projects/%d/repository/commits", id), GitlabCommit[].class);
+        commits.forEach(i -> i.withProject(this));
+        return commits;
     }
 
     /**
@@ -218,8 +227,8 @@ public class GitlabProject extends GitlabComponent {
      * @throws IOException
      */
     public GitlabCommit getCommit(String sha) throws IOException {
-        GitlabCommit commit = new GitlabCommit(sha).withHTTPRequestor(getHTTPRequestor()).withProject(this);
-        return getHTTPRequestor().get(String.format("/projects/%d/repository/commits/%s", id, sha), commit);
+        return getHTTPRequestor().get(String.format("/projects/%d/repository/commits/%s", id, sha), GitlabCommit.class)
+                                 .withProject(this);
     }
 
     /*
@@ -235,7 +244,10 @@ public class GitlabProject extends GitlabComponent {
      * @throws IOException
      */
     public List<GitlabBranch> getAllBranches() throws IOException {
-        return null; // TODO
+        List<GitlabBranch> branches = getHTTPRequestor()
+                .getList(String.format("/projects/%d/repository/branches", id), GitlabBranch[].class);
+        branches.forEach(i -> i.withProject(this));
+        return branches;
     }
 
     /**
@@ -261,8 +273,9 @@ public class GitlabProject extends GitlabComponent {
      * @throws IOException
      */
     public GitlabBranch getBranch(String name) throws IOException {
-        GitlabBranch branch = newBranch(name);
-        return getHTTPRequestor().get(String.format("/projects/%d/repository/branches/%s", id, name), branch);
+        return getHTTPRequestor()
+                .get(String.format("/projects/%d/repository/branches/%s", id, name), GitlabBranch.class)
+                .withProject(this);
     }
 
     /**
@@ -278,14 +291,15 @@ public class GitlabProject extends GitlabComponent {
 
     public GitlabMergeRequest newMergeRequest(String sourceBranch, String targetBranch, String title) {
         return new GitlabMergeRequest(sourceBranch, targetBranch, title)
-                .withHTTPRequestor(getHTTPRequestor()).withProject(this);
+                .withHTTPRequestor(getHTTPRequestor())
+                .withProject(this);
 
     }
 
     public GitlabMergeRequest getMergeRequest(int mergeRequestIId) throws IOException {
-        GitlabMergeRequest mergeRequest = newMergeRequest(null, null, null);
         return getHTTPRequestor()
-                .get(String.format("/projects/%d/merge_requests/%d", id, mergeRequestIId), mergeRequest);
+                .get(String.format("/projects/%d/merge_requests/%d", id, mergeRequestIId), GitlabMergeRequest.class)
+                .withProject(this);
     }
 
     /**
@@ -296,7 +310,7 @@ public class GitlabProject extends GitlabComponent {
      * @return the new GitlabProject which is the result of forking this project
      */
     public GitlabProject fork() throws IOException {
-        return this; // TODO
+        return getHTTPRequestor().get(String.format("/projects/%d/fork", id), GitlabProject.class);
     }
 
     /**
@@ -306,10 +320,7 @@ public class GitlabProject extends GitlabComponent {
      * @return the new {@link GitlabProject} after creating
      */
     public GitlabProject create() throws IOException {
-        Map<String, String> map = new HashMap<String, String>() {{
-            put("name", name);
-        }};
-        return getHTTPRequestor().post("/projects", map, this);
+        return getHTTPRequestor().post("/projects", new Body().putString("name", name), this);
     }
 
     /**
@@ -330,7 +341,17 @@ public class GitlabProject extends GitlabComponent {
      * @return the updated {@link GitlabProject}
      */
     public GitlabProject update() throws IOException {
-        return getHTTPRequestor().put("/projects/" + id, this);
+        Body body = new Body()
+                .putString("name", name)
+                .putString("path", path)
+                .putString("description", description)
+                .putString("default_branch", defaultBranch)
+                .putString("visibility", visibility)
+                .putStringArray("tag_list", tagList)
+                .putBoolean("issues_enabled", issuesEnabled)
+                .putBoolean("jobs_enabled", jobsEnabled)
+                .putBoolean("wiki_enabled", wikiEnabled);
+        return getHTTPRequestor().put("/projects/" + id, body, this);
     }
 
 
@@ -480,6 +501,11 @@ public class GitlabProject extends GitlabComponent {
 
     public GitlabProject withPath(String path) {
         this.path = path;
+        return this;
+    }
+
+    public GitlabProject withIssuesEnabled(boolean issuesEnabled) {
+        this.issuesEnabled = issuesEnabled;
         return this;
     }
 

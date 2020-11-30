@@ -3,37 +3,34 @@ package org.gitlab.api.models;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.gitlab.api.http.Body;
 import org.gitlab.api.http.GitlabHTTPRequestor;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
-@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
-        getterVisibility = JsonAutoDetect.Visibility.NONE
-)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class GitlabBranch extends GitlabComponent {
-    @JsonProperty(value = "name", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("name")
     private final String name;
-    @JsonProperty(value = "merged", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("merged")
     private boolean merged;
-    @JsonProperty(value = "protected", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("protected")
     private boolean isProtected; // for "protected"
-    @JsonProperty(value = "default", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("default")
     private boolean isDefault; // for "default"
-    @JsonProperty(value = "can_push", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("can_push")
     private boolean canPush;
-    @JsonProperty(value = "web_url", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("web_url")
     private String webUrl;
-    @JsonProperty(value = "commit", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty("commit")
     private GitlabCommit commit; // corresponds to branch name or commit SHA to create branch from
 
 
     @JsonIgnore
     private GitlabProject project;
 
-    public GitlabBranch(@JsonProperty("name") String name) {
+    GitlabBranch(@JsonProperty("name") String name) {
         this.name = name;
     }
 
@@ -75,10 +72,10 @@ public class GitlabBranch extends GitlabComponent {
     }
 
     public GitlabBranch create(String ref) throws IOException {
-        Map<String, String> map = new HashMap<>();
-        map.put("branch", name);
-        map.put("ref", ref);
-        return getHTTPRequestor().post(String.format("/projects/%d/repository/branches", project.getId()), map, this);
+        Body body = new Body()
+                .putString("branch", name)
+                .putString("ref", ref);
+        return getHTTPRequestor().post(String.format("/projects/%d/repository/branches", project.getId()), body, this);
     }
 
     public GitlabBranch delete() throws IOException {

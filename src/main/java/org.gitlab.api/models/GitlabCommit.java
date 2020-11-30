@@ -8,6 +8,7 @@ import org.gitlab.api.http.GitlabHTTPRequestor;
 import org.gitlab.api.http.LocalDateTimeDeserializer;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,36 +16,36 @@ import java.util.Objects;
         getterVisibility = JsonAutoDetect.Visibility.NONE
 )
 public class GitlabCommit extends GitlabComponent {
-    @JsonProperty(value = "id", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty( "id")
     private final String id;
-    @JsonProperty(value = "short_id", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty( "short_id")
     private String shortId;
-    @JsonProperty(value = "title", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty( "title")
     private String title;
-    @JsonProperty(value = "author_name", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty( "author_name")
     private String authorName;
-    @JsonProperty(value = "author_email", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty( "author_email")
     private String authorEmail;
-    @JsonProperty(value = "committer_name", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty( "committer_name")
     private String committerName;
-    @JsonProperty(value = "committer_email", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty( "committer_email")
     private String committerEmail;
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonProperty(value = "created_at", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty( "created_at")
     private LocalDateTime createdAt;
-    @JsonProperty(value = "message", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty( "message")
     private String message;
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonProperty(value = "committed_date", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty( "committed_date")
     private LocalDateTime committedDate;
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonProperty(value = "authored_date", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty( "authored_date")
     private LocalDateTime authoredDate;
-    @JsonProperty(value = "parent_ids", access = JsonProperty.Access.WRITE_ONLY)
-    private List<String> parentIds;
-    @JsonProperty(value = "status", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty( "parent_ids")
+    private List<String> parentIds = new ArrayList<>();
+    @JsonProperty( "status")
     private String status;
-    @JsonProperty(value = "web_url", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty( "web_url")
     private String webUrl;
 
     @JsonIgnore
@@ -54,7 +55,7 @@ public class GitlabCommit extends GitlabComponent {
         this.project = project;
         return this;
     }
-    public GitlabCommit(@JsonProperty("id") String id) {
+    GitlabCommit(@JsonProperty("id") String id) {
         this.id = id;
     }
 

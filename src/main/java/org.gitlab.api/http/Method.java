@@ -5,6 +5,5 @@ package org.gitlab.api.http;
  * shaburov.o.a@gmail.com
  */
 public enum Method {
-
     GET, PUT, POST, PATCH, DELETE, HEAD, OPTIONS, TRACE;
 }

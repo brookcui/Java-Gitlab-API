@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.commons.io.IOUtils;
 import org.gitlab.api.core.AuthMethod;
+import org.gitlab.api.models.GitlabComponent;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -13,7 +14,6 @@ import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -36,13 +36,13 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import static org.gitlab.api.http.Method.*;
@@ -59,6 +59,7 @@ public class GitlabHTTPRequestor {
     private static final Pattern PAGE_PATTERN = Pattern.compile("([&|?])page=(\\d+)");
 
     private final Config config;
+
     public static final ObjectMapper MAPPER = new ObjectMapper()
             .registerModule(new JavaTimeModule())
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -72,6 +73,13 @@ public class GitlabHTTPRequestor {
         return config;
     }
 
+    public <T extends GitlabComponent> T withHTTPRequestor(T component) {
+        if (component != null) {
+            component.withHTTPRequestor(this);
+        }
+        return component;
+    }
+
     /**
      * Get request, update the instance inplace
      *
@@ -81,8 +89,8 @@ public class GitlabHTTPRequestor {
      * @return
      * @throws IOException
      */
-    public <T> T get(String tailAPIUrl, T instance) throws IOException {
-        return to(GET, tailAPIUrl, null, null, null, instance);
+    public <T extends GitlabComponent> T get(String tailAPIUrl, T instance) throws IOException {
+        return withHTTPRequestor(to(GET, tailAPIUrl, null, null, null, instance));
 
     }
 
@@ -95,12 +103,31 @@ public class GitlabHTTPRequestor {
      * @return
      * @throws IOException
      */
-    public <T> T get(String tailAPIUrl, Class<T> type) throws IOException {
-        return to(GET, tailAPIUrl, null, null, type, null);
+    public <T extends GitlabComponent> T get(String tailAPIUrl, Class<T> type) throws IOException {
+        return withHTTPRequestor(to(GET, tailAPIUrl, null, null, type, null));
     }
 
     /**
-     * Put request, update the instance inplace
+     * Get request, create a new instance
+     *
+     * @param tailAPIUrl
+     * @param type
+     * @param <T>
+     * @return
+     * @throws IOException
+     */
+    public <T extends GitlabComponent> List<T> getList(String tailAPIUrl, Class<T[]> type) throws IOException {
+        T[] array = to(GET, tailAPIUrl, null, null, type, null);
+        if (array == null) {
+            return Collections.emptyList();
+        }
+        List<T> list = Arrays.asList(array);
+        list.forEach(this::withHTTPRequestor);
+        return list;
+    }
+
+    /**
+     * Put request with body, update the instance inplace
      *
      * @param tailAPIUrl
      * @param instance
@@ -108,12 +135,12 @@ public class GitlabHTTPRequestor {
      * @return
      * @throws IOException
      */
-    public <T> T put(String tailAPIUrl, T instance) throws IOException {
-        return to(PUT, tailAPIUrl, instance, null, null, instance);
+    public <T extends GitlabComponent> T put(String tailAPIUrl, Body body, T instance) throws IOException {
+        return withHTTPRequestor(to(PUT, tailAPIUrl, body, null, null, instance));
     }
 
     /**
-     * Put request, create a new instance
+     * Put request with body, create a new instance
      *
      * @param tailAPIUrl
      * @param body
@@ -122,26 +149,12 @@ public class GitlabHTTPRequestor {
      * @return
      * @throws IOException
      */
-    public <T> T put(String tailAPIUrl, T body, Class<T> type) throws IOException {
-        return to(PUT, tailAPIUrl, body, null, type, null);
+    public <T extends GitlabComponent> T put(String tailAPIUrl, Body body, Class<T> type) throws IOException {
+        return withHTTPRequestor(to(PUT, tailAPIUrl, body, null, type, null));
     }
 
     /**
-     * Post request, update the instance inplace
-     *
-     * @param tailAPIUrl
-     * @param instance
-     * @param <T>
-     * @return
-     * @throws IOException
-     */
-    public <T> T post(String tailAPIUrl, T instance) throws IOException {
-        return to(POST, tailAPIUrl, instance, null, null, instance);
-
-    }
-
-    /**
-     * Post request, update the instance inplace
+     * Post request with body, update the instance inplace
      *
      * @param tailAPIUrl
      * @param body
@@ -150,8 +163,8 @@ public class GitlabHTTPRequestor {
      * @return
      * @throws IOException
      */
-    public <T> T post(String tailAPIUrl, Object body, T instance) throws IOException {
-        return to(POST, tailAPIUrl, body, null, null, instance);
+    public <T extends GitlabComponent> T post(String tailAPIUrl, Body body, T instance) throws IOException {
+        return withHTTPRequestor(to(POST, tailAPIUrl, body, null, null, instance));
 
     }
 
@@ -165,14 +178,13 @@ public class GitlabHTTPRequestor {
      * @return
      * @throws IOException
      */
-    public <T> T post(String tailAPIUrl, T body, Class<T> type) throws IOException {
-        return to(POST, tailAPIUrl, body, null, type, null);
+    public <T extends GitlabComponent> T post(String tailAPIUrl, Body body, Class<T> type) throws IOException {
+        return withHTTPRequestor(to(POST, tailAPIUrl, body, null, type, null));
 
     }
 
     public void delete(String tailAPIUrl) throws IOException {
         to(DELETE, tailAPIUrl, null, null, null, null);
-
     }
 
 
@@ -187,7 +199,7 @@ public class GitlabHTTPRequestor {
      * @return An object of type T
      * @throws IOException on gitlab api error
      */
-    private <T> T to(Method method, String tailAPIUrl, Object data, Map<String, File> attachments, Class<T> type, T instance) throws IOException {
+    private <T> T to(Method method, String tailAPIUrl, Body data, Map<String, File> attachments, Class<T> type, T instance) throws IOException {
         HttpURLConnection connection = null;
         try {
             System.out.println(method.name() + " " + config.getAPIUrl(tailAPIUrl));
@@ -200,6 +212,7 @@ public class GitlabHTTPRequestor {
             try {
                 return parse(connection, type, instance);
             } catch (IOException e) {
+                e.printStackTrace();
                 handleAPIError(e, connection);
             }
 
@@ -211,7 +224,7 @@ public class GitlabHTTPRequestor {
         }
     }
 
-    public <T> List<T> getAll(final String tailUrl, final Class<T[]> type) {
+    public <T> List<T> getTotal(final String tailUrl, final Class<T[]> type) {
         List<T> results = new ArrayList<>();
         Iterator<T[]> iterator = asIterator(tailUrl, type);
 
@@ -353,14 +366,14 @@ public class GitlabHTTPRequestor {
      * Convert object to JSON Stream and write to the connection
      *
      * @param connection
-     * @param object
+     * @param body
      * @throws IOException
      */
-    private void submitData(HttpURLConnection connection, Object object) throws IOException {
+    private void submitData(HttpURLConnection connection, Body body) throws IOException {
         connection.setDoOutput(true);
         connection.setRequestProperty("Content-Type", "application/json");
-        System.out.println("Body: " + MAPPER.writeValueAsString(object));
-        MAPPER.writeValue(connection.getOutputStream(), object);
+        System.out.println("Body: " + MAPPER.writeValueAsString(body.getMap()));
+        MAPPER.writeValue(connection.getOutputStream(), body.getMap());
     }
 
 
@@ -444,7 +457,7 @@ public class GitlabHTTPRequestor {
 
     private void handleAPIError(IOException e, HttpURLConnection connection) throws IOException {
         System.out.println("Error: " + connection.getResponseMessage());
-        System.out.println("Error: " +  IOUtils.toString(connection.getErrorStream(), StandardCharsets.UTF_8));
+        System.out.println("Error: " + IOUtils.toString(connection.getErrorStream(), StandardCharsets.UTF_8));
         if (e instanceof FileNotFoundException || // pass through 404 Not Found to allow the caller to handle it intelligently
                 e instanceof SocketTimeoutException ||
                 e instanceof ConnectException) {
