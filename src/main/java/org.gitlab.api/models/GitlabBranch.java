@@ -14,6 +14,7 @@ import java.util.Objects;
         getterVisibility = JsonAutoDetect.Visibility.NONE
 )
 public class GitlabBranch extends GitlabComponent {
+    @JsonProperty(value = "name", access = JsonProperty.Access.WRITE_ONLY)
     private final String name;
     @JsonProperty(value = "merged", access = JsonProperty.Access.WRITE_ONLY)
     private boolean merged;
@@ -25,15 +26,15 @@ public class GitlabBranch extends GitlabComponent {
     private boolean canPush;
     @JsonProperty(value = "web_url", access = JsonProperty.Access.WRITE_ONLY)
     private String webUrl;
+    @JsonProperty(value = "commit", access = JsonProperty.Access.WRITE_ONLY)
     private GitlabCommit commit; // corresponds to branch name or commit SHA to create branch from
-    @JsonIgnore
-    private final GitlabProject project;
 
-    public GitlabBranch(@JsonProperty("project") GitlabProject project,
-                        @JsonProperty("name") String name) {
-        this.project = project;
+
+    @JsonIgnore
+    private GitlabProject project;
+
+    public GitlabBranch(@JsonProperty("name") String name) {
         this.name = name;
-        // TODO: convert ref to GitlabCommit and initialize field commit
     }
 
     @Override
@@ -81,7 +82,8 @@ public class GitlabBranch extends GitlabComponent {
     }
 
     public GitlabBranch delete() throws IOException {
-        return this; // TODO
+        getHTTPRequestor().delete(String.format("/projects/%d/repository/branches/%s", project.getId(), name));
+        return this;
     }
 
     @Override
@@ -124,4 +126,13 @@ public class GitlabBranch extends GitlabComponent {
     public GitlabProject getProject() {
         return project;
     }
+
+    GitlabBranch withProject(GitlabProject project) {
+        this.project = project;
+        if (this.commit != null) {
+            commit.withProject(project);
+        }
+        return this;
+    }
+
 }

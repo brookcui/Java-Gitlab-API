@@ -15,8 +15,8 @@ import java.util.Objects;
 )
 public class GitlabIssue extends GitlabComponent {
     @JsonIgnore
-    private final GitlabProject project; // required, project id === id
-
+    private GitlabProject project; // required, project id === id
+    @JsonProperty(value = "iid", access = JsonProperty.Access.WRITE_ONLY)
     private int iid; // required, issue id === iid
 
     @JsonProperty(value = "author", access = JsonProperty.Access.WRITE_ONLY)
@@ -58,14 +58,16 @@ public class GitlabIssue extends GitlabComponent {
      * Construct the issue with name
      * TODO: package private or protected
      *
-     * @param project
      * @param title
      */
-    public GitlabIssue(@JsonProperty("project") GitlabProject project, @JsonProperty("title") String title) {
-        this.project = project;
+    public GitlabIssue(@JsonProperty("title") String title) {
         this.title = title;
     }
 
+    GitlabIssue withProject(GitlabProject project) {
+        this.project = project;
+        return this;
+    }
 
     @Override
     public GitlabIssue withHTTPRequestor(GitlabHTTPRequestor requestor) {

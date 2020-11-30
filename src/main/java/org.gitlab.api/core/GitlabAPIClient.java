@@ -8,9 +8,11 @@ import org.gitlab.api.models.GitlabProject;
 import org.gitlab.api.models.GitlabUser;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.List;
 
 public class GitlabAPIClient extends GitlabComponent {
+
 
     public static class Builder {
         private final String endpoint;
@@ -59,15 +61,6 @@ public class GitlabAPIClient extends GitlabComponent {
         return null; // TODO
     }
 
-    // FIXME: expose this method here?
-    // FIXME: cannot get global issue id easily
-    // deprecate name getSingleIssue
-    // for admin
-    @Deprecated
-    public GitlabIssue getIssue(int issueId) throws IOException {
-        return null; // TODO
-    }
-
     /*
      * Projects
      */
@@ -78,12 +71,6 @@ public class GitlabAPIClient extends GitlabComponent {
     }
 
     public List<GitlabProject> getUserProjects(GitlabUser user) throws IOException {
-        return null; // TODO
-    }
-
-    // Change name getSingleProject -> getProject
-    @Deprecated
-    public GitlabProject getSingleProject(int projectId) throws IOException {
         return null; // TODO
     }
 
@@ -108,7 +95,9 @@ public class GitlabAPIClient extends GitlabComponent {
      * @throws IOException
      */
     public GitlabProject getProject(String namespace, String projectPath) throws IOException {
-        return null; // TODO
+        return getHTTPRequestor()
+                .get("/projects/" + URLEncoder.encode(namespace + "/" + projectPath, "UTF-8"), GitlabProject.class)
+                .withHTTPRequestor(getHTTPRequestor());
     }
 
     // Deprecated. Instead, use newProject(). See below.
@@ -181,11 +170,11 @@ public class GitlabAPIClient extends GitlabComponent {
     }
 
     public GitlabUser getUser(int userId) throws IOException {
-        return null; // TODO
+        return getHTTPRequestor().get("/users/" + userId, GitlabUser.class).withHTTPRequestor(getHTTPRequestor());
     }
 
     // FIXME: or name with getCurrentAuthenticatedUser
     public GitlabUser getCurrentUser() throws IOException {
-        return null; // TODO
+        return getHTTPRequestor().get("/user", GitlabUser.class).withHTTPRequestor(getHTTPRequestor());
     }
 }

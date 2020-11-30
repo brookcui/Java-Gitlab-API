@@ -23,7 +23,7 @@ public abstract class GitlabComponent {
         return requestor;
     }
 
-    public GitlabComponent withHTTPRequestor(GitlabHTTPRequestor requestor) {
+    public  GitlabComponent withHTTPRequestor(GitlabHTTPRequestor requestor){
         this.requestor = requestor;
         return this;
     }

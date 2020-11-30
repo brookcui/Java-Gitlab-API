@@ -54,10 +54,10 @@ public class GitlabProject extends GitlabComponent {
     @JsonProperty(value = "owner", access = JsonProperty.Access.WRITE_ONLY)
     private GitlabUser owner;
 
-    @JsonProperty(value = "name", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty(value = "name")
     private String name; // required
 
-    @JsonProperty(value = "path", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty(value = "path")
     private String path;
 
     @JsonProperty(value = "issues_enabled", access = JsonProperty.Access.WRITE_ONLY)
@@ -114,9 +114,6 @@ public class GitlabProject extends GitlabComponent {
         }
         return this;
     }
-    /*
-     * Users
-     */
 
     /**
      * Get the users list of this project, using the default pagination
@@ -129,10 +126,6 @@ public class GitlabProject extends GitlabComponent {
     public List<GitlabUser> getUsers() throws IOException {
         return null; // TODO
     }
-
-    /*
-     * Issues
-     */
 
     /**
      * Get all the issues of this project, using the default pagination
@@ -170,8 +163,7 @@ public class GitlabProject extends GitlabComponent {
      */
     public GitlabIssue getIssue(int issueIId) throws IOException {
         GitlabIssue issue = newIssue(null);
-        return getHTTPRequestor().get(String.format("/projects/%d/issues/%d", id, issueIId), issue)
-                                 .withHTTPRequestor(getHTTPRequestor());
+        return getHTTPRequestor().get(String.format("/projects/%d/issues/%d", id, issueIId), issue);
     }
 
     /**
@@ -182,7 +174,7 @@ public class GitlabProject extends GitlabComponent {
      * @return the new issue from this project
      */
     public GitlabIssue newIssue(String title) {
-        return new GitlabIssue(this, title).withHTTPRequestor(getHTTPRequestor());
+        return new GitlabIssue(title).withHTTPRequestor(getHTTPRequestor()).withProject(this);
     }
 
     /*
@@ -226,7 +218,8 @@ public class GitlabProject extends GitlabComponent {
      * @throws IOException
      */
     public GitlabCommit getCommit(String sha) throws IOException {
-        return null; // TODO
+        GitlabCommit commit = new GitlabCommit(sha).withHTTPRequestor(getHTTPRequestor()).withProject(this);
+        return getHTTPRequestor().get(String.format("/projects/%d/repository/commits/%s", id, sha), commit);
     }
 
     /*
@@ -263,12 +256,13 @@ public class GitlabProject extends GitlabComponent {
      * https://docs.gitlab.com/ee/api/branches.html#get-single-repository-branch
      * GET /projects/:id/repository/branches/:branch
      *
-     * @param branchName - the name of the branch
+     * @param name - the name of the branch
      * @return the {@link GitlabBranch} of the given branch name
      * @throws IOException
      */
-    public GitlabBranch getBranch(String branchName) throws IOException {
-        return null; // TODO
+    public GitlabBranch getBranch(String name) throws IOException {
+        GitlabBranch branch = newBranch(name);
+        return getHTTPRequestor().get(String.format("/projects/%d/repository/branches/%s", id, name), branch);
     }
 
     /**
@@ -279,9 +273,20 @@ public class GitlabProject extends GitlabComponent {
      * @return
      */
     public GitlabBranch newBranch(String name) {
-        return new GitlabBranch(this, name).withHTTPRequestor(getHTTPRequestor());
+        return new GitlabBranch(name).withHTTPRequestor(getHTTPRequestor()).withProject(this);
     }
 
+    public GitlabMergeRequest newMergeRequest(String sourceBranch, String targetBranch, String title) {
+        return new GitlabMergeRequest(sourceBranch, targetBranch, title)
+                .withHTTPRequestor(getHTTPRequestor()).withProject(this);
+
+    }
+
+    public GitlabMergeRequest getMergeRequest(int mergeRequestIId) throws IOException {
+        GitlabMergeRequest mergeRequest = newMergeRequest(null, null, null);
+        return getHTTPRequestor()
+                .get(String.format("/projects/%d/merge_requests/%d", id, mergeRequestIId), mergeRequest);
+    }
 
     /**
      * Fork the project into current user's repo
@@ -314,7 +319,8 @@ public class GitlabProject extends GitlabComponent {
      * @return the previous {@link GitlabProject} before deleting
      */
     public GitlabProject delete() throws IOException {
-        return this; // TODO
+        getHTTPRequestor().delete("/projects/" + id);
+        return this;
     }
 
     /**
@@ -324,7 +330,7 @@ public class GitlabProject extends GitlabComponent {
      * @return the updated {@link GitlabProject}
      */
     public GitlabProject update() throws IOException {
-        return this; // TODO
+        return getHTTPRequestor().put("/projects/" + id, this);
     }
 
 

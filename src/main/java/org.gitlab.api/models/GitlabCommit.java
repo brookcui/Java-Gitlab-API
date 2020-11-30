@@ -1,8 +1,10 @@
 package org.gitlab.api.models;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.gitlab.api.http.GitlabHTTPRequestor;
 import org.gitlab.api.http.LocalDateTimeDeserializer;
 
 import java.time.LocalDateTime;
@@ -13,8 +15,8 @@ import java.util.Objects;
         getterVisibility = JsonAutoDetect.Visibility.NONE
 )
 public class GitlabCommit extends GitlabComponent {
-
-    private String id;
+    @JsonProperty(value = "id", access = JsonProperty.Access.WRITE_ONLY)
+    private final String id;
     @JsonProperty(value = "short_id", access = JsonProperty.Access.WRITE_ONLY)
     private String shortId;
     @JsonProperty(value = "title", access = JsonProperty.Access.WRITE_ONLY)
@@ -45,13 +47,41 @@ public class GitlabCommit extends GitlabComponent {
     @JsonProperty(value = "web_url", access = JsonProperty.Access.WRITE_ONLY)
     private String webUrl;
 
+    @JsonIgnore
+    private GitlabProject project;
+
+    GitlabCommit withProject(GitlabProject project) {
+        this.project = project;
+        return this;
+    }
     public GitlabCommit(@JsonProperty("id") String id) {
         this.id = id;
     }
 
     @Override
+    public GitlabCommit withHTTPRequestor(GitlabHTTPRequestor requestor) {
+        super.withHTTPRequestor(requestor);
+        return this;
+    }
+
+    @Override
     public String toString() {
-        return title;
+        return "GitlabCommit{" +
+                "id=" + id +
+                ", shortId=" + shortId +
+                ", title=" + title +
+                ", authorName=" + authorName +
+                ", authorEmail=" + authorEmail +
+                ", committerName=" + committerName +
+                ", committerEmail=" + committerEmail +
+                ", createdAt=" + createdAt +
+                ", message=" + message +
+                ", committedDate=" + committedDate +
+                ", authoredDate=" + authoredDate +
+                ", parentIds=" + parentIds +
+                ", status=" + status +
+                ", webUrl=" + webUrl +
+                '}';
     }
 
     @Override
@@ -90,6 +120,10 @@ public class GitlabCommit extends GitlabComponent {
 
     public String getTitle() {
         return title;
+    }
+
+    public String getShortId() {
+        return shortId;
     }
 
     public String getAuthorName() {
@@ -135,4 +169,9 @@ public class GitlabCommit extends GitlabComponent {
     private String getWebUrl() {
         return webUrl;
     }
+
+    public GitlabProject getProject() {
+        return project;
+    }
+
 }

@@ -14,17 +14,19 @@ import java.util.List;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
         getterVisibility = JsonAutoDetect.Visibility.NONE
 )
-public class GitlabMergeRequest extends GitlabComponent{
+public class GitlabMergeRequest extends GitlabComponent {
+    @JsonProperty(value = "id", access = JsonProperty.Access.WRITE_ONLY)
     private int id; // required, url of the project
-    private int iid;
-    private int projectId;
 
+    @JsonProperty(value = "iid", access = JsonProperty.Access.WRITE_ONLY)
+    private int iid;
     @JsonProperty(value = "author", access = JsonProperty.Access.WRITE_ONLY)
     private GitlabUser author;
     @JsonProperty("description")
     private String description;
     @JsonProperty("state")
     private String state;
+
     @JsonProperty("assignees")
     private List<GitlabUser> assignees;
     @JsonProperty(value = "upvotes", access = JsonProperty.Access.WRITE_ONLY)
@@ -47,18 +49,22 @@ public class GitlabMergeRequest extends GitlabComponent{
     private boolean subscribed;
     @JsonProperty(value = "web_url", access = JsonProperty.Access.WRITE_ONLY)
     private String webUrl;
-
+    @JsonProperty(value = "target_branch")
     private String targetBranch; // required
+    @JsonProperty(value = "source_branch")
     private String sourceBranch; // required
 
     @JsonIgnore
-    private final GitlabProject project;
+    private GitlabProject project;
 
-    public GitlabMergeRequest(@JsonProperty("project") GitlabProject project,
-                              @JsonProperty("source_branch") String sourceBranch,
+    GitlabMergeRequest withProject(GitlabProject project) {
+        this.project = project;
+        return this;
+    }
+
+    public GitlabMergeRequest(@JsonProperty("source_branch") String sourceBranch,
                               @JsonProperty("target_branch") String targetBranch,
                               @JsonProperty("title") String title) {
-        this.project = project;
         this.sourceBranch = sourceBranch;
         this.targetBranch = targetBranch;
         this.title = title;
@@ -72,15 +78,16 @@ public class GitlabMergeRequest extends GitlabComponent{
 
     // create a new gitlab issue
     public GitlabMergeRequest create() throws IOException {
-        return this; // TODO
+        return getHTTPRequestor().post(String.format("/projects/%d/merge_requests", project.getId()), this);
     }
 
     public GitlabMergeRequest delete() throws IOException {
-        return this; // TODO
+        getHTTPRequestor().delete(String.format("/projects/%d/merge_requests/%d", project.getId(), getIid()));
+        return this;
     }
 
     public GitlabMergeRequest update() throws IOException {
-        return this; // TODO
+        return getHTTPRequestor().put(String.format("/projects/%d/merge_requests/%d", project.getId(), getIid()), this);
     }
 
     public List<GitlabUser> getAllParticipants() throws IOException {
@@ -119,6 +126,86 @@ public class GitlabMergeRequest extends GitlabComponent{
         return this;
     }
 
+    public GitlabMergeRequest withTitle(String title) {
+        this.title = title;
+        return this;
+    }
     //TODO: diff??
 
+
+    public GitlabUser getAuthor() {
+        return author;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public List<GitlabUser> getAssignees() {
+        return assignees;
+    }
+
+    public int getUpvotes() {
+        return upvotes;
+    }
+
+    public int getDownvotes() {
+        return downvotes;
+    }
+
+    public int getMergeRequestCount() {
+        return mergeRequestCount;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getClosedAt() {
+        return closedAt;
+    }
+
+    public GitlabUser getClosedBy() {
+        return closedBy;
+    }
+
+    public boolean isSubscribed() {
+        return subscribed;
+    }
+
+    public String getWebUrl() {
+        return webUrl;
+    }
+
+    public String getTargetBranch() {
+        return targetBranch;
+    }
+
+    public String getSourceBranch() {
+        return sourceBranch;
+    }
+
+    public GitlabProject getProject() {
+        return project;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public int getIid() {
+        return iid;
+    }
 }

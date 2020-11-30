@@ -13,6 +13,7 @@ import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -41,6 +42,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import static org.gitlab.api.http.Method.*;
@@ -169,7 +171,7 @@ public class GitlabHTTPRequestor {
     }
 
     public void delete(String tailAPIUrl) throws IOException {
-        to(POST, tailAPIUrl, null, null, null, null);
+        to(DELETE, tailAPIUrl, null, null, null, null);
 
     }
 
@@ -188,7 +190,7 @@ public class GitlabHTTPRequestor {
     private <T> T to(Method method, String tailAPIUrl, Object data, Map<String, File> attachments, Class<T> type, T instance) throws IOException {
         HttpURLConnection connection = null;
         try {
-            System.out.println(config.getAPIUrl(tailAPIUrl));
+            System.out.println(method.name() + " " + config.getAPIUrl(tailAPIUrl));
             connection = setupConnection(config.getAPIUrl(tailAPIUrl), method);
             if (attachments != null) {
                 submitAttachments(connection, data, attachments);
@@ -357,7 +359,7 @@ public class GitlabHTTPRequestor {
     private void submitData(HttpURLConnection connection, Object object) throws IOException {
         connection.setDoOutput(true);
         connection.setRequestProperty("Content-Type", "application/json");
-        System.out.println(MAPPER.writeValueAsString(object));
+        System.out.println("Body: " + MAPPER.writeValueAsString(object));
         MAPPER.writeValue(connection.getOutputStream(), object);
     }
 
@@ -409,7 +411,7 @@ public class GitlabHTTPRequestor {
             }
             reader = new InputStreamReader(wrapStream(connection, connection.getInputStream()), StandardCharsets.UTF_8);
             String json = IOUtils.toString(reader);
-            System.out.println(json);
+            System.out.println("Response: " + json);
             if (type == String.class) {
                 return type.cast(json);
             }
@@ -441,6 +443,8 @@ public class GitlabHTTPRequestor {
     }
 
     private void handleAPIError(IOException e, HttpURLConnection connection) throws IOException {
+        System.out.println("Error: " + connection.getResponseMessage());
+        System.out.println("Error: " +  IOUtils.toString(connection.getErrorStream(), StandardCharsets.UTF_8));
         if (e instanceof FileNotFoundException || // pass through 404 Not Found to allow the caller to handle it intelligently
                 e instanceof SocketTimeoutException ||
                 e instanceof ConnectException) {

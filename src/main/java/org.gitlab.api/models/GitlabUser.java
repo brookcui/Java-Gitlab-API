@@ -3,6 +3,7 @@ package org.gitlab.api.models;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.gitlab.api.http.GitlabHTTPRequestor;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,7 +13,8 @@ import java.util.Objects;
         getterVisibility = JsonAutoDetect.Visibility.NONE
 )
 public class GitlabUser extends GitlabComponent {
-    private int id;
+    @JsonProperty(value = "id", access = JsonProperty.Access.WRITE_ONLY)
+    private final int id;
     @JsonProperty(value = "username", access = JsonProperty.Access.WRITE_ONLY)
     private String username;
     @JsonProperty(value = "name", access = JsonProperty.Access.WRITE_ONLY)
@@ -44,7 +46,7 @@ public class GitlabUser extends GitlabComponent {
     @JsonProperty(value = "job_title", access = JsonProperty.Access.WRITE_ONLY)
     private String jobTitle;
 
-    public GitlabUser(@JsonProperty("project") int id) {
+    public GitlabUser(@JsonProperty("id") int id) {
         this.id = id;
     }
 
@@ -53,43 +55,79 @@ public class GitlabUser extends GitlabComponent {
     }
 
     // TODO: Find a better way to maintain consistency between all other models
-    public static GitlabUser fromId(int id){
+    public static GitlabUser fromId(int id) {
         return null;
     }
 
+@Override
+    public GitlabUser withHTTPRequestor(GitlabHTTPRequestor requestor) {
+        super.withHTTPRequestor(requestor);
+        return this;
+    }
 
-    /*
-     * Getters
-     */
-    public int getId() { return id; }
 
-    public String getUsername() { return username; }
+//
+//     * Getters
+//     */
+    public int getId() {
+        return id;
+    }
 
-    public String getState() { return state; }
+    public String getUsername() {
+        return username;
+    }
 
-    public String getAvatarUrl() { return avatarUrl; }
+    public String getState() {
+        return state;
+    }
 
-    public String getWebUrl() { return webUrl; }
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public String getWebUrl() {
+        return webUrl;
+    }
 
-    public String getBio() { return bio; }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 
-    public String getBioHtml() { return bioHtml; }
+    public String getBio() {
+        return bio;
+    }
 
-    public String getPublicEmail() { return publicEmail; }
+    public String getBioHtml() {
+        return bioHtml;
+    }
 
-    public String getSkype() { return skype; }
+    public String getPublicEmail() {
+        return publicEmail;
+    }
 
-    public String getLinkedin() { return linkedin; }
+    public String getSkype() {
+        return skype;
+    }
 
-    public String getTwitter() { return twitter; }
+    public String getLinkedin() {
+        return linkedin;
+    }
 
-    public String getWebsiteUrl() { return websiteUrl; }
+    public String getTwitter() {
+        return twitter;
+    }
 
-    public String getOrganization() { return organization; }
+    public String getWebsiteUrl() {
+        return websiteUrl;
+    }
 
-    public String getJobTitle() { return jobTitle; }
+    public String getOrganization() {
+        return organization;
+    }
+
+    public String getJobTitle() {
+        return jobTitle;
+    }
 
     @Override
     public String toString() {
