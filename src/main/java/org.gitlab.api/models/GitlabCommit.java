@@ -42,7 +42,7 @@ public class GitlabCommit extends GitlabComponent {
     @JsonProperty( "authored_date")
     private LocalDateTime authoredDate;
     @JsonProperty( "parent_ids")
-    private List<String> parentIds = new ArrayList<>();
+    private final List<String> parentIds = new ArrayList<>();
     @JsonProperty( "status")
     private String status;
     @JsonProperty( "web_url")

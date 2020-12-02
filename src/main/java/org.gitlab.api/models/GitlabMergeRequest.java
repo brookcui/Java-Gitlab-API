@@ -251,4 +251,29 @@ public class GitlabMergeRequest extends GitlabComponent {
     public List<String> getLabels() {
         return labels;
     }
+
+    @Override
+    public String toString() {
+        return "GitlabMergeRequest{" +
+                "id=" + id +
+                ", iid=" + iid +
+                ", author=" + author +
+                ", description=" + description +
+                ", state=" + state +
+                ", assignees=" + assignees +
+                ", upvotes=" + upvotes +
+                ", downvotes=" + downvotes +
+                ", mergeRequestCount=" + mergeRequestCount +
+                ", title=" + title +
+                ", updatedAt=" + updatedAt +
+                ", createdAt=" + createdAt +
+                ", closedAt=" + closedAt +
+                ", closedBy=" + closedBy +
+                ", subscribed=" + subscribed +
+                ", webUrl=" + webUrl +
+                ", targetBranch=" + targetBranch +
+                ", sourceBranch=" + sourceBranch +
+                ", labels=" + labels +
+                '}';
+    }
 }

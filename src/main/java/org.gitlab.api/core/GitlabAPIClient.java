@@ -7,10 +7,10 @@ import org.gitlab.api.models.GitlabComponent;
 import org.gitlab.api.models.GitlabIssue;
 import org.gitlab.api.models.GitlabProject;
 import org.gitlab.api.models.GitlabUser;
+import org.gitlab.api.models.query.NewQuery;
 
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.List;
 
 public class GitlabAPIClient extends GitlabComponent {
@@ -88,9 +88,11 @@ public class GitlabAPIClient extends GitlabComponent {
     public List<GitlabProject> getUserProjects(String username) throws IOException {
         return getHTTPRequestor().getList(String.format("/users/%s/projects", username), GitlabProject[].class);
     }
+
     public List<GitlabProject> getGroupProjects(String username) throws IOException {
         return getHTTPRequestor().getList(String.format("/groups/%s/projects", username), GitlabProject[].class);
     }
+
     /**
      * GET /projects/:id
      *
@@ -127,5 +129,10 @@ public class GitlabAPIClient extends GitlabComponent {
     // FIXME: or name with getCurrentAuthenticatedUser
     public GitlabUser getCurrentUser() throws IOException {
         return getHTTPRequestor().get("/user", GitlabUser.class);
+    }
+
+
+    public <T extends GitlabComponent> List<T> query(NewQuery<T> query) throws IOException {
+        return getHTTPRequestor().getList(query.getEntireUrl(),query.getType());
     }
 }

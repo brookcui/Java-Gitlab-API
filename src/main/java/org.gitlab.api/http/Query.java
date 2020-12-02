@@ -34,7 +34,7 @@ public class Query {
      * @param name  Parameter name
      * @param value Parameter value
      * @return this
-     * @throws UnsupportedEncodingException If the provided value cannot be URL Encoded
+     * @throws java.io.UnsupportedEncodingException If the provided value cannot be URL Encoded
      */
     public Query append(final String name, final String value) throws UnsupportedEncodingException {
         params.add(new Tuple<String, Tuple<String, String>>(name, new Tuple<String, String>(value, URLEncoder
@@ -49,7 +49,7 @@ public class Query {
      * @param name  Parameter name
      * @param value Parameter value
      * @return this
-     * @throws UnsupportedEncodingException If the provided value cannot be URL Encoded
+     * @throws java.io.UnsupportedEncodingException If the provided value cannot be URL Encoded
      */
     public <T> Query appendIf(final String name, final T value) throws UnsupportedEncodingException {
         if (value != null) {
