@@ -2,8 +2,8 @@ package org.gitlab.api.models;
 
 import org.gitlab.api.http.Config;
 
-public interface AuthComponent {
+public interface GitlabComponent {
     Config getConfig();
 
-    AuthComponent withConfig(Config config);
+    GitlabComponent withConfig(Config config);
 }

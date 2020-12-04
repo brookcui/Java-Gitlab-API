@@ -1,12 +1,9 @@
-package org.gitlab.api.models.query;
+package org.gitlab.api.models;
 
 
 import org.gitlab.api.http.Config;
-import org.gitlab.api.http.GitlabRestClient;
-import org.gitlab.api.models.GitLabException;
-import org.gitlab.api.models.AuthComponent;
+import org.gitlab.api.http.GitlabHttpClient;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.time.LocalDate;
@@ -23,35 +20,42 @@ import java.util.stream.Collectors;
  * Models the Query
  * aspect of a URL
  */
-public abstract class NewQuery<T extends AuthComponent> {
+public abstract class GitlabQuery<T extends GitlabComponent> implements GitlabComponent {
     private final Class<T[]> type;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter
             .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
-
-
-    private final Config config;
-
-    public  List<T> query(){
-        try {
-            return GitlabRestClient.getList(config,getEntireUrl(),type);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new GitLabException(e);
-        }
-    };
-
+    private Config config;
 
     public abstract String getUrlPrefix();
+
+
+    public GitlabQuery(Config config, Class<T[]> type) {
+        this.config = config;
+        this.type = type;
+    }
+
+    @Override
+    public GitlabQuery<T> withConfig(Config config) {
+        this.config = config;
+        return this;
+    }
+
+
+    @Override
+    public Config getConfig() {
+        return config;
+    }
+
+    public List<T> query() {
+        return GitlabHttpClient.getList(config, getEntireUrl(), type);
+    }
+
 
     public String getEntireUrl() {
         return getUrlPrefix() + toString();
     }
 
-    public NewQuery(Class<T[]> type, Config config) {
-        this.type = type;
-        this.config = config;
-    }
 
     public Class<T[]> getType() {
         return type;
@@ -80,7 +84,7 @@ public abstract class NewQuery<T extends AuthComponent> {
      * @param value Parameter value
      * @return this
      */
-    public NewQuery<T> appendString(String name, String value) {
+    protected GitlabQuery<T> appendString(String name, String value) {
         if (value != null) {
             try {
                 params.add(new Tuple<>(name, new Tuple<>(value, URLEncoder.encode(value, "UTF-8"))));
@@ -92,30 +96,30 @@ public abstract class NewQuery<T extends AuthComponent> {
     }
 
 
-    public NewQuery<T> appendInt(String name, int value) {
+    protected GitlabQuery<T> appendInt(String name, int value) {
         return appendString(name, String.valueOf(value));
     }
 
-    public NewQuery<T> appendBoolean(String name, boolean value) {
+    protected GitlabQuery<T> appendBoolean(String name, boolean value) {
         return appendString(name, String.valueOf(value));
     }
 
-    public NewQuery<T> appendStrings(String name, List<String> strings) {
+    protected GitlabQuery<T> appendStrings(String name, List<String> strings) {
         return appendString(name, String.join(",", strings));
     }
 
-    public NewQuery<T> appendInts(String name, List<Integer> ints) {
+    protected GitlabQuery<T> appendInts(String name, List<Integer> ints) {
         return appendString(name, ints.stream().map(String::valueOf).collect(Collectors.joining(",")));
     }
 
-    public NewQuery<T> appendDate(String name, LocalDate date) {
+    protected GitlabQuery<T> appendDate(String name, LocalDate date) {
         if (date != null) {
             return appendString(name, date.format(DATE_FORMATTER));
         }
         return this;
     }
 
-    public NewQuery<T> appendDateTime(String name, LocalDateTime dateTime) {
+    protected GitlabQuery<T> appendDateTime(String name, LocalDateTime dateTime) {
         if (dateTime != null) {
             ZonedDateTime time = dateTime.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneOffset.UTC);
             return appendString(name, DATE_TIME_FORMATTER.format(time));
@@ -123,9 +127,6 @@ public abstract class NewQuery<T extends AuthComponent> {
         return this;
     }
 
-    public Config getConfig() {
-        return config;
-    }
     /**
      * Returns a Query suitable for appending
      * to a URI
@@ -147,5 +148,6 @@ public abstract class NewQuery<T extends AuthComponent> {
 
         return builder.toString();
     }
+
 
 }

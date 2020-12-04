@@ -10,47 +10,46 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
-@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
-        getterVisibility = JsonAutoDetect.Visibility.NONE
-)
-public class GitlabUser implements AuthComponent {
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+public class GitlabUser implements GitlabComponent {
+
+    @JsonProperty(value = "id")
+    private final int id;
+    @JsonProperty(value = "username")
+    private String username;
+    @JsonProperty(value = "name")
+    private String name;
+    @JsonProperty(value = "state")
+    private String state;
+    @JsonProperty(value = "avatar_url")
+    private String avatarUrl;
+    @JsonProperty(value = "web_url")
+    private String webUrl;
+    @JsonProperty(value = "created_at")
+    private LocalDateTime createdAt;
+    @JsonProperty(value = "bio")
+    private String bio;
+    @JsonProperty(value = "bio_html")
+    private String bioHtml;
+    @JsonProperty(value = "public_email")
+    private String publicEmail;
+    @JsonProperty(value = "skype")
+    private String skype;
+    @JsonProperty(value = "linkedin")
+    private String linkedin;
+    @JsonProperty(value = "twitter")
+    private String twitter;
+    @JsonProperty(value = "website_url")
+    private String websiteUrl;
+    @JsonProperty(value = "organization")
+    private String organization;
+    @JsonProperty(value = "job_title")
+    private String jobTitle;
+
     @JsonIgnore
     private Config config;
 
-    @JsonProperty(value = "id", access = JsonProperty.Access.WRITE_ONLY)
-    private final int id;
-    @JsonProperty(value = "username", access = JsonProperty.Access.WRITE_ONLY)
-    private String username;
-    @JsonProperty(value = "name", access = JsonProperty.Access.WRITE_ONLY)
-    private String name;
-    @JsonProperty(value = "state", access = JsonProperty.Access.WRITE_ONLY)
-    private String state;
-    @JsonProperty(value = "avatar_url", access = JsonProperty.Access.WRITE_ONLY)
-    private String avatarUrl;
-    @JsonProperty(value = "web_url", access = JsonProperty.Access.WRITE_ONLY)
-    private String webUrl;
-    @JsonProperty(value = "created_at", access = JsonProperty.Access.WRITE_ONLY)
-    private LocalDateTime createdAt;
-    @JsonProperty(value = "bio", access = JsonProperty.Access.WRITE_ONLY)
-    private String bio;
-    @JsonProperty(value = "bio_html", access = JsonProperty.Access.WRITE_ONLY)
-    private String bioHtml;
-    @JsonProperty(value = "public_email", access = JsonProperty.Access.WRITE_ONLY)
-    private String publicEmail;
-    @JsonProperty(value = "skype", access = JsonProperty.Access.WRITE_ONLY)
-    private String skype;
-    @JsonProperty(value = "linkedin", access = JsonProperty.Access.WRITE_ONLY)
-    private String linkedin;
-    @JsonProperty(value = "twitter", access = JsonProperty.Access.WRITE_ONLY)
-    private String twitter;
-    @JsonProperty(value = "website_url", access = JsonProperty.Access.WRITE_ONLY)
-    private String websiteUrl;
-    @JsonProperty(value = "organization", access = JsonProperty.Access.WRITE_ONLY)
-    private String organization;
-    @JsonProperty(value = "job_title", access = JsonProperty.Access.WRITE_ONLY)
-    private String jobTitle;
-
-     GitlabUser(@JsonProperty("id") int id) {
+    GitlabUser(@JsonProperty("id") int id) {
         this.id = id;
     }
 
@@ -64,9 +63,6 @@ public class GitlabUser implements AuthComponent {
     }
 
 
-    //
-//     * Getters
-//     */
     public int getId() {
         return id;
     }
@@ -173,5 +169,58 @@ public class GitlabUser implements AuthComponent {
     public GitlabUser withConfig(Config config) {
         this.config = config;
         return this;
+    }
+
+    public static class Query extends GitlabQuery<GitlabUser> {
+         Query(Config config) {
+            super(config, GitlabUser[].class);
+        }
+
+        public Query withUsername(String username) {
+             appendString("username", username);
+             return this;
+        }
+
+        public Query withActive(boolean active) {
+            appendBoolean("active", active);
+            return this;
+        }
+
+        public Query withBlocked(boolean blocked) {
+            appendBoolean("blocked", blocked);
+            return this;
+        }
+
+        public Query withExcludeInternal(boolean excludeInternal) {
+            appendBoolean("exclude_internal", excludeInternal);
+            return this;
+        }
+        @Override
+        public String getUrlPrefix() {
+            return "/users";
+        }
+    }
+    public static class ProjectQuery extends GitlabQuery<GitlabUser> {
+        private final int projectId;
+
+        ProjectQuery(Config config, int projectId) {
+            super(config, GitlabUser[].class);
+            this.projectId= projectId;
+        }
+
+        public ProjectQuery withSearch(String search) {
+            appendString("search", search);
+            return this;
+        }
+
+        public ProjectQuery withSkipUsers(List<Integer> skipUsers) {
+            appendInts("skip_users", skipUsers);
+            return this;
+        }
+
+        @Override
+        public String getUrlPrefix() {
+            return String.format("/projects/%d/users", projectId);
+        }
     }
 }

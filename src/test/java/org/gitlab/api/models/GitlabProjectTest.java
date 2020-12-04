@@ -1,22 +1,19 @@
 package org.gitlab.api.models;
 
-import org.gitlab.api.core.GitlabAPIClient;
-import org.gitlab.api.models.query.ProjectQuery;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GitlabProjectTest {
-    private static final GitlabAPIClient CLIENT = new GitlabAPIClient
-            .Builder("https://gitlab.com")
-            .withAccessToken(System.getenv("TOKEN"))
-            .build();
+    private static final GitlabAPIClient CLIENT = GitlabAPIClient
+            .fromAccessToken("https://gitlab.com", System.getenv("TOKEN"));
 
     @Test
-    void getIssue() throws IOException {
+    void getIssue() {
         GitlabProject project = CLIENT.newProject("test").create();
         GitlabIssue issue = project.newIssue("new issue").create();
         assertEquals("new issue", project.getIssue(issue.getIid()).getTitle());
@@ -24,18 +21,34 @@ class GitlabProjectTest {
     }
 
     @Test
-    void query() throws IOException {
-//        List<GitlabIssue> issues = CLIENT.query(query);
-//        issues.forEach(System.out::println);
-
-//        CommitQuery query = new CommitQuery(22777636).withRefName("master")
-//                                                     .withUntil(LocalDateTime.now().minusDays(1));
-//        List<GitlabCommit> commits = CLIENT.query(query);
-//        commits.forEach(System.out::println);
-        ProjectQuery query = new ProjectQuery(CLIENT.getConfig()).withOwned(true);
-        List<GitlabProject> projects = CLIENT.query(query);
+    void query() {
+        List<GitlabProject> projects = CLIENT.projects().withArchived(false).query();
         projects.forEach(System.out::println);
 
+    }
 
+    @Test
+    void queryIssues() {
+        GitlabProject project = CLIENT.getProject(22777636);
+        List<GitlabIssue> issues = project.issues().withLabels(Collections.singletonList("ccc")).query();
+        assertEquals(1, issues.size());
+        assertEquals(22777636, issues.get(0).getProjectId());
+        System.out.println(issues);
+    }
+
+    @Test
+    void queryBranch() {
+        GitlabProject project = CLIENT.getProject(22777636);
+        List<GitlabBranch> branches = project.branches().withSearch("test1").query();
+        assertEquals(2, branches.size());
+        assertTrue(branches.get(0).getName().contains("test1"));
+    }
+
+    @Test
+    void queryMergeRequest() {
+        GitlabProject project = CLIENT.getProject(22777636);
+        List<GitlabMergeRequest> mergeRequests =
+                project.mergeRequests().withAuthorId(project.getCreatorId()).withState("closed").query();
+        assertEquals(2, mergeRequests.size());
     }
 }

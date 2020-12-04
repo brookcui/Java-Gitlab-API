@@ -12,12 +12,79 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
-        getterVisibility = JsonAutoDetect.Visibility.NONE
-)
-public class GitlabCommit implements AuthComponent {
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+public class GitlabCommit implements GitlabComponent {
     @JsonIgnore
     private Config config;
+
+
+    @Override
+    public Config getConfig() {
+        return config;
+    }
+
+    @Override
+    public GitlabCommit withConfig(Config config) {
+        this.config = config;
+        return this;
+    }
+
+    public static class Query extends GitlabQuery<GitlabCommit> {
+        private final int projectId;
+
+        Query(Config config, int projectId) {
+            super(config, GitlabCommit[].class);
+            this.projectId = projectId;
+        }
+
+        public Query withRefName(String refName) {
+            appendString("ref_name", refName);
+            return this;
+        }
+
+        public Query withSince(LocalDateTime since) {
+            appendDateTime("since", since);
+            return this;
+        }
+
+        public Query withUntil(LocalDateTime until) {
+            appendDateTime("until", until);
+            return this;
+        }
+
+        public Query withPath(String path) {
+            appendString("path", path);
+            return this;
+        }
+
+        public Query withStats(boolean withStats) {
+            appendBoolean("with_stats", withStats);
+            return this;
+        }
+
+        public Query withFirstParent(boolean firstParent) {
+            appendBoolean("first_parent", firstParent);
+            return this;
+        }
+
+        /**
+         * List commits in order.
+         * <p>
+         * Possible values: default, topo. Defaults to default, the commits are shown in reverse chronological order.
+         *
+         * @param order
+         * @return
+         */
+        public Query withOrder(String order) {
+            appendString("order", order);
+            return this;
+        }
+
+        @Override
+        public String getUrlPrefix() {
+            return String.format("/projects/%d/repository/commits", projectId);
+        }
+    }
 
     @JsonProperty( "id")
     private final String id;
@@ -173,14 +240,4 @@ public class GitlabCommit implements AuthComponent {
         return project;
     }
 
-    @Override
-    public Config getConfig() {
-        return config;
-    }
-
-    @Override
-    public GitlabCommit withConfig(Config config) {
-        this.config = config;
-        return this;
-    }
 }

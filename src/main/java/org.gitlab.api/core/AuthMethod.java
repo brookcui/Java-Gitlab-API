@@ -15,11 +15,11 @@ public enum AuthMethod {
         this.tokenHeaderFormat = tokenHeaderFormat;
     }
 
-    public String getTokenHeaderName() {
+    public String headerName() {
         return tokenHeaderName;
     }
 
-    public String getTokenHeaderFormat() {
+    public String headerFormat() {
         return tokenHeaderFormat;
     }
 }

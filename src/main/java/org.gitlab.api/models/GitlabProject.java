@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.gitlab.api.core.Pagination;
 import org.gitlab.api.http.Body;
 import org.gitlab.api.http.Config;
-import org.gitlab.api.http.GitlabRestClient;
+import org.gitlab.api.http.GitlabHttpClient;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -20,83 +20,57 @@ import java.util.Objects;
  * @throws UnsupportedOperationException
  * @throws IOException
  */
-@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
-        getterVisibility = JsonAutoDetect.Visibility.NONE
-)
-public class GitlabProject implements AuthComponent {
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+public class GitlabProject implements GitlabComponent {
     @JsonIgnore
     private Config config;
-
     private int id; // required
     private String description;
     @JsonProperty("name_with_namespace")
     private String nameWithNamespace;
-
     @JsonProperty("path_with_namespace")
     private String pathWithNamespace;
-
     @JsonProperty("default_branch")
     private String defaultBranch;
-
     private String visibility;
-
     @JsonProperty("ssh_url_to_repo")
     private String sshUrlToRepo;
-
     @JsonProperty("http_url_to_repo")
     private String httpUrlToRepo;
-
     @JsonProperty("web_url")
     private String webUrl;
-
     @JsonProperty("readme_url")
     private String readmeUrl;
-
     @JsonProperty("tag_list")
     private List<String> tagList = new ArrayList<>();
-
     @JsonProperty("owner")
     private GitlabUser owner;
-
     @JsonProperty("name")
     private String name; // required
-
     @JsonProperty("path")
     private String path;
-
     @JsonProperty("issues_enabled")
     private boolean issuesEnabled;
-
     @JsonProperty("open_issues_count")
     private int openIssuesCount;
-
     @JsonProperty("merge_requests_enabled")
     private boolean mergeRequestsEnabled;
-
     @JsonProperty("jobs_enabled")
     private boolean jobsEnabled;
-
     @JsonProperty("wiki_enabled")
     private boolean wikiEnabled;
-
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
-
     @JsonProperty("last_activity_at")
     private LocalDateTime lastActivityAt;
-
     @JsonProperty("creator_id")
     private int creatorId;
-
     @JsonProperty("archived")
     private boolean archived;
-
     @JsonProperty("forks_count")
     private int forksCount;
-
     @JsonProperty("star_count")
     private int starCount;
-
     @JsonProperty("public_jobs")
     private boolean publicJobs;
 
@@ -109,50 +83,20 @@ public class GitlabProject implements AuthComponent {
     public GitlabProject(@JsonProperty("name") String name) {
         this.name = name;
     }
-    
-    
-    static GitlabProject fromId(Config config,int id) throws IOException {
-        return GitlabRestClient.get(config, "/projects/" + id, GitlabProject.class);
+
+    static GitlabProject fromId(Config config, int id) {
+        return GitlabHttpClient.get(config, "/projects/" + id, GitlabProject.class);
     }
 
-    /**
-     * Get the users list of this project, using the default pagination
-     * GET /projects/:id/users
-     * https://docs.gitlab.com/ee/api/projects.html#get-project-users
-     *
-     * @return a list of {@link GitlabUser}s
-     * @throws IOException
-     */
-    public List<GitlabUser> getUsers() throws IOException {
-        return GitlabRestClient.getList(config, String.format("/projects/%d/users", id), GitlabUser[].class);
+    @Override
+    public Config getConfig() {
+        return config;
     }
 
-    /**
-     * Get all the issues of this project, using the default pagination
-     * https://docs.gitlab.com/ee/api/issues.html#list-project-issues
-     * GET /projects/:id/issues
-     *
-     * @return a list of {@link GitlabIssue}s
-     * @throws IOException
-     */
-    public List<GitlabIssue> getAllIssues() throws IOException {
-        List<GitlabIssue> issues = GitlabRestClient
-                .getList(config, String.format("/projects/%d/issues", id), GitlabIssue[].class);
-        issues.forEach(i -> i.withProject(this));
-        return issues;
-    }
-
-    /**
-     * Get all the issues of this project, using the given pagination
-     * https://docs.gitlab.com/ee/api/issues.html#list-project-issues
-     * GET /projects/:id/issues
-     *
-     * @param pagination - the given pagination
-     * @return a list of {@link GitlabIssue}s
-     * @throws IOException
-     */
-    public List<GitlabIssue> getAllIssues(Pagination pagination) throws IOException {
-        return null; // TODO
+    @Override
+    public GitlabProject withConfig(Config config) {
+        this.config = config;
+        return this;
     }
 
 
@@ -163,11 +107,10 @@ public class GitlabProject implements AuthComponent {
      *
      * @param issueIId - the given issueIId
      * @return the {@link GitlabIssue} of the given issueIId
-     * @throws IOException
      */
-    public GitlabIssue getIssue(int issueIId) throws IOException {
-        return GitlabRestClient.get(config, String.format("/projects/%d/issues/%d", id, issueIId), GitlabIssue.class)
-                                 .withProject(this);
+    public GitlabIssue getIssue(int issueIId) {
+        return GitlabHttpClient.get(config, String.format("/projects/%d/issues/%d", id, issueIId), GitlabIssue.class)
+                               .withProject(this);
     }
 
     /**
@@ -181,38 +124,6 @@ public class GitlabProject implements AuthComponent {
         return new GitlabIssue(title).withConfig(config).withProject(this);
     }
 
-    /*
-     * Commits
-     */
-    // TODO: branch.getAllCommits()? project.getAllCommits("branch1")?
-
-    /**
-     * Get all the commits of this project in the default branch, using the default pagination
-     * https://docs.gitlab.com/ee/api/commits.html#list-repository-commits
-     * GET /projects/:id/repository/commits
-     *
-     * @return a list of {@link GitlabCommit}s
-     * @throws IOException
-     */
-    public List<GitlabCommit> getAllCommits() throws IOException {
-        List<GitlabCommit> commits = GitlabRestClient
-                .getList(config, String.format("/projects/%d/repository/commits", id), GitlabCommit[].class);
-        commits.forEach(i -> i.withProject(this));
-        return commits;
-    }
-
-    /**
-     * Get all the commits of this project in the default branch, using the given pagination
-     * https://docs.gitlab.com/ee/api/commits.html#list-repository-commits
-     * GET /projects/:id/repository/commits
-     *
-     * @param pagination - the given pagination
-     * @return a list of {@link GitlabCommit}s
-     * @throws IOException
-     */
-    public List<GitlabCommit> getAllCommits(Pagination pagination) throws IOException {
-        return null; // TODO
-    }
 
     /**
      * TODO: rename sha?
@@ -222,44 +133,13 @@ public class GitlabProject implements AuthComponent {
      *
      * @param sha - commit hash or name of a repository branch or tag
      * @return
-     * @throws IOException
      */
-    public GitlabCommit getCommit(String sha) throws IOException {
-        return GitlabRestClient.get(config, String.format("/projects/%d/repository/commits/%s", id, sha),
+    public GitlabCommit getCommit(String sha) {
+        return GitlabHttpClient.get(config, String.format("/projects/%d/repository/commits/%s", id, sha),
                 GitlabCommit.class).withProject(this);
     }
 
-    /*
-     * Branches
-     */
 
-    /**
-     * Get a list of repository branches from a project, sorted by name alphabetically, using the default pagination
-     * https://docs.gitlab.com/ee/api/branches.html#list-repository-branches
-     * GET /projects/:id/repository/branches
-     *
-     * @return the list of {@link GitlabBranch}s
-     * @throws IOException
-     */
-    public List<GitlabBranch> getAllBranches() throws IOException {
-        List<GitlabBranch> branches = GitlabRestClient
-                .getList(config, String.format("/projects/%d/repository/branches", id), GitlabBranch[].class);
-        branches.forEach(i -> i.withProject(this));
-        return branches;
-    }
-
-    /**
-     * Get a list of repository branches from a project, sorted by name alphabetically, using the given pagination
-     * https://docs.gitlab.com/ee/api/branches.html#list-repository-branches
-     * GET /projects/:id/repository/branches
-     *
-     * @param pagination - the given pagination
-     * @return the list of {@link GitlabBranch}s
-     * @throws IOException
-     */
-    public List<GitlabBranch> getAllBranches(Pagination pagination) throws IOException {
-        return null; // TODO
-    }
 
     /**
      * Get a single project repository branch based on the branch name
@@ -268,10 +148,9 @@ public class GitlabProject implements AuthComponent {
      *
      * @param name - the name of the branch
      * @return the {@link GitlabBranch} of the given branch name
-     * @throws IOException
      */
-    public GitlabBranch getBranch(String name) throws IOException {
-        return GitlabRestClient
+    public GitlabBranch getBranch(String name) {
+        return GitlabHttpClient
                 .get(config, String.format("/projects/%d/repository/branches/%s", id, name), GitlabBranch.class)
                 .withProject(this);
     }
@@ -294,10 +173,33 @@ public class GitlabProject implements AuthComponent {
 
     }
 
-    public GitlabMergeRequest getMergeRequest(int mergeRequestIId) throws IOException {
-        return GitlabRestClient.get(config, String.format(
+    public GitlabMergeRequest getMergeRequest(int mergeRequestIId) {
+        return GitlabHttpClient.get(config, String.format(
                 "/projects/%d/merge_requests/%d", id, mergeRequestIId), GitlabMergeRequest.class).withProject(this);
     }
+
+
+
+    public GitlabUser.ProjectQuery users() {
+        return new GitlabUser.ProjectQuery(config, id);
+    }
+
+    public GitlabBranch.Query branches() {
+        return new GitlabBranch.Query(config, id);
+    }
+
+    public GitlabCommit.Query commits() {
+        return new GitlabCommit.Query(config, id);
+    }
+
+    public GitlabIssue.ProjectQuery issues() {
+        return new GitlabIssue.ProjectQuery(config, id);
+    }
+
+    public GitlabMergeRequest.ProjectQuery mergeRequests() {
+        return new GitlabMergeRequest.ProjectQuery(config, id);
+    }
+
 
     /**
      * Fork the project into current user's repo
@@ -306,8 +208,8 @@ public class GitlabProject implements AuthComponent {
      *
      * @return the new GitlabProject which is the result of forking this project
      */
-    public GitlabProject fork() throws IOException {
-        return GitlabRestClient.get(config,String.format("/projects/%d/fork", id), GitlabProject.class);
+    public GitlabProject fork() {
+        return GitlabHttpClient.get(config, String.format("/projects/%d/fork", id), GitlabProject.class);
     }
 
     /**
@@ -316,8 +218,8 @@ public class GitlabProject implements AuthComponent {
      *
      * @return the new {@link GitlabProject} after creating
      */
-    public GitlabProject create() throws IOException {
-        return GitlabRestClient.post(config, "/projects", new Body().putString("name", name), this);
+    public GitlabProject create() {
+        return GitlabHttpClient.post(config, "/projects", new Body().putString("name", name), this);
     }
 
     /**
@@ -326,8 +228,8 @@ public class GitlabProject implements AuthComponent {
      *
      * @return the previous {@link GitlabProject} before deleting
      */
-    public GitlabProject delete() throws IOException {
-        GitlabRestClient.delete(config, "/projects/" + id);
+    public GitlabProject delete() {
+        GitlabHttpClient.delete(config, "/projects/" + id);
         return this;
     }
 
@@ -337,7 +239,7 @@ public class GitlabProject implements AuthComponent {
      *
      * @return the updated {@link GitlabProject}
      */
-    public GitlabProject update() throws IOException {
+    public GitlabProject update() {
         Body body = new Body()
                 .putString("name", name)
                 .putString("path", path)
@@ -348,13 +250,10 @@ public class GitlabProject implements AuthComponent {
                 .putBoolean("issues_enabled", issuesEnabled)
                 .putBoolean("jobs_enabled", jobsEnabled)
                 .putBoolean("wiki_enabled", wikiEnabled);
-        return GitlabRestClient.put(config, "/projects/" + id, body, this);
+        return GitlabHttpClient.put(config, "/projects/" + id, body, this);
     }
 
 
-    /*
-     * Getters
-     */
     public int getId() {
         return id;
     }
@@ -431,7 +330,6 @@ public class GitlabProject implements AuthComponent {
         return wikiEnabled;
     }
 
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -460,6 +358,11 @@ public class GitlabProject implements AuthComponent {
         return publicJobs;
     }
 
+    public GitlabProject withDescription(String description) {
+        this.description = description;
+        return this;
+    }
+
 
     /*
      * Setters
@@ -468,12 +371,6 @@ public class GitlabProject implements AuthComponent {
      * last_activity_at, archived, forks_count, star_count, public_jobs
      *
      */
-
-
-    public GitlabProject withDescription(String description) {
-        this.description = description;
-        return this;
-    }
 
     public GitlabProject withDefaultBranch(String defaultBranch) {
         this.defaultBranch = defaultBranch;
@@ -515,6 +412,7 @@ public class GitlabProject implements AuthComponent {
         this.wikiEnabled = wikiEnabled;
         return this;
     }
+
 
     @Override
     public String toString() {
@@ -586,17 +484,131 @@ public class GitlabProject implements AuthComponent {
         return Objects.hash(id);
     }
 
-    @Override
-    public Config getConfig() {
-        return this.config;
+    public static class Query extends GitlabQuery<GitlabProject> {
+        public Query(Config config) {
+            super(config, GitlabProject[].class);
+        }
+
+        public Query withArchived(boolean archived) {
+            appendBoolean("archived", archived);
+            return this;
+        }
+
+
+        public Query withIdAfter(int idAfter) {
+            appendInt("id_after", idAfter);
+            return this;
+        }
+
+        public Query withIdBefore(int idBefore) {
+            appendInt("id_before", idBefore);
+            return this;
+        }
+
+        public Query withLastActivityAfter(LocalDateTime lastActivityAfter) {
+            appendDateTime("last_activity_after", lastActivityAfter);
+            return this;
+        }
+
+        public Query withLastActivityBefore(LocalDateTime lastActivityBefore) {
+            appendDateTime("last_activity_before", lastActivityBefore);
+            return this;
+        }
+
+        public Query withMembership(boolean membership) {
+            appendBoolean("membership", membership);
+            return this;
+        }
+
+        public Query withMinAccessLevel(int minAccessLevel) {
+            appendInt("min_access_level", minAccessLevel);
+            return this;
+        }
+
+        public Query withOrderBy(String orderBy) {
+            appendString("order_by", orderBy);
+            return this;
+        }
+
+        public Query withOwned(boolean owned) {
+            appendBoolean("owned", owned);
+            return this;
+        }
+
+        public Query withRepositoryChecksumFailed(boolean repositoryChecksumFailed) {
+            appendBoolean("repository_checksum_failed", repositoryChecksumFailed);
+            return this;
+        }
+
+        public Query withRepositoryStorage(String repositoryStorage) {
+            appendString("repository_storage", repositoryStorage);
+            return this;
+        }
+
+        public Query withSearchNamespaces(boolean searchNamespaces) {
+            appendBoolean("search_namespaces", searchNamespaces);
+            return this;
+        }
+
+        public Query withSearch(String search) {
+            appendString("search", search);
+            return this;
+        }
+
+        public Query withSimple(boolean simple) {
+            appendBoolean("simple", simple);
+            return this;
+        }
+
+        public Query withSort(String sort) {
+            appendString("sort", sort);
+            return this;
+        }
+
+        public Query withStarred(boolean starred) {
+            appendBoolean("starred", starred);
+            return this;
+        }
+
+        public Query withStatistics(boolean statistics) {
+            appendBoolean("statistics", statistics);
+            return this;
+        }
+
+        public Query withVisibility(String visibility) {
+            appendString("visibility", visibility);
+            return this;
+        }
+
+        public Query withCheckSumFailed(boolean checkSumFailed) {
+            appendBoolean("wiki_checksum_failed", checkSumFailed);
+            return this;
+        }
+
+        public Query withCustomAttributes(boolean customAttributes) {
+            appendBoolean("with_custom_attributes", customAttributes);
+            return this;
+        }
+
+        public Query withIssuesEnabled(boolean issuesEnabled) {
+            appendBoolean("with_issues_enabled", issuesEnabled);
+            return this;
+        }
+
+        public Query withMergeRequestsEnabled(boolean mergeRequestsEnabled) {
+            appendBoolean("with_merge_requests_enabled", mergeRequestsEnabled);
+            return this;
+        }
+
+        public Query withProgrammingLanguage(String programmingLanguage) {
+            appendString("with_programming_language", programmingLanguage);
+            return this;
+        }
+
+        @Override
+        public String getUrlPrefix() {
+            return "/projects";
+        }
     }
 
-    @Override
-    public GitlabProject withConfig(Config config) {
-        if (owner != null) {
-            owner.withConfig(config);
-        }
-        this.config = config;
-        return this;
-    }
 }

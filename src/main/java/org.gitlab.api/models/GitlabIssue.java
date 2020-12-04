@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.gitlab.api.http.Body;
 import org.gitlab.api.http.Config;
-import org.gitlab.api.http.GitlabRestClient;
+import org.gitlab.api.http.GitlabHttpClient;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -14,10 +14,308 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
-        getterVisibility = JsonAutoDetect.Visibility.NONE
-)
-public class GitlabIssue implements AuthComponent {
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+public class GitlabIssue implements GitlabComponent {
+
+    @Override
+    public Config getConfig() {
+        return config;
+    }
+
+    @Override
+    public GitlabIssue withConfig(Config config) {
+        this.config = config;
+        return this;
+    }
+
+    public static class ProjectQuery extends GitlabQuery<GitlabIssue> {
+        private final int projectId;
+
+        public ProjectQuery(Config config, int projectId) {
+            super(config, GitlabIssue[].class);
+            this.projectId = projectId;
+        }
+
+        public ProjectQuery withAssigneeId(int assigneeId) {
+            appendInt("assignee_id", assigneeId);
+            return this;
+        }
+
+        public ProjectQuery withAssigneeUsernames(List<String> assigneeUsernames) {
+            appendStrings("assignee_username", assigneeUsernames);
+            return this;
+        }
+
+        public ProjectQuery withAuthorId(int authorId) {
+            appendInt("author_id", authorId);
+            return this;
+        }
+
+        public ProjectQuery withAuthorUsername(String authorUsername) {
+            appendString("author_username", authorUsername);
+            return this;
+        }
+
+        public ProjectQuery withConfidential(boolean confidential) {
+            appendBoolean("confidential", confidential);
+            return this;
+        }
+
+        public ProjectQuery withCreatedAfter(LocalDateTime createdAfter) {
+            appendDateTime("created_after", createdAfter);
+            return this;
+        }
+
+        public ProjectQuery withCreatedBefore(LocalDateTime createdBefore) {
+            appendDateTime("created_before", createdBefore);
+            return this;
+        }
+
+        /**
+         * Due date could be 0(no due date), overdue, week, month or next_month_and_previous_two_weeks according to
+         * gitlab api.
+         *
+         * @param dueDate due date
+         * @return
+         */
+        public ProjectQuery withDueDate(String dueDate) {
+            appendString("due_date", dueDate);
+            return this;
+        }
+
+        public ProjectQuery withIids(List<Integer> iids) {
+            appendInts("iids", iids);
+            return this;
+
+        }
+
+        public ProjectQuery withMilestone(String milestone) {
+            appendString("milestone", milestone);
+            return this;
+
+        }
+
+        public ProjectQuery withLabels(List<String> labels) {
+            appendStrings("labels", labels);
+            return this;
+
+        }
+
+        public ProjectQuery withMyReactionEmoji(String myReactionEmoji) {
+            appendString("my_reaction_emoji", myReactionEmoji);
+            return this;
+        }
+
+        public ProjectQuery withNonArchived(boolean nonArchived) {
+            appendBoolean("non_archived", nonArchived);
+            return this;
+        }
+
+        public ProjectQuery withNot(String not) {
+            appendString("not", not);
+            return this;
+        }
+
+        public ProjectQuery withOrderBy(String orderBy) {
+            appendString("order_by", orderBy);
+            return this;
+        }
+
+        public ProjectQuery withScope(String scope) {
+            appendString("scope", scope);
+            return this;
+        }
+
+        public ProjectQuery withSearch(String search) {
+            appendString("search", search);
+            return this;
+        }
+
+        public ProjectQuery withSort(String sort) {
+            appendString("sort", sort);
+            return this;
+        }
+
+        public ProjectQuery withUpdatedAfter(LocalDateTime updatedAfter) {
+            appendDateTime("updated_after", updatedAfter);
+            return this;
+        }
+
+        public ProjectQuery withUpdatedBefore(LocalDateTime updatedBefore) {
+            appendDateTime("updated_before", updatedBefore);
+            return this;
+        }
+
+        public ProjectQuery withWeight(int weight) {
+            appendInt("weight", weight);
+            return this;
+        }
+
+        public ProjectQuery withLabelsDetails(boolean labelsDetails) {
+            appendBoolean("with_labels_details", labelsDetails);
+            return this;
+        }
+
+
+        @Override
+        public String getUrlPrefix() {
+            return String.format("/projects/%d/issues", projectId);
+        }
+
+    }
+
+    public static class Query extends GitlabQuery<GitlabIssue> {
+
+        Query(Config config) {
+            super(config, GitlabIssue[].class);
+        }
+
+        public Query withAssigneeId(int assigneeId) {
+            appendInt("assignee_id", assigneeId);
+            return this;
+        }
+
+        public Query withAssigneeUsernames(List<String> assigneeUsernames) {
+            appendStrings("assignee_username", assigneeUsernames);
+            return this;
+        }
+
+        public Query withAuthorId(int authorId) {
+            appendInt("author_id", authorId);
+            return this;
+        }
+
+        public Query withAuthorUsername(String authorUsername) {
+            appendString("author_username", authorUsername);
+            return this;
+        }
+
+        public Query withConfidential(boolean confidential) {
+            appendBoolean("confidential", confidential);
+            return this;
+        }
+
+        public Query withCreatedAfter(LocalDateTime createdAfter) {
+            appendDateTime("created_after", createdAfter);
+            return this;
+        }
+
+        public Query withCreatedBefore(LocalDateTime createdBefore) {
+            appendDateTime("created_before", createdBefore);
+            return this;
+        }
+
+        /**
+         * Due date could be 0(no due date), overdue, week, month or next_month_and_previous_two_weeks according to
+         * gitlab api.
+         *
+         * @param dueDate due date
+         * @return
+         */
+        public Query withDueDate(String dueDate) {
+            appendString("due_date", dueDate);
+            return this;
+        }
+
+        public Query withIids(List<Integer> iids) {
+            appendInts("iids", iids);
+            return this;
+
+        }
+
+        public Query withIn(String in) {
+            appendString("in", in);
+            return this;
+
+        }
+
+        public Query withIterationId(int iterationId) {
+            appendInt("iteration_id", iterationId);
+            return this;
+
+        }
+
+        public Query withIterationTitle(String iterationTitle) {
+
+            appendString("iteration_title", iterationTitle);
+            return this;
+
+        }
+
+        public Query withMilestone(String milestone) {
+            appendString("milestone", milestone);
+            return this;
+
+        }
+
+        public Query withLabels(List<String> labels) {
+            appendStrings("labels", labels);
+            return this;
+
+        }
+
+        public Query withMyReactionEmoji(String myReactionEmoji) {
+            appendString("my_reaction_emoji", myReactionEmoji);
+            return this;
+        }
+
+        public Query withNonArchived(boolean nonArchived) {
+            appendBoolean("non_archived", nonArchived);
+            return this;
+        }
+
+        public Query withNot(String not) {
+            appendString("not", not);
+            return this;
+        }
+
+        public Query withOrderBy(String orderBy) {
+            appendString("order_by", orderBy);
+            return this;
+        }
+
+        public Query withScope(String scope) {
+            appendString("scope", scope);
+            return this;
+        }
+
+        public Query withSearch(String search) {
+            appendString("search", search);
+            return this;
+        }
+
+        public Query withSort(String sort) {
+            appendString("sort", sort);
+            return this;
+        }
+
+        public Query withUpdatedAfter(LocalDateTime updatedAfter) {
+            appendDateTime("updated_after", updatedAfter);
+            return this;
+        }
+
+        public Query withUpdatedBefore(LocalDateTime updatedBefore) {
+            appendDateTime("updated_before", updatedBefore);
+            return this;
+        }
+
+        public Query withWeight(int weight) {
+            appendInt("weight", weight);
+            return this;
+        }
+
+        public Query withLabelsDetails(boolean labelsDetails) {
+            appendBoolean("with_labels_details", labelsDetails);
+            return this;
+        }
+
+
+        @Override
+        public String getUrlPrefix() {
+            return "/issues";
+        }
+    }
+
     @JsonIgnore
     private Config config;
 
@@ -59,7 +357,6 @@ public class GitlabIssue implements AuthComponent {
     @JsonProperty("subscribed")
     private boolean subscribed;
     @JsonProperty("due_date")
-    //@JsonDeserialize(using = DateDeserializer.class)
     private LocalDate dueDate;
     @JsonProperty("web_url")
     private String webUrl;
@@ -89,48 +386,69 @@ public class GitlabIssue implements AuthComponent {
     }
 
     // create a new gitlab issue
-    public GitlabIssue create() throws IOException {
+    public GitlabIssue create() {
         Body body = new Body()
                 .putString("title", title)
                 .putIntArray("assignee_ids", assignees.stream().mapToInt(GitlabUser::getId).toArray())
                 .putStringArray("labels", labels)
                 .putString("description", description)
                 .putDate("due_date", dueDate);
-        return GitlabRestClient.post(config, String.format("/projects/%d/issues", projectId), body, this);
+        return GitlabHttpClient.post(config, String.format("/projects/%d/issues", projectId), body, this);
     }
 
-    public GitlabIssue delete() throws IOException {
-        GitlabRestClient.delete(config, String.format("/projects/%d/issues/%d", projectId, iid));
+    public GitlabIssue delete() {
+        GitlabHttpClient.delete(config, String.format("/projects/%d/issues/%d", projectId, iid));
         return this;
     }
 
-    public GitlabIssue update() throws IOException {
+    public GitlabIssue update() {
         Body body = new Body()
                 .putString("title", title)
                 .putIntArray("assignee_ids", assignees.stream().mapToInt(GitlabUser::getId).toArray())
                 .putString("description", description)
                 .putStringArray("labels", labels)
                 .putDate("due_date", dueDate);
-        return GitlabRestClient.put(config, String.format("/projects/%d/issues/%d", projectId, iid), body, this);
+        return GitlabHttpClient.put(config, String.format("/projects/%d/issues/%d", projectId, iid), body, this);
     }
 
-    public GitlabIssue close() throws IOException {
+    public GitlabIssue close() {
         Body body = new Body().putString("state_event", "close");
-        return GitlabRestClient.put(config,String.format("/projects/%d/issues/%d", projectId, iid), body, this);
+        return GitlabHttpClient.put(config, String.format("/projects/%d/issues/%d", projectId, iid), body, this);
     }
 
-    public GitlabIssue reopen() throws IOException {
+    public GitlabIssue reopen() {
         Body body = new Body().putString("state_event", "reopen");
-        return GitlabRestClient.put(config, String.format("/projects/%d/issues/%d", projectId, iid), body, this);
+        return GitlabHttpClient.put(config, String.format("/projects/%d/issues/%d", projectId, iid), body, this);
     }
 
+    public List<GitlabMergeRequest> getRelatedMergeRequests() {
+        List<GitlabMergeRequest> mergeRequests = GitlabHttpClient
+                .getList(config,
+                        String.format("/projects/%d/issues/%d/related_merge_requests", projectId, iid),
+                        GitlabMergeRequest[].class);
+        mergeRequests.forEach(mergeRequest -> mergeRequest.withProject(getProject()));
+        return mergeRequests;
+    }
+
+    /**
+     * Todo a bettername
+     * @return
+     */
+    public List<GitlabMergeRequest> getMergeRequestsClosedOnMerge() {
+        List<GitlabMergeRequest> mergeRequests = GitlabHttpClient
+                .getList(config,
+                        String.format("/projects/%d/issues/%d/closed_by", projectId, iid),
+                        GitlabMergeRequest[].class);
+        mergeRequests.forEach(mergeRequest -> mergeRequest.withProject(getProject()));
+        return mergeRequests;
+    }
     /**
      * Lazily initialized project field
      *
      * @return
      * @throws IOException
      */
-    public GitlabProject getProject() throws IOException {
+    public GitlabProject getProject() {
         if (project == null) {
             project = GitlabProject.fromId(config, projectId);
         }
@@ -317,14 +635,4 @@ public class GitlabIssue implements AuthComponent {
         return id;
     }
 
-    @Override
-    public Config getConfig() {
-        return config;
-    }
-
-    @Override
-    public GitlabIssue withConfig(Config config) {
-        this.config = config;
-        return this;
-    }
 }

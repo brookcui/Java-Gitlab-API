@@ -1,12 +1,9 @@
 package org.gitlab.api.http;
 
 import org.gitlab.api.core.AuthMethod;
-import org.gitlab.api.core.GitlabAPIClient;
+import org.gitlab.api.models.GitlabAPIClient;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.Proxy;
-import java.net.URL;
 
 public class Config {
     private final String endpoint;
@@ -30,11 +27,12 @@ public class Config {
         this.apiNamespace = DEFAULT_API_NAMESPACE;
     }
 
-    public URL getAPIUrl(String tailAPIUrl) throws MalformedURLException {
+
+    public String getAPIUrl(String tailAPIUrl) {
         if (!tailAPIUrl.startsWith("/")) {
             tailAPIUrl = "/" + tailAPIUrl;
         }
-        return new URL(endpoint + apiNamespace + tailAPIUrl);
+        return endpoint + apiNamespace + tailAPIUrl;
     }
 
     public Proxy getProxy() {
@@ -42,7 +40,7 @@ public class Config {
     }
 
 
-    public AuthMethod getAuthMethod() {
+    public AuthMethod authMethod() {
         return authMethod;
     }
 
@@ -51,11 +49,9 @@ public class Config {
     }
 
 
-
     public int getConnectionTimeout() {
         return connectionTimeout;
     }
-
 
 
     public String getUserAgent() {
@@ -88,7 +84,7 @@ public class Config {
         this.proxy = proxy;
     }
 
-    public String getToken() {
+    public String token() {
         return token;
     }
 }

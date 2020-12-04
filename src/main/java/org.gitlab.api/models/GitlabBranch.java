@@ -5,18 +5,18 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.gitlab.api.http.Body;
 import org.gitlab.api.http.Config;
-import org.gitlab.api.http.GitlabRestClient;
+import org.gitlab.api.http.GitlabHttpClient;
 
 import java.io.IOException;
 import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabBranch implements AuthComponent {
-    @JsonIgnore
-    private Config config;
+public class GitlabBranch implements GitlabComponent {
 
     @JsonProperty("name")
     private final String name;
+    @JsonIgnore
+    private Config config;
     @JsonProperty("merged")
     private boolean merged;
     @JsonProperty("protected")
@@ -29,11 +29,8 @@ public class GitlabBranch implements AuthComponent {
     private String webUrl;
     @JsonProperty("commit")
     private GitlabCommit commit; // corresponds to branch name or commit SHA to create branch from
-
-
     @JsonIgnore
     private GitlabProject project;
-
     GitlabBranch(@JsonProperty("name") String name) {
         this.name = name;
     }
@@ -46,9 +43,6 @@ public class GitlabBranch implements AuthComponent {
     @Override
     public GitlabBranch withConfig(Config config) {
         this.config = config;
-        if (commit != null) {
-            commit.withConfig(config);
-        }
         return this;
     }
 
@@ -80,16 +74,16 @@ public class GitlabBranch implements AuthComponent {
         return commit;
     }
 
-    public GitlabBranch create(String ref) throws IOException {
+    public GitlabBranch create(String ref) {
         Body body = new Body()
                 .putString("branch", name)
                 .putString("ref", ref);
-        return GitlabRestClient.post(config, String.format("/projects/%d/repository/branches", project.getId()), body,
-                this);
+        return GitlabHttpClient
+                .post(config, String.format("/projects/%d/repository/branches", project.getId()), body, this);
     }
 
-    public GitlabBranch delete() throws IOException {
-        GitlabRestClient.delete(config, String.format("/projects/%d/repository/branches/%s", project.getId(), name));
+    public GitlabBranch delete() {
+        GitlabHttpClient.delete(config, String.format("/projects/%d/repository/branches/%s", project.getId(), name));
         return this;
     }
 
@@ -140,6 +134,27 @@ public class GitlabBranch implements AuthComponent {
             commit.withProject(project);
         }
         return this;
+    }
+
+    public static class Query extends GitlabQuery<GitlabBranch> {
+
+        private final int projectId;
+
+        Query(Config config, int projectId) {
+            super(config, GitlabBranch[].class);
+            this.projectId = projectId;
+        }
+
+
+        public Query withSearch(String search) {
+            appendString("search", search);
+            return this;
+        }
+
+        @Override
+        public String getUrlPrefix() {
+            return String.format("/projects/%d/repository/branches", projectId);
+        }
     }
 
 }
