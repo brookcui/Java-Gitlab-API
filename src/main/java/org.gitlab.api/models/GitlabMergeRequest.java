@@ -168,10 +168,8 @@ public class GitlabMergeRequest implements GitlabComponent {
 
     }
     public static class Query extends GitlabQuery<GitlabMergeRequest> {
-        private final int projectId;
-        Query(Config config, int projectId) {
+        Query(Config config) {
             super(config, GitlabMergeRequest[].class);
-            this.projectId = projectId;
         }
 
         public Query withState(String state) {

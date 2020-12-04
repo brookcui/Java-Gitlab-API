@@ -42,6 +42,7 @@ public class GitlabAPIClient {
         return new GitlabProject.Query(config);
     }
 
+    public GitlabMergeRequest.Query mergeRequests() {return new GitlabMergeRequest.Query(config);}
     public List<GitlabProject> getUserProjects(String username) {
         return GitlabHttpClient.getList(config, String.format("/users/%s/projects", username), GitlabProject[].class);
     }
