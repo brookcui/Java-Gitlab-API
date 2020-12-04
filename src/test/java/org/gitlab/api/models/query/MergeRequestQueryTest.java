@@ -17,7 +17,7 @@ class MergeRequestQueryTest {
 
     @Test
     public void test() throws IOException {
-        MergeRequestQuery query = new MergeRequestQuery().withCreatedBefore(LocalDateTime.now())
+        MergeRequestQuery query = new MergeRequestQuery(CLIENT.getConfig()).withCreatedBefore(LocalDateTime.now())
                                                          .withLabels(Collections.singletonList("aaaaa"));
         List<GitlabMergeRequest> mrs = CLIENT.query(query);
         mrs.forEach(System.out::println);

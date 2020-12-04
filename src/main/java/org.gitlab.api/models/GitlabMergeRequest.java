@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.gitlab.api.core.Pagination;
 import org.gitlab.api.http.Body;
-import org.gitlab.api.http.GitlabHTTPRequestor;
+import org.gitlab.api.http.Config;
+import org.gitlab.api.http.GitlabRestClient;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -16,7 +17,10 @@ import java.util.List;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
         getterVisibility = JsonAutoDetect.Visibility.NONE
 )
-public class GitlabMergeRequest extends GitlabComponent {
+public class GitlabMergeRequest implements AuthComponent {
+    @JsonIgnore
+    private Config config;
+
     @JsonProperty("id")
     private int id; // required, url of the project
 
@@ -73,11 +77,6 @@ public class GitlabMergeRequest extends GitlabComponent {
         this.title = title;
     }
 
-    @Override
-    public GitlabMergeRequest withHTTPRequestor(GitlabHTTPRequestor requestor) {
-        super.withHTTPRequestor(requestor);
-        return this;
-    }
 
     // create a new gitlab issue
     public GitlabMergeRequest create() throws IOException {
@@ -89,11 +88,12 @@ public class GitlabMergeRequest extends GitlabComponent {
                 .putString("description", description)
                 .putStringArray("labels", labels);
 
-        return getHTTPRequestor().post(String.format("/projects/%d/merge_requests", project.getId()), body, this);
+        return GitlabRestClient
+                .post(config, String.format("/projects/%d/merge_requests", project.getId()), body, this);
     }
 
     public GitlabMergeRequest delete() throws IOException {
-        getHTTPRequestor().delete(String.format("/projects/%d/merge_requests/%d", project.getId(), iid));
+        GitlabRestClient.delete(config, String.format("/projects/%d/merge_requests/%d", project.getId(), iid));
         return this;
     }
 
@@ -104,13 +104,13 @@ public class GitlabMergeRequest extends GitlabComponent {
                 .putIntArray("assignee_ids", assignees.stream().mapToInt(GitlabUser::getId).toArray())
                 .putString("description", description)
                 .putStringArray("labels", labels);
-        return getHTTPRequestor()
-                .put(String.format("/projects/%d/merge_requests/%d", project.getId(), iid), body, this);
+        return GitlabRestClient
+                .put(config, String.format("/projects/%d/merge_requests/%d", project.getId(), iid), body, this);
     }
 
     public List<GitlabUser> getAllParticipants() throws IOException {
-        return getHTTPRequestor().getList(String
-                .format("/projects/%d/merge_requests/%d/participants", project.getId(), iid), GitlabUser[].class);
+        return GitlabRestClient.getList(config,
+                String.format("/projects/%d/merge_requests/%d/participants", project.getId(), iid), GitlabUser[].class);
     }
 
     public List<GitlabUser> getAllParticipants(Pagination pagination) throws IOException {
@@ -118,7 +118,7 @@ public class GitlabMergeRequest extends GitlabComponent {
     }
 
     public List<GitlabCommit> getAllCommits() throws IOException {
-        return getHTTPRequestor().getList(String
+        return GitlabRestClient.getList(config, String
                 .format("/projects/%d/merge_requests/%d/commits", project.getId(), iid), GitlabCommit[].class);
     }
 
@@ -127,7 +127,7 @@ public class GitlabMergeRequest extends GitlabComponent {
     }
 
     public List<GitlabIssue> getAllIssues() throws IOException {
-        return getHTTPRequestor().getList(String
+        return GitlabRestClient.getList(config, String
                 .format("/projects/%d/merge_requests/%d/closes_issues", project.getId(), iid), GitlabIssue[].class);
     }
 
@@ -136,17 +136,17 @@ public class GitlabMergeRequest extends GitlabComponent {
     }
 
     public GitlabMergeRequest accept() throws IOException {
-        return getHTTPRequestor().put(String
+        return GitlabRestClient.put(config, String
                 .format("/projects/%d/merge_requests/%d/merge", project.getId(), iid), null, this);
     }
 
     public GitlabMergeRequest approve() throws IOException {
-        return getHTTPRequestor().post(String
+        return GitlabRestClient.post(config, String
                 .format("/projects/%d/merge_requests/%d/approve", project.getId(), iid), null, this);
     }
 
     public GitlabMergeRequest decline() throws IOException {
-        return getHTTPRequestor().post(String
+        return GitlabRestClient.post(config, String
                 .format("/projects/%d/merge_requests/%d/unapprove", project.getId(), iid), null, this);
     }
 
@@ -275,5 +275,16 @@ public class GitlabMergeRequest extends GitlabComponent {
                 ", sourceBranch=" + sourceBranch +
                 ", labels=" + labels +
                 '}';
+    }
+
+    @Override
+    public Config getConfig() {
+        return config;
+    }
+
+    @Override
+    public GitlabMergeRequest withConfig(Config config) {
+        this.config = config;
+        return this;
     }
 }

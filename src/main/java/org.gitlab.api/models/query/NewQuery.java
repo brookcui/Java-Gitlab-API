@@ -1,8 +1,12 @@
 package org.gitlab.api.models.query;
 
 
-import org.gitlab.api.models.GitlabComponent;
+import org.gitlab.api.http.Config;
+import org.gitlab.api.http.GitlabRestClient;
+import org.gitlab.api.models.GitLabException;
+import org.gitlab.api.models.AuthComponent;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.time.LocalDate;
@@ -19,11 +23,24 @@ import java.util.stream.Collectors;
  * Models the Query
  * aspect of a URL
  */
-public abstract class NewQuery<T extends GitlabComponent> {
+public abstract class NewQuery<T extends AuthComponent> {
     private final Class<T[]> type;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter
             .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+
+
+    private final Config config;
+
+    public  List<T> query(){
+        try {
+            return GitlabRestClient.getList(config,getEntireUrl(),type);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new GitLabException(e);
+        }
+    };
+
 
     public abstract String getUrlPrefix();
 
@@ -31,8 +48,9 @@ public abstract class NewQuery<T extends GitlabComponent> {
         return getUrlPrefix() + toString();
     }
 
-    public NewQuery(Class<T[]> type) {
+    public NewQuery(Class<T[]> type, Config config) {
         this.type = type;
+        this.config = config;
     }
 
     public Class<T[]> getType() {
@@ -105,6 +123,9 @@ public abstract class NewQuery<T extends GitlabComponent> {
         return this;
     }
 
+    public Config getConfig() {
+        return config;
+    }
     /**
      * Returns a Query suitable for appending
      * to a URI

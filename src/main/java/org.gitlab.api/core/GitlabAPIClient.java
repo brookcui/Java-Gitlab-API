@@ -1,9 +1,9 @@
 package org.gitlab.api.core;
 
 import org.gitlab.api.http.Config;
-import org.gitlab.api.http.GitlabHTTPRequestor;
+import org.gitlab.api.http.GitlabRestClient;
 import org.gitlab.api.http.Query;
-import org.gitlab.api.models.GitlabComponent;
+import org.gitlab.api.models.AuthComponent;
 import org.gitlab.api.models.GitlabIssue;
 import org.gitlab.api.models.GitlabProject;
 import org.gitlab.api.models.GitlabUser;
@@ -13,8 +13,18 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.List;
 
-public class GitlabAPIClient extends GitlabComponent {
+public class GitlabAPIClient implements AuthComponent {
+    private final Config config;
 
+    @Override
+    public Config getConfig() {
+        return null;
+    }
+
+    @Override
+    public AuthComponent withConfig(Config config) {
+        return null;
+    }
 
     public static class Builder {
         private final String endpoint;
@@ -38,12 +48,6 @@ public class GitlabAPIClient extends GitlabComponent {
             return this;
         }
 
-//        public Builder withPassword(String username, String password) {
-//            this.authMethod = AuthMethod.PASSWORD;
-//            this.username = username;
-//            this.password = password;
-//            return this;
-//        }
 
         public GitlabAPIClient build() {
             return new GitlabAPIClient(this);
@@ -51,7 +55,7 @@ public class GitlabAPIClient extends GitlabComponent {
     }
 
     private GitlabAPIClient(Builder builder) {
-        super(new GitlabHTTPRequestor(new Config(builder.endpoint, builder.token, builder.authMethod)));
+        config = new Config(builder.endpoint, builder.token, builder.authMethod);
     }
 
     /*
@@ -60,7 +64,7 @@ public class GitlabAPIClient extends GitlabComponent {
 
     // Returns all issues the authenticated user has access to.
     public List<GitlabIssue> getAllIssues() throws IOException {
-        return getHTTPRequestor().getList("/issues", GitlabIssue[].class);
+        return GitlabRestClient.getList(config, "/issues", GitlabIssue[].class);
     }
 
     /*
@@ -77,20 +81,20 @@ public class GitlabAPIClient extends GitlabComponent {
      * @throws IOException
      */
     public List<GitlabProject> getAllProjects() throws IOException {
-        return getHTTPRequestor().getList("/projects", GitlabProject[].class);
+        return GitlabRestClient.getList(config, "/projects", GitlabProject[].class);
     }
 
     public List<GitlabProject> getOwnedProjects() throws IOException {
         Query query = new Query().append("owned", "true");
-        return getHTTPRequestor().getList("/projects" + query, GitlabProject[].class);
+        return GitlabRestClient.getList(config, "/projects" + query, GitlabProject[].class);
     }
 
     public List<GitlabProject> getUserProjects(String username) throws IOException {
-        return getHTTPRequestor().getList(String.format("/users/%s/projects", username), GitlabProject[].class);
+        return GitlabRestClient.getList(config, String.format("/users/%s/projects", username), GitlabProject[].class);
     }
 
     public List<GitlabProject> getGroupProjects(String username) throws IOException {
-        return getHTTPRequestor().getList(String.format("/groups/%s/projects", username), GitlabProject[].class);
+        return GitlabRestClient.getList(config, String.format("/groups/%s/projects", username), GitlabProject[].class);
     }
 
     /**
@@ -101,7 +105,7 @@ public class GitlabAPIClient extends GitlabComponent {
      * @throws IOException
      */
     public GitlabProject getProject(int projectId) throws IOException {
-        return getHTTPRequestor().get("/projects/" + projectId, GitlabProject.class);
+        return GitlabRestClient.get(config, "/projects/" + projectId, GitlabProject.class);
     }
 
     /**
@@ -113,26 +117,26 @@ public class GitlabAPIClient extends GitlabComponent {
      * @throws IOException
      */
     public GitlabProject getProject(String namespace, String projectPath) throws IOException {
-        return getHTTPRequestor()
-                .get("/projects/" + URLEncoder.encode(namespace + "/" + projectPath, "UTF-8"), GitlabProject.class);
+        return GitlabRestClient.get(config, "/projects/" + URLEncoder.encode(
+                namespace + "/" + projectPath, "UTF-8"), GitlabProject.class);
     }
 
     public GitlabProject newProject(String name) {
-        return new GitlabProject(name).withHTTPRequestor(getHTTPRequestor());
+        return new GitlabProject(name).withConfig(config);
     }
 
 
     public GitlabUser getUser(int userId) throws IOException {
-        return getHTTPRequestor().get("/users/" + userId, GitlabUser.class);
+        return GitlabRestClient.get(config, "/users/" + userId, GitlabUser.class);
     }
 
     // FIXME: or name with getCurrentAuthenticatedUser
     public GitlabUser getCurrentUser() throws IOException {
-        return getHTTPRequestor().get("/user", GitlabUser.class);
+        return GitlabRestClient.get(config, "/user", GitlabUser.class);
     }
 
 
-    public <T extends GitlabComponent> List<T> query(NewQuery<T> query) throws IOException {
-        return getHTTPRequestor().getList(query.getEntireUrl(),query.getType());
+    public <T extends AuthComponent> List<T> query(NewQuery<T> query) throws IOException {
+        return GitlabRestClient.getList(config, query.getEntireUrl(), query.getType());
     }
 }

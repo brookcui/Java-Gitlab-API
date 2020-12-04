@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import org.gitlab.api.http.GitlabHTTPRequestor;
+import org.gitlab.api.http.Config;
 import org.gitlab.api.http.LocalDateTimeDeserializer;
 
 import java.time.LocalDateTime;
@@ -15,7 +15,10 @@ import java.util.Objects;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
         getterVisibility = JsonAutoDetect.Visibility.NONE
 )
-public class GitlabCommit extends GitlabComponent {
+public class GitlabCommit implements AuthComponent {
+    @JsonIgnore
+    private Config config;
+
     @JsonProperty( "id")
     private final String id;
     @JsonProperty( "short_id")
@@ -59,11 +62,6 @@ public class GitlabCommit extends GitlabComponent {
         this.id = id;
     }
 
-    @Override
-    public GitlabCommit withHTTPRequestor(GitlabHTTPRequestor requestor) {
-        super.withHTTPRequestor(requestor);
-        return this;
-    }
 
     @Override
     public String toString() {
@@ -175,4 +173,14 @@ public class GitlabCommit extends GitlabComponent {
         return project;
     }
 
+    @Override
+    public Config getConfig() {
+        return config;
+    }
+
+    @Override
+    public GitlabCommit withConfig(Config config) {
+        this.config = config;
+        return this;
+    }
 }

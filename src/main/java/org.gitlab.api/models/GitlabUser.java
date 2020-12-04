@@ -2,8 +2,9 @@
 package org.gitlab.api.models;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.gitlab.api.http.GitlabHTTPRequestor;
+import org.gitlab.api.http.Config;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,7 +13,10 @@ import java.util.Objects;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
         getterVisibility = JsonAutoDetect.Visibility.NONE
 )
-public class GitlabUser extends GitlabComponent {
+public class GitlabUser implements AuthComponent {
+    @JsonIgnore
+    private Config config;
+
     @JsonProperty(value = "id", access = JsonProperty.Access.WRITE_ONLY)
     private final int id;
     @JsonProperty(value = "username", access = JsonProperty.Access.WRITE_ONLY)
@@ -57,12 +61,6 @@ public class GitlabUser extends GitlabComponent {
     // TODO: Find a better way to maintain consistency between all other models
     public static GitlabUser fromId(int id) {
         return null;
-    }
-
-    @Override
-    public GitlabUser withHTTPRequestor(GitlabHTTPRequestor requestor) {
-        super.withHTTPRequestor(requestor);
-        return this;
     }
 
 
@@ -164,5 +162,16 @@ public class GitlabUser extends GitlabComponent {
                 Objects.equals(websiteUrl, that.websiteUrl) &&
                 Objects.equals(organization, that.organization) &&
                 Objects.equals(jobTitle, that.jobTitle);
+    }
+
+    @Override
+    public Config getConfig() {
+        return config;
+    }
+
+    @Override
+    public GitlabUser withConfig(Config config) {
+        this.config = config;
+        return this;
     }
 }

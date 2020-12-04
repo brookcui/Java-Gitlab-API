@@ -1,5 +1,6 @@
 package org.gitlab.api.models.query;
 
+import org.gitlab.api.http.Config;
 import org.gitlab.api.models.GitlabCommit;
 
 import java.time.LocalDateTime;
@@ -7,8 +8,8 @@ import java.time.LocalDateTime;
 public class CommitQuery extends NewQuery<GitlabCommit> {
     private final int projectId;
 
-    public CommitQuery(int projectId) {
-        super(GitlabCommit[].class);
+    public CommitQuery(int projectId, Config config) {
+        super(GitlabCommit[].class, config);
         this.projectId = projectId;
     }
 

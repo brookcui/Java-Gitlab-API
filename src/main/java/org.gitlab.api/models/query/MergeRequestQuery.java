@@ -1,13 +1,14 @@
 package org.gitlab.api.models.query;
 
+import org.gitlab.api.http.Config;
 import org.gitlab.api.models.GitlabMergeRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class MergeRequestQuery extends NewQuery<GitlabMergeRequest> {
-    public MergeRequestQuery() {
-        super(GitlabMergeRequest[].class);
+    public MergeRequestQuery(Config config) {
+        super(GitlabMergeRequest[].class, config);
     }
 
     public MergeRequestQuery withState(String state) {

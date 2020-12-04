@@ -1,5 +1,6 @@
 package org.gitlab.api.models.query;
 
+import org.gitlab.api.http.Config;
 import org.gitlab.api.models.GitlabMergeRequest;
 
 import java.time.LocalDateTime;
@@ -8,8 +9,8 @@ import java.util.List;
 public class ProjectMergeRequestQuery extends NewQuery<GitlabMergeRequest> {
     private final int projectId;
 
-    public ProjectMergeRequestQuery(int projectId) {
-        super(GitlabMergeRequest[].class);
+    public ProjectMergeRequestQuery(int projectId, Config config) {
+        super(GitlabMergeRequest[].class, config);
         this.projectId = projectId;
     }
 

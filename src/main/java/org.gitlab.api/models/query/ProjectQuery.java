@@ -1,14 +1,14 @@
 package org.gitlab.api.models.query;
 
-import org.gitlab.api.models.GitlabIssue;
+import org.gitlab.api.http.Config;
 import org.gitlab.api.models.GitlabProject;
 
 import java.time.LocalDateTime;
 
 public class ProjectQuery extends NewQuery<GitlabProject> {
 
-    public ProjectQuery() {
-        super(GitlabProject[].class);
+    public ProjectQuery(Config config) {
+        super(GitlabProject[].class, config);
     }
 
     public ProjectQuery withArchived(boolean archived) {

@@ -1,5 +1,6 @@
 package org.gitlab.api.models.query;
 
+import org.gitlab.api.http.Config;
 import org.gitlab.api.models.GitlabIssue;
 
 import java.time.LocalDateTime;
@@ -9,8 +10,8 @@ public class ProjectIssueQuery extends NewQuery<GitlabIssue> {
 
     private final int projectId;
 
-    public ProjectIssueQuery(int projectId) {
-        super(GitlabIssue[].class);
+    public ProjectIssueQuery(int projectId, Config config) {
+        super(GitlabIssue[].class, config);
         this.projectId = projectId;
     }
 

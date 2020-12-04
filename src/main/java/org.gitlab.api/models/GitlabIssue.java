@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.gitlab.api.http.Body;
-import org.gitlab.api.http.GitlabHTTPRequestor;
+import org.gitlab.api.http.Config;
+import org.gitlab.api.http.GitlabRestClient;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -16,7 +17,10 @@ import java.util.Objects;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
         getterVisibility = JsonAutoDetect.Visibility.NONE
 )
-public class GitlabIssue extends GitlabComponent {
+public class GitlabIssue implements AuthComponent {
+    @JsonIgnore
+    private Config config;
+
     @JsonIgnore
     private GitlabProject project;
 
@@ -84,12 +88,6 @@ public class GitlabIssue extends GitlabComponent {
         return this;
     }
 
-    @Override
-    public GitlabIssue withHTTPRequestor(GitlabHTTPRequestor requestor) {
-        super.withHTTPRequestor(requestor);
-        return this;
-    }
-
     // create a new gitlab issue
     public GitlabIssue create() throws IOException {
         Body body = new Body()
@@ -98,11 +96,11 @@ public class GitlabIssue extends GitlabComponent {
                 .putStringArray("labels", labels)
                 .putString("description", description)
                 .putDate("due_date", dueDate);
-        return getHTTPRequestor().post(String.format("/projects/%d/issues", projectId), body, this);
+        return GitlabRestClient.post(config, String.format("/projects/%d/issues", projectId), body, this);
     }
 
     public GitlabIssue delete() throws IOException {
-        getHTTPRequestor().delete(String.format("/projects/%d/issues/%d", projectId, iid));
+        GitlabRestClient.delete(config, String.format("/projects/%d/issues/%d", projectId, iid));
         return this;
     }
 
@@ -113,17 +111,17 @@ public class GitlabIssue extends GitlabComponent {
                 .putString("description", description)
                 .putStringArray("labels", labels)
                 .putDate("due_date", dueDate);
-        return getHTTPRequestor().put(String.format("/projects/%d/issues/%d", projectId, iid), body, this);
+        return GitlabRestClient.put(config, String.format("/projects/%d/issues/%d", projectId, iid), body, this);
     }
 
     public GitlabIssue close() throws IOException {
         Body body = new Body().putString("state_event", "close");
-        return getHTTPRequestor().put(String.format("/projects/%d/issues/%d", projectId, iid), body, this);
+        return GitlabRestClient.put(config,String.format("/projects/%d/issues/%d", projectId, iid), body, this);
     }
 
     public GitlabIssue reopen() throws IOException {
         Body body = new Body().putString("state_event", "reopen");
-        return getHTTPRequestor().put(String.format("/projects/%d/issues/%d", projectId, iid), body, this);
+        return GitlabRestClient.put(config, String.format("/projects/%d/issues/%d", projectId, iid), body, this);
     }
 
     /**
@@ -134,7 +132,7 @@ public class GitlabIssue extends GitlabComponent {
      */
     public GitlabProject getProject() throws IOException {
         if (project == null) {
-            project = GitlabProject.fromId(getHTTPRequestor(), projectId);
+            project = GitlabProject.fromId(config, projectId);
         }
         return project;
     }
@@ -317,5 +315,16 @@ public class GitlabIssue extends GitlabComponent {
 
     public int getId() {
         return id;
+    }
+
+    @Override
+    public Config getConfig() {
+        return config;
+    }
+
+    @Override
+    public GitlabIssue withConfig(Config config) {
+        this.config = config;
+        return this;
     }
 }

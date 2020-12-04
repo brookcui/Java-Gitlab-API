@@ -4,15 +4,14 @@ import org.gitlab.api.core.AuthMethod;
 import org.gitlab.api.core.GitlabAPIClient;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 
 public class Config {
     private final String endpoint;
     private final AuthMethod authMethod;
-    private String token;
-    private String username;
-    private String password;
+    private final String token;
     private static final int DEFAULT_TIMEOUT = 0;
     private int responseReadTimeout = DEFAULT_TIMEOUT;
     private int connectionTimeout = DEFAULT_TIMEOUT;
@@ -31,7 +30,7 @@ public class Config {
         this.apiNamespace = DEFAULT_API_NAMESPACE;
     }
 
-    public URL getAPIUrl(String tailAPIUrl) throws IOException {
+    public URL getAPIUrl(String tailAPIUrl) throws MalformedURLException {
         if (!tailAPIUrl.startsWith("/")) {
             tailAPIUrl = "/" + tailAPIUrl;
         }

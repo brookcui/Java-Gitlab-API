@@ -4,13 +4,17 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.gitlab.api.http.Body;
-import org.gitlab.api.http.GitlabHTTPRequestor;
+import org.gitlab.api.http.Config;
+import org.gitlab.api.http.GitlabRestClient;
 
 import java.io.IOException;
 import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabBranch extends GitlabComponent {
+public class GitlabBranch implements AuthComponent {
+    @JsonIgnore
+    private Config config;
+
     @JsonProperty("name")
     private final String name;
     @JsonProperty("merged")
@@ -35,10 +39,15 @@ public class GitlabBranch extends GitlabComponent {
     }
 
     @Override
-    public GitlabBranch withHTTPRequestor(GitlabHTTPRequestor requestor) {
-        super.withHTTPRequestor(requestor);
+    public Config getConfig() {
+        return config;
+    }
+
+    @Override
+    public GitlabBranch withConfig(Config config) {
+        this.config = config;
         if (commit != null) {
-            commit.withHTTPRequestor(requestor);
+            commit.withConfig(config);
         }
         return this;
     }
@@ -75,11 +84,12 @@ public class GitlabBranch extends GitlabComponent {
         Body body = new Body()
                 .putString("branch", name)
                 .putString("ref", ref);
-        return getHTTPRequestor().post(String.format("/projects/%d/repository/branches", project.getId()), body, this);
+        return GitlabRestClient.post(config, String.format("/projects/%d/repository/branches", project.getId()), body,
+                this);
     }
 
     public GitlabBranch delete() throws IOException {
-        getHTTPRequestor().delete(String.format("/projects/%d/repository/branches/%s", project.getId(), name));
+        GitlabRestClient.delete(config, String.format("/projects/%d/repository/branches/%s", project.getId(), name));
         return this;
     }
 

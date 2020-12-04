@@ -1,10 +1,12 @@
 package org.gitlab.api.models;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.gitlab.api.core.Pagination;
 import org.gitlab.api.http.Body;
-import org.gitlab.api.http.GitlabHTTPRequestor;
+import org.gitlab.api.http.Config;
+import org.gitlab.api.http.GitlabRestClient;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -21,7 +23,10 @@ import java.util.Objects;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
         getterVisibility = JsonAutoDetect.Visibility.NONE
 )
-public class GitlabProject extends GitlabComponent {
+public class GitlabProject implements AuthComponent {
+    @JsonIgnore
+    private Config config;
+
     private int id; // required
     private String description;
     @JsonProperty("name_with_namespace")
@@ -104,18 +109,10 @@ public class GitlabProject extends GitlabComponent {
     public GitlabProject(@JsonProperty("name") String name) {
         this.name = name;
     }
-
-    static GitlabProject fromId(GitlabHTTPRequestor requestor, int id) throws IOException {
-        return requestor.get("/projects/" + id, GitlabProject.class);
-    }
-
-    @Override
-    public GitlabProject withHTTPRequestor(GitlabHTTPRequestor requestor) {
-        super.withHTTPRequestor(requestor);
-        if (owner != null) {
-            owner.withHTTPRequestor(requestor);
-        }
-        return this;
+    
+    
+    static GitlabProject fromId(Config config,int id) throws IOException {
+        return GitlabRestClient.get(config, "/projects/" + id, GitlabProject.class);
     }
 
     /**
@@ -127,7 +124,7 @@ public class GitlabProject extends GitlabComponent {
      * @throws IOException
      */
     public List<GitlabUser> getUsers() throws IOException {
-        return getHTTPRequestor().getList(String.format("/projects/%d/users", id), GitlabUser[].class);
+        return GitlabRestClient.getList(config, String.format("/projects/%d/users", id), GitlabUser[].class);
     }
 
     /**
@@ -139,8 +136,8 @@ public class GitlabProject extends GitlabComponent {
      * @throws IOException
      */
     public List<GitlabIssue> getAllIssues() throws IOException {
-        List<GitlabIssue> issues = getHTTPRequestor()
-                .getList(String.format("/projects/%d/issues", id), GitlabIssue[].class);
+        List<GitlabIssue> issues = GitlabRestClient
+                .getList(config, String.format("/projects/%d/issues", id), GitlabIssue[].class);
         issues.forEach(i -> i.withProject(this));
         return issues;
     }
@@ -158,6 +155,7 @@ public class GitlabProject extends GitlabComponent {
         return null; // TODO
     }
 
+
     /**
      * Get the issue based on the given issueIId (The internal ID of a project’s issue)
      * https://docs.gitlab.com/ee/api/issues.html#single-project-issue
@@ -168,7 +166,7 @@ public class GitlabProject extends GitlabComponent {
      * @throws IOException
      */
     public GitlabIssue getIssue(int issueIId) throws IOException {
-        return getHTTPRequestor().get(String.format("/projects/%d/issues/%d", id, issueIId), GitlabIssue.class)
+        return GitlabRestClient.get(config, String.format("/projects/%d/issues/%d", id, issueIId), GitlabIssue.class)
                                  .withProject(this);
     }
 
@@ -180,7 +178,7 @@ public class GitlabProject extends GitlabComponent {
      * @return the new issue from this project
      */
     public GitlabIssue newIssue(String title) {
-        return new GitlabIssue(title).withHTTPRequestor(getHTTPRequestor()).withProject(this);
+        return new GitlabIssue(title).withConfig(config).withProject(this);
     }
 
     /*
@@ -197,8 +195,8 @@ public class GitlabProject extends GitlabComponent {
      * @throws IOException
      */
     public List<GitlabCommit> getAllCommits() throws IOException {
-        List<GitlabCommit> commits = getHTTPRequestor()
-                .getList(String.format("/projects/%d/repository/commits", id), GitlabCommit[].class);
+        List<GitlabCommit> commits = GitlabRestClient
+                .getList(config, String.format("/projects/%d/repository/commits", id), GitlabCommit[].class);
         commits.forEach(i -> i.withProject(this));
         return commits;
     }
@@ -227,8 +225,8 @@ public class GitlabProject extends GitlabComponent {
      * @throws IOException
      */
     public GitlabCommit getCommit(String sha) throws IOException {
-        return getHTTPRequestor().get(String.format("/projects/%d/repository/commits/%s", id, sha), GitlabCommit.class)
-                                 .withProject(this);
+        return GitlabRestClient.get(config, String.format("/projects/%d/repository/commits/%s", id, sha),
+                GitlabCommit.class).withProject(this);
     }
 
     /*
@@ -244,8 +242,8 @@ public class GitlabProject extends GitlabComponent {
      * @throws IOException
      */
     public List<GitlabBranch> getAllBranches() throws IOException {
-        List<GitlabBranch> branches = getHTTPRequestor()
-                .getList(String.format("/projects/%d/repository/branches", id), GitlabBranch[].class);
+        List<GitlabBranch> branches = GitlabRestClient
+                .getList(config, String.format("/projects/%d/repository/branches", id), GitlabBranch[].class);
         branches.forEach(i -> i.withProject(this));
         return branches;
     }
@@ -273,8 +271,8 @@ public class GitlabProject extends GitlabComponent {
      * @throws IOException
      */
     public GitlabBranch getBranch(String name) throws IOException {
-        return getHTTPRequestor()
-                .get(String.format("/projects/%d/repository/branches/%s", id, name), GitlabBranch.class)
+        return GitlabRestClient
+                .get(config, String.format("/projects/%d/repository/branches/%s", id, name), GitlabBranch.class)
                 .withProject(this);
     }
 
@@ -286,20 +284,19 @@ public class GitlabProject extends GitlabComponent {
      * @return
      */
     public GitlabBranch newBranch(String name) {
-        return new GitlabBranch(name).withHTTPRequestor(getHTTPRequestor()).withProject(this);
+        return new GitlabBranch(name).withConfig(config).withProject(this);
     }
 
     public GitlabMergeRequest newMergeRequest(String sourceBranch, String targetBranch, String title) {
         return new GitlabMergeRequest(sourceBranch, targetBranch, title)
-                .withHTTPRequestor(getHTTPRequestor())
+                .withConfig(config)
                 .withProject(this);
 
     }
 
     public GitlabMergeRequest getMergeRequest(int mergeRequestIId) throws IOException {
-        return getHTTPRequestor()
-                .get(String.format("/projects/%d/merge_requests/%d", id, mergeRequestIId), GitlabMergeRequest.class)
-                .withProject(this);
+        return GitlabRestClient.get(config, String.format(
+                "/projects/%d/merge_requests/%d", id, mergeRequestIId), GitlabMergeRequest.class).withProject(this);
     }
 
     /**
@@ -310,7 +307,7 @@ public class GitlabProject extends GitlabComponent {
      * @return the new GitlabProject which is the result of forking this project
      */
     public GitlabProject fork() throws IOException {
-        return getHTTPRequestor().get(String.format("/projects/%d/fork", id), GitlabProject.class);
+        return GitlabRestClient.get(config,String.format("/projects/%d/fork", id), GitlabProject.class);
     }
 
     /**
@@ -320,7 +317,7 @@ public class GitlabProject extends GitlabComponent {
      * @return the new {@link GitlabProject} after creating
      */
     public GitlabProject create() throws IOException {
-        return getHTTPRequestor().post("/projects", new Body().putString("name", name), this);
+        return GitlabRestClient.post(config, "/projects", new Body().putString("name", name), this);
     }
 
     /**
@@ -330,7 +327,7 @@ public class GitlabProject extends GitlabComponent {
      * @return the previous {@link GitlabProject} before deleting
      */
     public GitlabProject delete() throws IOException {
-        getHTTPRequestor().delete("/projects/" + id);
+        GitlabRestClient.delete(config, "/projects/" + id);
         return this;
     }
 
@@ -351,7 +348,7 @@ public class GitlabProject extends GitlabComponent {
                 .putBoolean("issues_enabled", issuesEnabled)
                 .putBoolean("jobs_enabled", jobsEnabled)
                 .putBoolean("wiki_enabled", wikiEnabled);
-        return getHTTPRequestor().put("/projects/" + id, body, this);
+        return GitlabRestClient.put(config, "/projects/" + id, body, this);
     }
 
 
@@ -589,4 +586,17 @@ public class GitlabProject extends GitlabComponent {
         return Objects.hash(id);
     }
 
+    @Override
+    public Config getConfig() {
+        return this.config;
+    }
+
+    @Override
+    public GitlabProject withConfig(Config config) {
+        if (owner != null) {
+            owner.withConfig(config);
+        }
+        this.config = config;
+        return this;
+    }
 }

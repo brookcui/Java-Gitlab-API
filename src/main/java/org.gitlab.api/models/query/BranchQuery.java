@@ -1,13 +1,14 @@
 package org.gitlab.api.models.query;
 
+import org.gitlab.api.http.Config;
 import org.gitlab.api.models.GitlabBranch;
 
 public class BranchQuery extends NewQuery<GitlabBranch> {
 
     private final int projectId;
 
-    public BranchQuery(int projectId) {
-        super(GitlabBranch[].class);
+    public BranchQuery(int projectId, Config config) {
+        super(GitlabBranch[].class, config);
         this.projectId = projectId;
     }
 
