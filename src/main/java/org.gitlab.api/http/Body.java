@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 public class Body {
-    private final Map<String, Object> map = new HashMap<>();
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final Map<String, Object> map = new HashMap<>();
 
     public Body putInt(String key, int value) {
         map.put(key, value);

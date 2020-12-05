@@ -1,9 +1,8 @@
-package org.gitlab.api.models;
+package org.gitlab.api.core;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.gitlab.api.core.Pagination;
 import org.gitlab.api.http.Body;
 import org.gitlab.api.http.Config;
 import org.gitlab.api.http.GitlabHttpClient;
@@ -140,7 +139,6 @@ public class GitlabProject implements GitlabComponent {
     }
 
 
-
     /**
      * Get a single project repository branch based on the branch name
      * https://docs.gitlab.com/ee/api/branches.html#get-single-repository-branch
@@ -177,7 +175,6 @@ public class GitlabProject implements GitlabComponent {
         return GitlabHttpClient.get(config, String.format(
                 "/projects/%d/merge_requests/%d", id, mergeRequestIId), GitlabMergeRequest.class).withProject(this);
     }
-
 
 
     public GitlabUser.ProjectQuery users() {
@@ -408,6 +405,7 @@ public class GitlabProject implements GitlabComponent {
         return this;
     }
 
+
     public GitlabProject withWikiEnabled(boolean wikiEnabled) {
         this.wikiEnabled = wikiEnabled;
         return this;
@@ -602,6 +600,12 @@ public class GitlabProject implements GitlabComponent {
 
         public Query withProgrammingLanguage(String programmingLanguage) {
             appendString("with_programming_language", programmingLanguage);
+            return this;
+        }
+
+        @Override
+        public Query withPagination(Pagination pagination) {
+            appendPagination(pagination);
             return this;
         }
 

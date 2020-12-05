@@ -1,4 +1,4 @@
-package org.gitlab.api.models;
+package org.gitlab.api.core;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -14,9 +14,44 @@ import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class GitlabCommit implements GitlabComponent {
+    @JsonProperty("id")
+    private final String id;
+    @JsonProperty("parent_ids")
+    private final List<String> parentIds = new ArrayList<>();
     @JsonIgnore
     private Config config;
-
+    @JsonProperty("short_id")
+    private String shortId;
+    @JsonProperty("title")
+    private String title;
+    @JsonProperty("author_name")
+    private String authorName;
+    @JsonProperty("author_email")
+    private String authorEmail;
+    @JsonProperty("committer_name")
+    private String committerName;
+    @JsonProperty("committer_email")
+    private String committerEmail;
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonProperty("created_at")
+    private LocalDateTime createdAt;
+    @JsonProperty("message")
+    private String message;
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonProperty("committed_date")
+    private LocalDateTime committedDate;
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonProperty("authored_date")
+    private LocalDateTime authoredDate;
+    @JsonProperty("status")
+    private String status;
+    @JsonProperty("web_url")
+    private String webUrl;
+    @JsonIgnore
+    private GitlabProject project;
+    GitlabCommit(@JsonProperty("id") String id) {
+        this.id = id;
+    }
 
     @Override
     public Config getConfig() {
@@ -29,106 +64,10 @@ public class GitlabCommit implements GitlabComponent {
         return this;
     }
 
-    public static class Query extends GitlabQuery<GitlabCommit> {
-        private final int projectId;
-
-        Query(Config config, int projectId) {
-            super(config, GitlabCommit[].class);
-            this.projectId = projectId;
-        }
-
-        public Query withRefName(String refName) {
-            appendString("ref_name", refName);
-            return this;
-        }
-
-        public Query withSince(LocalDateTime since) {
-            appendDateTime("since", since);
-            return this;
-        }
-
-        public Query withUntil(LocalDateTime until) {
-            appendDateTime("until", until);
-            return this;
-        }
-
-        public Query withPath(String path) {
-            appendString("path", path);
-            return this;
-        }
-
-        public Query withStats(boolean withStats) {
-            appendBoolean("with_stats", withStats);
-            return this;
-        }
-
-        public Query withFirstParent(boolean firstParent) {
-            appendBoolean("first_parent", firstParent);
-            return this;
-        }
-
-        /**
-         * List commits in order.
-         * <p>
-         * Possible values: default, topo. Defaults to default, the commits are shown in reverse chronological order.
-         *
-         * @param order
-         * @return
-         */
-        public Query withOrder(String order) {
-            appendString("order", order);
-            return this;
-        }
-
-        @Override
-        public String getUrlPrefix() {
-            return String.format("/projects/%d/repository/commits", projectId);
-        }
-    }
-
-    @JsonProperty( "id")
-    private final String id;
-    @JsonProperty( "short_id")
-    private String shortId;
-    @JsonProperty( "title")
-    private String title;
-    @JsonProperty( "author_name")
-    private String authorName;
-    @JsonProperty( "author_email")
-    private String authorEmail;
-    @JsonProperty( "committer_name")
-    private String committerName;
-    @JsonProperty( "committer_email")
-    private String committerEmail;
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonProperty( "created_at")
-    private LocalDateTime createdAt;
-    @JsonProperty( "message")
-    private String message;
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonProperty( "committed_date")
-    private LocalDateTime committedDate;
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonProperty( "authored_date")
-    private LocalDateTime authoredDate;
-    @JsonProperty( "parent_ids")
-    private final List<String> parentIds = new ArrayList<>();
-    @JsonProperty( "status")
-    private String status;
-    @JsonProperty( "web_url")
-    private String webUrl;
-
-    @JsonIgnore
-    private GitlabProject project;
-
     GitlabCommit withProject(GitlabProject project) {
         this.project = project;
         return this;
     }
-    GitlabCommit(@JsonProperty("id") String id) {
-        this.id = id;
-    }
-
 
     @Override
     public String toString() {
@@ -238,6 +177,69 @@ public class GitlabCommit implements GitlabComponent {
 
     public GitlabProject getProject() {
         return project;
+    }
+
+    public static class Query extends GitlabQuery<GitlabCommit> {
+        private final int projectId;
+
+        Query(Config config, int projectId) {
+            super(config, GitlabCommit[].class);
+            this.projectId = projectId;
+        }
+
+        public Query withRefName(String refName) {
+            appendString("ref_name", refName);
+            return this;
+        }
+
+        public Query withSince(LocalDateTime since) {
+            appendDateTime("since", since);
+            return this;
+        }
+
+        public Query withUntil(LocalDateTime until) {
+            appendDateTime("until", until);
+            return this;
+        }
+
+        public Query withPath(String path) {
+            appendString("path", path);
+            return this;
+        }
+
+        public Query withStats(boolean withStats) {
+            appendBoolean("with_stats", withStats);
+            return this;
+        }
+
+        public Query withFirstParent(boolean firstParent) {
+            appendBoolean("first_parent", firstParent);
+            return this;
+        }
+
+        @Override
+        public Query withPagination(Pagination pagination) {
+            appendPagination(pagination);
+            return this;
+        }
+
+        /**
+         * List commits in order.
+         * <p>
+         * Possible values: default, topo. Defaults to default, the commits are shown in reverse chronological order.
+         *
+         * @param order
+         * @return
+         */
+        public Query withOrder(String order) {
+            appendString("order", order);
+            return this;
+        }
+
+        @Override
+        public String getUrlPrefix() {
+            return String.format("/projects/%d/repository/commits", projectId);
+        }
     }
 
 }

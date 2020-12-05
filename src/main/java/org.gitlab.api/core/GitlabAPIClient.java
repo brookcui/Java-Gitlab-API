@@ -1,10 +1,8 @@
-package org.gitlab.api.models;
+package org.gitlab.api.core;
 
-import org.gitlab.api.core.AuthMethod;
 import org.gitlab.api.http.Config;
 import org.gitlab.api.http.GitlabHttpClient;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
@@ -12,17 +10,16 @@ import java.util.List;
 public class GitlabAPIClient {
     private final Config config;
 
+    private GitlabAPIClient(String endpoint, String token, AuthMethod authMethod) {
+        config = new Config(endpoint, token, authMethod);
+    }
+
     public static GitlabAPIClient fromOAuth2Token(String endpoint, String oauth2Token) {
         return new GitlabAPIClient(endpoint, oauth2Token, AuthMethod.OAUTH2);
     }
 
     public static GitlabAPIClient fromAccessToken(String endpoint, String accessToken) {
         return new GitlabAPIClient(endpoint, accessToken, AuthMethod.ACCESS_TOKEN);
-    }
-
-
-    private GitlabAPIClient(String endpoint, String token, AuthMethod authMethod) {
-        config = new Config(endpoint, token, authMethod);
     }
 
     public Config getConfig() {
@@ -42,7 +39,10 @@ public class GitlabAPIClient {
         return new GitlabProject.Query(config);
     }
 
-    public GitlabMergeRequest.Query mergeRequests() {return new GitlabMergeRequest.Query(config);}
+    public GitlabMergeRequest.Query mergeRequests() {
+        return new GitlabMergeRequest.Query(config);
+    }
+
     public List<GitlabProject> getUserProjects(String username) {
         return GitlabHttpClient.getList(config, String.format("/users/%s/projects", username), GitlabProject[].class);
     }
@@ -52,7 +52,6 @@ public class GitlabAPIClient {
      *
      * @param projectId
      * @return
-
      */
     public GitlabProject getProject(int projectId) {
         return GitlabHttpClient.get(config, "/projects/" + projectId, GitlabProject.class);
@@ -64,7 +63,6 @@ public class GitlabAPIClient {
      * @param namespace   -
      * @param projectPath - username%2FprojectPath
      * @return
-
      */
     public GitlabProject getProject(String namespace, String projectPath) {
         try {

@@ -1,4 +1,4 @@
-package org.gitlab.api.models;
+package org.gitlab.api.core;
 
 
 import org.gitlab.api.http.Config;
@@ -20,62 +20,49 @@ import java.util.stream.Collectors;
  * Models the Query
  * aspect of a URL
  */
-public abstract class GitlabQuery<T extends GitlabComponent> implements GitlabComponent {
-    private final Class<T[]> type;
+public abstract class GitlabQuery<C extends GitlabComponent> implements GitlabComponent {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter
             .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    private final Class<C[]> type;
+    /**
+     * The type of params is:
+     * Tuple<name, Tuple<value, URLEncoder.encode(value, "UTF-8")>>
+     */
+    private final List<Tuple<String, Tuple<String, String>>> params = new ArrayList<Tuple<String, Tuple<String, String>>>();
     private Config config;
 
-    public abstract String getUrlPrefix();
-
-
-    public GitlabQuery(Config config, Class<T[]> type) {
+    public GitlabQuery(Config config, Class<C[]> type) {
         this.config = config;
         this.type = type;
     }
 
+    public abstract String getUrlPrefix();
+
+    public abstract GitlabQuery<C> withPagination(Pagination pagination);
+
     @Override
-    public GitlabQuery<T> withConfig(Config config) {
+    public GitlabQuery<C> withConfig(Config config) {
         this.config = config;
         return this;
     }
-
 
     @Override
     public Config getConfig() {
         return config;
     }
 
-    public List<T> query() {
+    public List<C> query() {
         return GitlabHttpClient.getList(config, getEntireUrl(), type);
     }
-
 
     public String getEntireUrl() {
         return getUrlPrefix() + toString();
     }
 
-
-    public Class<T[]> getType() {
+    public Class<C[]> getType() {
         return type;
     }
-
-    private static class Tuple<T1, T2> {
-        T1 _1;
-        T2 _2;
-
-        public Tuple(T1 _1, T2 _2) {
-            this._1 = _1;
-            this._2 = _2;
-        }
-    }
-
-    /**
-     * The type of params is:
-     * Tuple<name, Tuple<value, URLEncoder.encode(value, "UTF-8")>>
-     */
-    private final List<Tuple<String, Tuple<String, String>>> params = new ArrayList<Tuple<String, Tuple<String, String>>>();
 
     /**
      * Appends a parameter to the query
@@ -84,7 +71,7 @@ public abstract class GitlabQuery<T extends GitlabComponent> implements GitlabCo
      * @param value Parameter value
      * @return this
      */
-    protected GitlabQuery<T> appendString(String name, String value) {
+    protected GitlabQuery<C> appendString(String name, String value) {
         if (value != null) {
             try {
                 params.add(new Tuple<>(name, new Tuple<>(value, URLEncoder.encode(value, "UTF-8"))));
@@ -95,35 +82,40 @@ public abstract class GitlabQuery<T extends GitlabComponent> implements GitlabCo
         return this;
     }
 
-
-    protected GitlabQuery<T> appendInt(String name, int value) {
+    protected GitlabQuery<C> appendInt(String name, int value) {
         return appendString(name, String.valueOf(value));
     }
 
-    protected GitlabQuery<T> appendBoolean(String name, boolean value) {
+    protected GitlabQuery<C> appendBoolean(String name, boolean value) {
         return appendString(name, String.valueOf(value));
     }
 
-    protected GitlabQuery<T> appendStrings(String name, List<String> strings) {
+    protected GitlabQuery<C> appendStrings(String name, List<String> strings) {
         return appendString(name, String.join(",", strings));
     }
 
-    protected GitlabQuery<T> appendInts(String name, List<Integer> ints) {
+    protected GitlabQuery<C> appendInts(String name, List<Integer> ints) {
         return appendString(name, ints.stream().map(String::valueOf).collect(Collectors.joining(",")));
     }
 
-    protected GitlabQuery<T> appendDate(String name, LocalDate date) {
+    protected GitlabQuery<C> appendDate(String name, LocalDate date) {
         if (date != null) {
             return appendString(name, date.format(DATE_FORMATTER));
         }
         return this;
     }
 
-    protected GitlabQuery<T> appendDateTime(String name, LocalDateTime dateTime) {
+    protected GitlabQuery<C> appendDateTime(String name, LocalDateTime dateTime) {
         if (dateTime != null) {
             ZonedDateTime time = dateTime.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneOffset.UTC);
             return appendString(name, DATE_TIME_FORMATTER.format(time));
         }
+        return this;
+    }
+
+    protected GitlabQuery<C> appendPagination(Pagination pagination) {
+        appendInt("per_page", pagination.getPageSize());
+        appendInt("page", pagination.getPageNumber());
         return this;
     }
 
@@ -147,6 +139,16 @@ public abstract class GitlabQuery<T extends GitlabComponent> implements GitlabCo
         }
 
         return builder.toString();
+    }
+
+    private static class Tuple<T1, T2> {
+        T1 _1;
+        T2 _2;
+
+        public Tuple(T1 _1, T2 _2) {
+            this._1 = _1;
+            this._2 = _2;
+        }
     }
 
 

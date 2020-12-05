@@ -1,4 +1,4 @@
-package org.gitlab.api.models;
+package org.gitlab.api.core;
 
 public class GitlabException extends RuntimeException {
 

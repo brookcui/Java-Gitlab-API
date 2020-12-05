@@ -1,4 +1,4 @@
-package org.gitlab.api.models;
+package org.gitlab.api.core;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -7,7 +7,6 @@ import org.gitlab.api.http.Body;
 import org.gitlab.api.http.Config;
 import org.gitlab.api.http.GitlabHttpClient;
 
-import java.io.IOException;
 import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
@@ -31,6 +30,7 @@ public class GitlabBranch implements GitlabComponent {
     private GitlabCommit commit; // corresponds to branch name or commit SHA to create branch from
     @JsonIgnore
     private GitlabProject project;
+
     GitlabBranch(@JsonProperty("name") String name) {
         this.name = name;
     }
@@ -148,6 +148,12 @@ public class GitlabBranch implements GitlabComponent {
 
         public Query withSearch(String search) {
             appendString("search", search);
+            return this;
+        }
+
+        @Override
+        public Query withPagination(Pagination pagination) {
+            appendPagination(pagination);
             return this;
         }
 

@@ -1,5 +1,4 @@
-
-package org.gitlab.api.models;
+package org.gitlab.api.core;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -53,15 +52,14 @@ public class GitlabUser implements GitlabComponent {
         this.id = id;
     }
 
-    public List<GitlabProject> getUserProjects() {
-        return null; // TODO
-    }
-
     // TODO: Find a better way to maintain consistency between all other models
     public static GitlabUser fromId(int id) {
         return null;
     }
 
+    public List<GitlabProject> getUserProjects() {
+        return null; // TODO
+    }
 
     public int getId() {
         return id;
@@ -172,13 +170,19 @@ public class GitlabUser implements GitlabComponent {
     }
 
     public static class Query extends GitlabQuery<GitlabUser> {
-         Query(Config config) {
+        Query(Config config) {
             super(config, GitlabUser[].class);
         }
 
+        @Override
+        public Query withPagination(Pagination pagination) {
+            appendPagination(pagination);
+            return this;
+        }
+
         public Query withUsername(String username) {
-             appendString("username", username);
-             return this;
+            appendString("username", username);
+            return this;
         }
 
         public Query withActive(boolean active) {
@@ -195,17 +199,25 @@ public class GitlabUser implements GitlabComponent {
             appendBoolean("exclude_internal", excludeInternal);
             return this;
         }
+
         @Override
         public String getUrlPrefix() {
             return "/users";
         }
     }
+
     public static class ProjectQuery extends GitlabQuery<GitlabUser> {
         private final int projectId;
 
         ProjectQuery(Config config, int projectId) {
             super(config, GitlabUser[].class);
-            this.projectId= projectId;
+            this.projectId = projectId;
+        }
+
+        @Override
+        public ProjectQuery withPagination(Pagination pagination) {
+            appendPagination(pagination);
+            return this;
         }
 
         public ProjectQuery withSearch(String search) {

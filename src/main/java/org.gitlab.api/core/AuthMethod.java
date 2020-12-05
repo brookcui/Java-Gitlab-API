@@ -2,8 +2,7 @@ package org.gitlab.api.core;
 
 public enum AuthMethod {
     OAUTH2("Authorization", "Bearer %s"),
-    ACCESS_TOKEN("PRIVATE-TOKEN", "%s"),
-    PASSWORD("", "");
+    ACCESS_TOKEN("PRIVATE-TOKEN", "%s");
 
     private final String tokenHeaderName;
 

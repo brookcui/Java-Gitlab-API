@@ -9,8 +9,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import org.gitlab.api.models.GitlabComponent;
-import org.gitlab.api.models.GitlabException;
+import org.gitlab.api.core.GitlabComponent;
+import org.gitlab.api.core.GitlabException;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -18,13 +18,13 @@ import java.util.Collections;
 import java.util.List;
 
 public class GitlabHttpClient {
+    public static final ObjectMapper MAPPER = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     /**
      * The default client has no auth method.
      */
     private static final OkHttpClient client = new OkHttpClient();
-    public static final ObjectMapper MAPPER = new ObjectMapper()
-            .registerModule(new JavaTimeModule())
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
 
