@@ -1,4 +1,4 @@
-package org.gitlab.api.models;
+package org.gitlab.api.core;
 
 import org.gitlab.api.core.GitlabAPIClient;
 import org.junit.jupiter.api.Test;
