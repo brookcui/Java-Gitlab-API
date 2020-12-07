@@ -4,7 +4,6 @@ import org.gitlab.api.http.Config;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -169,6 +168,52 @@ public class GitlabIssueTest {
 
     @Test
     void testQuery() {
+        LocalDate today = LocalDate.now();
+        LocalDate tomorrow = today.plusDays(1);
 
+        GitlabProject project = CLIENT.newProject("test").create();
+        GitlabIssue issue1 = project.newIssue("issue1").withDescription("new issue1").create();
+        GitlabIssue issue2 = project.newIssue("issue2").withDueDate(tomorrow).create();
+        GitlabIssue issue3 = project.newIssue("issue3").withDueDate(tomorrow).create();
+
+        // Query all issues
+        List<GitlabIssue> allIssues = CLIENT.issues().query();
+        assertEquals(3, allIssues.size());
+
+        // Valid query field
+        Config config = project.getConfig();
+        GitlabIssue.Query q1 = new GitlabIssue.Query(config).withDueDate("0");
+        List<GitlabIssue> res1 = q1.query();
+        assertEquals(2, res1.size());
+
+        // Invalid query field
+        GitlabIssue.Query q2 = new GitlabIssue.Query(config).withAuthorUsername("invalid name");
+        List<GitlabIssue> res2 = q2.query();
+        assertEquals(0, res2.size());
+
+        // Sort
+        GitlabIssue.Query q3 = new GitlabIssue.Query(config).withDueDate("week").withSort("desc");
+        List<GitlabIssue> res3 = q3.query();
+        assertEquals(2, res3.size());
+        assertEquals(issue3.getId(), res3.get(0).getId());
+        assertEquals(issue2.getId(), res3.get(1).getId());
+
+        // Order by
+        GitlabIssue.Query q4 = new GitlabIssue.Query(config).withDueDate("week").withOrderBy("created_at");
+        List<GitlabIssue> res4 = q4.query();
+        assertEquals(2, res3.size());
+        assertEquals(issue2.getId(), res4.get(0).getId());
+        assertEquals(issue3.getId(), res4.get(1).getId());
+
+        // Search
+        GitlabIssue.Query q5 = new GitlabIssue.Query(config).withSearch("new issue1");
+        List<GitlabIssue> res5 = q5.query();
+        assertEquals(1, res3.size());
+        assertEquals(issue1.getId(), res5.get(0).getId());
+
+        issue1.delete();
+        issue2.delete();
+        issue3.delete();
+        project.delete();
     }
 }

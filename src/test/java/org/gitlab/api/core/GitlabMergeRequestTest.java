@@ -1,9 +1,12 @@
 package org.gitlab.api.core;
 
+import org.gitlab.api.http.Config;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class GitlabMergeRequestTest {
     private static final GitlabAPIClient CLIENT =
@@ -20,7 +23,7 @@ public class GitlabMergeRequestTest {
         mergeRequest = mergeRequest.withDescription("a new merge request").update();
         assertEquals("a new merge request", project.getMergeRequest(mergeRequest.getIid()).getDescription());
         GitlabMergeRequest mergeRequestDeleted = mergeRequest.delete();
-        assertThrows(RuntimeException.class, ()->{project.getMergeRequest(mergeRequestDeleted.getIid());});
+        assertThrows(GitlabException.class, ()->{project.getMergeRequest(mergeRequestDeleted.getIid());});
 
         src.delete();
         target.delete();
@@ -36,7 +39,7 @@ public class GitlabMergeRequestTest {
         GitlabMergeRequest mergeRequest = project.newMergeRequest(src.getName(), target.getName(), "req1").create();
         assertEquals("req1", project.getIssue(mergeRequest.getIid()).getTitle());
         GitlabMergeRequest mergeRequestDeleted = mergeRequest.delete();
-        assertThrows(RuntimeException.class, ()->{project.getMergeRequest(mergeRequestDeleted.getIid());});
+        assertThrows(GitlabException.class, ()->{project.getMergeRequest(mergeRequestDeleted.getIid());});
 
         src.delete();
         target.delete();
@@ -50,11 +53,11 @@ public class GitlabMergeRequestTest {
         GitlabBranch target = project.newBranch("branch2");
 
         GitlabMergeRequest mergeRequest = project.newMergeRequest(src.getName(), target.getName(), "req1").create();
-        assertThrows(RuntimeException.class,
+        assertThrows(GitlabException.class,
                 ()->{project.newMergeRequest("req1", src.getName(), target.getName()).create();});
         assertEquals("issue1", project.getMergeRequest(mergeRequest.getIid()).getTitle());
         GitlabMergeRequest mergeRequestDeleted = mergeRequest.delete();
-        assertThrows(RuntimeException.class, ()->{project.getIssue(mergeRequestDeleted.getIid());});
+        assertThrows(GitlabException.class, ()->{project.getIssue(mergeRequestDeleted.getIid());});
 
         src.delete();
         target.delete();
@@ -71,8 +74,8 @@ public class GitlabMergeRequestTest {
         assertEquals("req1", project.getMergeRequest(mergeRequest.getIid()).getTitle());
         GitlabMergeRequest mergeRequestDeleted1 = mergeRequest.delete();
         assertNotNull(mergeRequestDeleted1);
-        assertThrows(RuntimeException.class, ()->{mergeRequest.delete();});
-        assertThrows(RuntimeException.class, ()->{project.getMergeRequest(mergeRequestDeleted1.getIid());});
+        assertThrows(GitlabException.class, ()->{mergeRequest.delete();});
+        assertThrows(GitlabException.class, ()->{project.getMergeRequest(mergeRequestDeleted1.getIid());});
 
         src.delete();
         target.delete();
@@ -93,7 +96,7 @@ public class GitlabMergeRequestTest {
         mergeRequest.withTitle("req2").update();
         assertEquals("req2", project.getMergeRequest(mergeRequest.getIid()).getTitle());
         GitlabMergeRequest mergeRequestDeleted = mergeRequest.delete();
-        assertThrows(RuntimeException.class, ()->{project.getIssue(mergeRequestDeleted.getId());});
+        assertThrows(GitlabException.class, ()->{project.getIssue(mergeRequestDeleted.getId());});
 
         src.delete();
         target.delete();
@@ -211,6 +214,62 @@ public class GitlabMergeRequestTest {
 
     @Test
     void testQuery() {
+        GitlabProject project = CLIENT.newProject("test").create();
+        GitlabBranch src = project.newBranch("branch1");
+        GitlabBranch target = project.newBranch("branch2");
 
+        GitlabMergeRequest mergeRequest1 = project
+                .newMergeRequest(src.getName(), target.getName(), "req1")
+                .withDescription("new req1").create();
+        GitlabMergeRequest mergeRequest2 = project
+                .newMergeRequest(src.getName(), "master", "req2")
+                .withDescription("new req2").create();
+        GitlabMergeRequest mergeRequest3 = project
+                .newMergeRequest(src.getName(), "master", "req3")
+                .withDescription("new req3").create();
+
+        // Query all issues
+        List<GitlabMergeRequest> allMergeRequests = CLIENT.mergeRequests().query();
+        assertEquals(3, allMergeRequests.size());
+
+        // Valid query field
+        Config config = project.getConfig();
+        GitlabMergeRequest.Query q1 = new GitlabMergeRequest.Query(config).withTargetBranch(target.getName());
+        List<GitlabMergeRequest> res1 = q1.query();
+        assertEquals(1, res1.size());
+
+        // Invalid query field
+        GitlabMergeRequest.Query q2 = new GitlabMergeRequest.Query(config).withCreatedBefore(LocalDateTime.now());
+        List<GitlabMergeRequest> res2 = q2.query();
+        assertEquals(0, res2.size());
+
+        // Sort
+        GitlabMergeRequest.Query q3 = new GitlabMergeRequest.Query(config).withTargetBranch("master").withSort("desc");
+        List<GitlabMergeRequest> res3 = q3.query();
+        assertEquals(2, res3.size());
+        assertEquals(mergeRequest3.getId(), res3.get(0).getId());
+        assertEquals(mergeRequest2.getId(), res3.get(1).getId());
+
+        // Order by
+        GitlabMergeRequest.Query q4 = new GitlabMergeRequest
+                .Query(config).
+                withTargetBranch("master")
+                .withOrderBy("created_at");
+        List<GitlabMergeRequest> res4 = q4.query();
+        assertEquals(2, res3.size());
+        assertEquals(mergeRequest2.getId(), res4.get(0).getId());
+        assertEquals(mergeRequest3.getId(), res4.get(1).getId());
+
+        // Search
+        GitlabMergeRequest.Query q5 = new GitlabMergeRequest.Query(config).withSearch("new req");
+        List<GitlabMergeRequest> res5 = q5.query();
+        assertEquals(3, res3.size());
+
+        mergeRequest1.delete();
+        mergeRequest2.delete();
+        mergeRequest3.delete();
+        src.delete();
+        target.delete();
+        project.delete();
     }
 }
