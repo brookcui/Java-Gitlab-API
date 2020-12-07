@@ -1,10 +1,6 @@
-package org.gitlab.api.models;
+package org.gitlab.api.core;
 
-import org.gitlab.api.core.*;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -215,6 +211,6 @@ public class GitlabMergeRequestTest {
 
     @Test
     void testQuery() {
-        
+
     }
 }

@@ -1,12 +1,11 @@
-package org.gitlab.api.models;
+package org.gitlab.api.core;
 
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
-import org.gitlab.api.core.*;
+import org.gitlab.api.http.Config;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -80,7 +79,7 @@ public class GitlabIssueTest {
         GitlabIssue issue1 = project1.newIssue("issue1").create();
         assertEquals("issue1", project1.getIssue(issue1.getId()).getTitle());
         issue1.withProject(project2).update();
-        assertThrows(IOException.class, ()->{project1.getIssue(issue1.getId());});
+        assertThrows(GitlabException.class, ()->{project1.getIssue(issue1.getId());});
         assertEquals("issue1", project1.getIssue(issue1.getId()).getTitle());
         issue1.delete();
         project1.delete();
@@ -170,8 +169,6 @@ public class GitlabIssueTest {
 
     @Test
     void testQuery() {
-        GitlabProject project = CLIENT.newProject("test").create();
-        GitlabIssue issue1 = project.newIssue("issue1").create();
-        GitlabIssue.Query q = new GitlabIssue.Query<GitlabIssue>().withCreatedBefore(LocalDateTime.now())
+
     }
 }
