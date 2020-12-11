@@ -1,93 +1,85 @@
 package org.gitlab.api.core;
 
 import org.gitlab.api.http.Config;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GitlabIssueTest {
     private static final GitlabAPIClient CLIENT =
             GitlabAPIClient.fromAccessToken("https://gitlab.com", System.getenv("TOKEN"));
+    private GitlabProject project;
+
+    @BeforeEach
+    void setup() {
+        Random ran = new Random();
+        String num = String.valueOf(ran.nextInt(100));
+        project = CLIENT.newProject("test" + num).create();
+
+    }
+    @AfterEach
+    void cleanup() {
+        project.delete();
+    }
+
     @Test // CRURDR
     void testSequentialCRUD() {
-        GitlabProject project = CLIENT.newProject("test").create();
         GitlabIssue issue1 = project.newIssue("issue1").create();
-        assertEquals("issue1", project.getIssue(issue1.getId()).getTitle());
+        assertEquals("issue1", project.getIssue(issue1.getIid()).getTitle());
         issue1 = issue1.withDescription("a new issue").update();
-        assertEquals("a new issue", project.getIssue(issue1.getId()).getDescription());
+        assertEquals("a new issue", project.getIssue(issue1.getIid()).getDescription());
         GitlabIssue issueDeleted = issue1.delete();
-        assertThrows(GitlabException.class, ()->{project.getIssue(issueDeleted.getId());});
-        project.delete();
+        assertThrows(GitlabException.class, ()->{project.getIssue(issueDeleted.getIid());});
     }
 
     @Test // CRDR
     void testSequentialCRD() {
-        GitlabProject project = CLIENT.newProject("test").create();
         GitlabIssue issue1 = project.newIssue("issue1").create();
-        assertEquals("issue1", project.getIssue(issue1.getId()).getTitle());
+        assertEquals("issue1", project.getIssue(issue1.getIid()).getTitle());
         GitlabIssue issueDeleted = issue1.delete();
-        assertThrows(GitlabException.class, ()->{project.getIssue(issueDeleted.getId());});
-        project.delete();
+        assertThrows(GitlabException.class, ()->{project.getIssue(issueDeleted.getIid());});
     }
 
     @Test //CRURDDR
     void testDuplicateDelete() {
-        GitlabProject project = CLIENT.newProject("test").create();
         GitlabIssue issue1 = project.newIssue("issue1").create();
-        assertEquals("issue1", project.getIssue(issue1.getId()).getTitle());
+        assertEquals("issue1", project.getIssue(issue1.getIid()).getTitle());
         issue1.withDescription("a new issue").update();
-        assertEquals("a new issue", project.getIssue(issue1.getId()).getDescription());
+        assertEquals("a new issue", project.getIssue(issue1.getIid()).getDescription());
         GitlabIssue issueDeleted1 = issue1.delete();
         assertNotNull(issueDeleted1);
         assertThrows(GitlabException.class, ()->{issue1.delete();});
-        assertThrows(GitlabException.class, ()->{project.getIssue(issue1.getId()).getTitle();});
-        project.delete();
+        assertThrows(GitlabException.class, ()->{project.getIssue(issue1.getIid()).getTitle();});
     }
 
     @Test //CRUURDR
     void testDuplicateUpdate() {
-        GitlabProject project = CLIENT.newProject("test").create();
         GitlabIssue issue1 = project.newIssue("issue1").create();
-        assertEquals("issue1", project.getIssue(issue1.getId()).getTitle());
+        assertEquals("issue1", project.getIssue(issue1.getIid()).getTitle());
         issue1.withDescription("a new issue1").update();
-        assertEquals("a new issue", project.getIssue(issue1.getId()).getDescription());
+        assertEquals("a new issue1", project.getIssue(issue1.getIid()).getDescription());
         issue1.withDescription("a new issue2").update();
-        assertEquals("a new issue2", project.getIssue(issue1.getId()).getDescription());
+        assertEquals("a new issue2", project.getIssue(issue1.getIid()).getDescription());
         GitlabIssue issueDeleted1 = issue1.delete();
         assertNotNull(issueDeleted1);
-        assertThrows(GitlabException.class, ()->{project.getIssue(issue1.getId()).getTitle();});
-        project.delete();
+        assertThrows(GitlabException.class, ()->{project.getIssue(issue1.getIid()).getTitle();});
     }
 
     @Test //Update a non-exist object
     void testMultipleUpdate() {
-        GitlabProject project = CLIENT.newProject("test").create();
         assertThrows(GitlabException.class, ()->{project.getIssue(12345).withTitle("issue1").update();});
         assertThrows(GitlabException.class, ()->{project.getIssue(12345).withDescription("a new issue1").update();});
         assertThrows(GitlabException.class, ()->{project.getIssue(12345).withDueDate(LocalDate.now()).update();});
-        project.delete();
-    }
-
-    @Test // Move issue to a new project
-    void testMoveIssue() {
-        GitlabProject project1 = CLIENT.newProject("test1").create();
-        GitlabProject project2 = CLIENT.newProject("test2").create();
-        GitlabIssue issue1 = project1.newIssue("issue1").create();
-        assertEquals("issue1", project1.getIssue(issue1.getId()).getTitle());
-        issue1.withProject(project2).update();
-        assertThrows(GitlabException.class, ()->{project1.getIssue(issue1.getId());});
-        assertEquals("issue1", project1.getIssue(issue1.getId()).getTitle());
-        issue1.delete();
-        project1.delete();
-        project2.delete();
     }
 
     @Test
     void testEquals() {
-        GitlabProject project = CLIENT.newProject("test").create();
         // same title
         GitlabIssue issue1 = project.newIssue("issue").create();
         GitlabIssue issue2 = project.newIssue("issue").create();
@@ -98,12 +90,10 @@ public class GitlabIssueTest {
         assertFalse(issue1.equals(issue2));
         issue1.delete();
         issue2.delete();
-        project.delete();
     }
 
     @Test
     void testToString() {
-        GitlabProject project = CLIENT.newProject("test").create();
         GitlabIssue issue1 = project.newIssue("issue1").create();
         issue1.withDescription("a new issue");
         String expected = "GitlabIssue{" +
@@ -126,17 +116,15 @@ public class GitlabIssueTest {
                 ", subscribed=" + issue1.isSubscribed() +
                 ", dueDate=" + issue1.getDueDate() +
                 ", webUrl=" + issue1.getWebUrl() +
-                ", hasTasks=" + issue1.isHasTasks() +
+                ", hasTasks=" + issue1.hasTasks() +
                 ", epicId=" + issue1.getEpicId() +
                 '}';
         assertEquals(expected, issue1.toString());
         issue1.delete();
-        project.delete();
     }
 
     @Test
     void testGetter() {
-        GitlabProject project = CLIENT.newProject("test").create();
         GitlabIssue issue1 = project.newIssue("issue1").create();
         assertEquals("issue1", issue1.getTitle());
         assertEquals(project.getId(), issue1.getProjectId());
@@ -147,15 +135,13 @@ public class GitlabIssueTest {
         assertNull(issue1.getClosedAt());
         assertNull(issue1.getDueDate());
         assertFalse(issue1.hasTasks());
-        assertFalse(issue1.isSubscribed());
+        assertTrue(issue1.isSubscribed());
 
         issue1.delete();
-        project.delete();
     }
 
     @Test
     void testChangeState() {
-        GitlabProject project = CLIENT.newProject("test").create();
         GitlabIssue issue1 = project.newIssue("issue1").create();
         assertEquals("opened", issue1.getState());
         issue1.close();
@@ -163,7 +149,6 @@ public class GitlabIssueTest {
         issue1.reopen();
         assertEquals("opened", issue1.getState());
         issue1.delete();
-        project.delete();
     }
 
     @Test
@@ -171,49 +156,43 @@ public class GitlabIssueTest {
         LocalDate today = LocalDate.now();
         LocalDate tomorrow = today.plusDays(1);
 
-        GitlabProject project = CLIENT.newProject("test").create();
         GitlabIssue issue1 = project.newIssue("issue1").withDescription("new issue1").create();
         GitlabIssue issue2 = project.newIssue("issue2").withDueDate(tomorrow).create();
         GitlabIssue issue3 = project.newIssue("issue3").withDueDate(tomorrow).create();
 
-        // Query all issues
-        List<GitlabIssue> allIssues = CLIENT.issues().query();
+        Config config = project.getConfig();
+
+        // Query all issues under this project
+        List<GitlabIssue> allIssues = project.issues().query();
         assertEquals(3, allIssues.size());
 
         // Valid query field
-        Config config = project.getConfig();
-        GitlabIssue.Query q1 = new GitlabIssue.Query(config).withDueDate("0");
-        List<GitlabIssue> res1 = q1.query();
-        assertEquals(2, res1.size());
+        List<GitlabIssue> res1 = project.issues().withDueDate("0").query();
+        assertEquals(1, res1.size());
 
         // Invalid query field
-        GitlabIssue.Query q2 = new GitlabIssue.Query(config).withAuthorUsername("invalid name");
-        List<GitlabIssue> res2 = q2.query();
+        List<GitlabIssue> res2 = project.issues().withAuthorUsername("invalid name").query();
         assertEquals(0, res2.size());
 
         // Sort
-        GitlabIssue.Query q3 = new GitlabIssue.Query(config).withDueDate("week").withSort("desc");
-        List<GitlabIssue> res3 = q3.query();
+        List<GitlabIssue> res3 = project.issues().withDueDate("week").withSort("desc").query();
         assertEquals(2, res3.size());
-        assertEquals(issue3.getId(), res3.get(0).getId());
-        assertEquals(issue2.getId(), res3.get(1).getId());
+        assertEquals(issue3.getIid(), res3.get(0).getIid());
+        assertEquals(issue2.getIid(), res3.get(1).getIid());
 
         // Order by
-        GitlabIssue.Query q4 = new GitlabIssue.Query(config).withDueDate("week").withOrderBy("created_at");
-        List<GitlabIssue> res4 = q4.query();
-        assertEquals(2, res3.size());
-        assertEquals(issue2.getId(), res4.get(0).getId());
-        assertEquals(issue3.getId(), res4.get(1).getId());
+        List<GitlabIssue> res4 = project.issues().withDueDate("week").withOrderBy("created_at").query();
+        assertEquals(2, res4.size());
+        assertEquals(issue3.getIid(), res4.get(0).getIid());
+        assertEquals(issue2.getIid(), res4.get(1).getIid());
 
         // Search
-        GitlabIssue.Query q5 = new GitlabIssue.Query(config).withSearch("new issue1");
-        List<GitlabIssue> res5 = q5.query();
-        assertEquals(1, res3.size());
-        assertEquals(issue1.getId(), res5.get(0).getId());
+        List<GitlabIssue> res5 = project.issues().withSearch("new issue1").query();
+        assertEquals(1, res5.size());
+        assertEquals(issue1.getIid(), res5.get(0).getIid());
 
         issue1.delete();
         issue2.delete();
         issue3.delete();
-        project.delete();
     }
 }
