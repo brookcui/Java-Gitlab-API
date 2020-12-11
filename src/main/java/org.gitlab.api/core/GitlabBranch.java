@@ -124,6 +124,11 @@ public class GitlabBranch implements GitlabComponent {
                 commit.equals(that.commit);
     }
 
+    /**
+     * Get the {@link GitlabProject} that current the {@link GitlabBranch} belongs to
+     *
+     * @return the {@link GitlabProject} that current the {@link GitlabBranch} belongs to
+     */
     public GitlabProject getProject() {
         return project;
     }
@@ -136,6 +141,10 @@ public class GitlabBranch implements GitlabComponent {
         return this;
     }
 
+    /**
+     * Query class for the @link GitlabBranch} to support query operations
+     * Gitlab Web API: https://docs.gitlab.com/ee/api/branches.html
+     */
     public static class Query extends GitlabQuery<GitlabBranch> {
 
         private final int projectId;
@@ -145,18 +154,33 @@ public class GitlabBranch implements GitlabComponent {
             this.projectId = projectId;
         }
 
-
+        /**
+         * Add search parameter to the current query
+         *
+         * @param search - string to be searched
+         * @return Current {@link GitlabBranch} with search parameter
+         */
         public Query withSearch(String search) {
             appendString("search", search);
             return this;
         }
 
+        /**
+         * add pagination on top of the query
+         *
+         * @param pagination pagination object that defines page number and size
+         * @return Current {@link GitlabBranch} with the given peganation object
+         */
         @Override
         public Query withPagination(Pagination pagination) {
             appendPagination(pagination);
             return this;
         }
 
+        /**
+         * Get the URL prefix for the HTTP request
+         * @return The URL for current {@link GitlabBranch}
+         */
         @Override
         public String getUrlPrefix() {
             return String.format("/projects/%d/repository/branches", projectId);
