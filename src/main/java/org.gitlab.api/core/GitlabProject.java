@@ -483,7 +483,7 @@ public class GitlabProject implements GitlabComponent {
     }
 
     public static class Query extends GitlabQuery<GitlabProject> {
-        public Query(Config config) {
+        Query(Config config) {
             super(config, GitlabProject[].class);
         }
 
