@@ -1,6 +1,5 @@
 package org.gitlab.api.core;
 
-import org.gitlab.api.http.Config;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -159,8 +158,6 @@ public class GitlabIssueTest {
         GitlabIssue issue1 = project.newIssue("issue1").withDescription("new issue1").create();
         GitlabIssue issue2 = project.newIssue("issue2").withDueDate(tomorrow).create();
         GitlabIssue issue3 = project.newIssue("issue3").withDueDate(tomorrow).create();
-
-        Config config = project.getConfig();
 
         // Query all issues under this project
         List<GitlabIssue> allIssues = project.issues().query();
