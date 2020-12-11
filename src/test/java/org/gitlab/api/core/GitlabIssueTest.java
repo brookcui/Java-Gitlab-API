@@ -159,9 +159,13 @@ public class GitlabIssueTest {
         GitlabIssue issue2 = project.newIssue("issue2").withDueDate(tomorrow).create();
         GitlabIssue issue3 = project.newIssue("issue3").withDueDate(tomorrow).create();
 
+        // Query all merge requests visible to current user
+        List<GitlabIssue> allIssues = CLIENT.issues().query();
+        assertTrue(allIssues.size() >= 3);
+
         // Query all issues under this project
-        List<GitlabIssue> allIssues = project.issues().query();
-        assertEquals(3, allIssues.size());
+        List<GitlabIssue> allProjectIssues = project.issues().query();
+        assertEquals(3, allProjectIssues.size());
 
         // Valid query field
         List<GitlabIssue> res1 = project.issues().withDueDate("0").query();
