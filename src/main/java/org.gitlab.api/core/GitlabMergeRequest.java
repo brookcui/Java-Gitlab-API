@@ -287,7 +287,7 @@ public class GitlabMergeRequest implements GitlabComponent {
     public static class ProjectQuery extends GitlabQuery<GitlabMergeRequest> {
         private final int projectId;
 
-        public ProjectQuery(Config config, int projectId) {
+        ProjectQuery(Config config, int projectId) {
             super(config, GitlabMergeRequest[].class);
             this.projectId = projectId;
         }

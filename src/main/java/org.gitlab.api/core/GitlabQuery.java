@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * Models the Query
  * aspect of a URL
  */
-public abstract class GitlabQuery<C extends GitlabComponent> implements GitlabComponent {
+abstract class GitlabQuery<C extends GitlabComponent> implements GitlabComponent {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter
             .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
@@ -32,7 +32,7 @@ public abstract class GitlabQuery<C extends GitlabComponent> implements GitlabCo
     private final List<Tuple<String, Tuple<String, String>>> params = new ArrayList<Tuple<String, Tuple<String, String>>>();
     private Config config;
 
-    public GitlabQuery(Config config, Class<C[]> type) {
+    GitlabQuery(Config config, Class<C[]> type) {
         this.config = config;
         this.type = type;
     }

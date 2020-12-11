@@ -241,10 +241,6 @@ public class GitlabIssue implements GitlabComponent {
         return projectId;
     }
 
-    public boolean isHasTasks() {
-        return hasTasks;
-    }
-
     /*
      * Setters
      * There will be no setter for projectId, id, author, upvotes, downvotes, mergeRequestCount, updatedAt, createdAt,
@@ -347,7 +343,7 @@ public class GitlabIssue implements GitlabComponent {
     public static class ProjectQuery extends GitlabQuery<GitlabIssue> {
         private final int projectId;
 
-        public ProjectQuery(Config config, int projectId) {
+         ProjectQuery(Config config, int projectId) {
             super(config, GitlabIssue[].class);
             this.projectId = projectId;
         }
