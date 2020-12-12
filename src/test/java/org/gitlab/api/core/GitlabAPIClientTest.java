@@ -13,10 +13,6 @@ public class GitlabAPIClientTest {
         GitlabUser currentUser = CLIENT.getCurrentUser();
         GitlabProject newProject = CLIENT.newProject("test1").create();
         assertEquals(newProject.getName(), CLIENT.getProject(newProject.getId()).getName());
-        String path = newProject.getPath();
-        String name = newProject.getName();
-
-//        assertEquals(newProject.getName(), CLIENT.getProject(name, path).getName()); //wait for impl-dev
         newProject.delete();
     }
     @Test
