@@ -172,7 +172,7 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
     /**
      * Get the config that is stored in current {@link GitlabBranch}
      *
-     * @return
+     * @return the config with user detail
      */
     @Override
     public Config getConfig() {
