@@ -27,8 +27,6 @@ public class GitlabMergeRequestTest {
     }
     @AfterEach
     void cleanup() {
-//        src.delete();
-//        target.delete();
         project.delete();
     }
 
