@@ -39,6 +39,8 @@ abstract class GitlabQuery<C extends GitlabComponent> implements GitlabComponent
 
     public abstract String getUrlPrefix();
 
+    abstract void bind(C component);
+
     public abstract GitlabQuery<C> withPagination(Pagination pagination);
 
     @Override
@@ -53,14 +55,16 @@ abstract class GitlabQuery<C extends GitlabComponent> implements GitlabComponent
     }
 
     public List<C> query() {
-        return GitlabHttpClient.getList(config, getEntireUrl(), type);
+        List<C> components = GitlabHttpClient.getList(config, getEntireUrl(), type);
+        components.forEach(this::bind);
+        return components;
     }
 
     public String getEntireUrl() {
         return getUrlPrefix() + toString();
     }
 
-    public Class<C[]> getType() {
+    protected Class<C[]> getType() {
         return type;
     }
 

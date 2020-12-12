@@ -3,11 +3,15 @@ package org.gitlab.api.core;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.gitlab.api.http.Config;
-import org.gitlab.api.http.LocalDateTimeDeserializer;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -53,21 +57,6 @@ public class GitlabCommit implements GitlabComponent {
         this.id = id;
     }
 
-    @Override
-    public Config getConfig() {
-        return config;
-    }
-
-    @Override
-    public GitlabCommit withConfig(Config config) {
-        this.config = config;
-        return this;
-    }
-
-    GitlabCommit withProject(GitlabProject project) {
-        this.project = project;
-        return this;
-    }
 
     @Override
     public String toString() {
@@ -171,7 +160,7 @@ public class GitlabCommit implements GitlabComponent {
         return status;
     }
 
-    private String getWebUrl() {
+    public String getWebUrl() {
         return webUrl;
     }
 
@@ -179,46 +168,64 @@ public class GitlabCommit implements GitlabComponent {
         return project;
     }
 
-    public static class Query extends GitlabQuery<GitlabCommit> {
-        private final int projectId;
 
-        Query(Config config, int projectId) {
+    @Override
+    public Config getConfig() {
+        return config;
+    }
+
+    @Override
+    public GitlabCommit withConfig(Config config) {
+        this.config = config;
+        return this;
+    }
+
+    GitlabCommit withProject(GitlabProject project) {
+        this.project = project;
+        return this;
+    }
+
+
+    public static class ProjectQuery extends GitlabQuery<GitlabCommit> {
+        private final GitlabProject project;
+
+        ProjectQuery(Config config, GitlabProject project) {
             super(config, GitlabCommit[].class);
-            this.projectId = projectId;
+            this.project = project;
         }
 
-        public Query withRefName(String refName) {
+        public ProjectQuery withRefName(String refName) {
             appendString("ref_name", refName);
             return this;
         }
 
-        public Query withSince(LocalDateTime since) {
+        public ProjectQuery withSince(LocalDateTime since) {
             appendDateTime("since", since);
             return this;
         }
 
-        public Query withUntil(LocalDateTime until) {
+        public ProjectQuery withUntil(LocalDateTime until) {
             appendDateTime("until", until);
             return this;
         }
 
-        public Query withPath(String path) {
+        public ProjectQuery withPath(String path) {
             appendString("path", path);
             return this;
         }
 
-        public Query withStats(boolean withStats) {
+        public ProjectQuery withStats(boolean withStats) {
             appendBoolean("with_stats", withStats);
             return this;
         }
 
-        public Query withFirstParent(boolean firstParent) {
+        public ProjectQuery withFirstParent(boolean firstParent) {
             appendBoolean("first_parent", firstParent);
             return this;
         }
 
         @Override
-        public Query withPagination(Pagination pagination) {
+        public ProjectQuery withPagination(Pagination pagination) {
             appendPagination(pagination);
             return this;
         }
@@ -231,14 +238,33 @@ public class GitlabCommit implements GitlabComponent {
          * @param order
          * @return
          */
-        public Query withOrder(String order) {
+        public ProjectQuery withOrder(String order) {
             appendString("order", order);
             return this;
         }
 
+
         @Override
         public String getUrlPrefix() {
-            return String.format("/projects/%d/repository/commits", projectId);
+            return String.format("/projects/%d/repository/commits", project.getId());
+        }
+
+        @Override
+         void bind(GitlabCommit component) {
+            component.withProject(project);
+        }
+    }
+
+
+
+    private static class LocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
+        @Override
+        public LocalDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) {
+            try {
+                return ZonedDateTime.parse(jsonParser.getText()).toLocalDateTime();
+            } catch (IOException e) {
+                throw new GitlabException(e);
+            }
         }
     }
 

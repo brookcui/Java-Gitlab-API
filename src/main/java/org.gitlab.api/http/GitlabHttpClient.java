@@ -18,7 +18,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class GitlabHttpClient {
-    public static final ObjectMapper MAPPER = new ObjectMapper()
+    private static final ObjectMapper MAPPER = new ObjectMapper()
             .registerModule(new JavaTimeModule())
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     /**
@@ -84,7 +84,7 @@ public class GitlabHttpClient {
     }
 
 
-    public static String request(Config config, String tailUrl, Method method, Body data) {
+    private static String request(Config config, String tailUrl, Method method, Body data) {
         Request request;
         try {
             request = new Request.Builder()
@@ -112,6 +112,10 @@ public class GitlabHttpClient {
         } catch (IOException e) {
             throw new GitlabException(e);
         }
+    }
+
+    private enum Method {
+        GET, PUT, POST, DELETE;
     }
 
 }

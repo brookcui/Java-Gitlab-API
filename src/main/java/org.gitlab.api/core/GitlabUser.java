@@ -204,6 +204,11 @@ public class GitlabUser implements GitlabComponent {
         public String getUrlPrefix() {
             return "/users";
         }
+
+        @Override
+        void bind(GitlabUser component) {
+
+        }
     }
 
     public static class ProjectQuery extends GitlabQuery<GitlabUser> {
@@ -233,6 +238,11 @@ public class GitlabUser implements GitlabComponent {
         @Override
         public String getUrlPrefix() {
             return String.format("/projects/%d/users", projectId);
+        }
+
+        @Override
+        void bind(GitlabUser component) {
+
         }
     }
 }

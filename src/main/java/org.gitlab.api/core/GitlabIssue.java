@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabIssue implements GitlabComponent {
+public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
 
     @JsonIgnore
     private Config config;
@@ -62,38 +62,18 @@ public class GitlabIssue implements GitlabComponent {
     private boolean hasTasks;
     @JsonProperty("epic_id")
     private int epicId;
+
     /**
      * Construct the issue with name
      * TODO: package private or protected
      *
      * @param title
      */
-    public GitlabIssue(@JsonProperty("title") String title) {
+    GitlabIssue(@JsonProperty("title") String title) {
         this.title = title;
     }
 
     @Override
-    public Config getConfig() {
-        return config;
-    }
-
-    @Override
-    public GitlabIssue withConfig(Config config) {
-        this.config = config;
-        return this;
-    }
-
-    public List<String> getLabels() {
-        return labels;
-    }
-
-    GitlabIssue withProject(GitlabProject project) {
-        this.project = project;
-        this.projectId = project.getId();
-        return this;
-    }
-
-    // create a new gitlab issue
     public GitlabIssue create() {
         Body body = new Body()
                 .putString("title", title)
@@ -103,12 +83,12 @@ public class GitlabIssue implements GitlabComponent {
                 .putDate("due_date", dueDate);
         return GitlabHttpClient.post(config, String.format("/projects/%d/issues", projectId), body, this);
     }
-
+    @Override
     public GitlabIssue delete() {
         GitlabHttpClient.delete(config, String.format("/projects/%d/issues/%d", projectId, iid));
         return this;
     }
-
+    @Override
     public GitlabIssue update() {
         Body body = new Body()
                 .putString("title", title)
@@ -156,7 +136,6 @@ public class GitlabIssue implements GitlabComponent {
      * Lazily initialized project field
      *
      * @return
-     * @throws IOException
      */
     public GitlabProject getProject() {
         if (project == null) {
@@ -241,6 +220,17 @@ public class GitlabIssue implements GitlabComponent {
         return projectId;
     }
 
+
+    public List<String> getLabels() {
+        return labels;
+    }
+
+    GitlabIssue withProject(GitlabProject project) {
+        this.project = project;
+        this.projectId = project.getId();
+        return this;
+    }
+
     /*
      * Setters
      * There will be no setter for projectId, id, author, upvotes, downvotes, mergeRequestCount, updatedAt, createdAt,
@@ -271,6 +261,18 @@ public class GitlabIssue implements GitlabComponent {
         this.labels = labels;
         return this;
     }
+
+    @Override
+    public Config getConfig() {
+        return config;
+    }
+
+    @Override
+    public GitlabIssue withConfig(Config config) {
+        this.config = config;
+        return this;
+    }
+
 
     @Override
     public String toString() {
@@ -341,11 +343,11 @@ public class GitlabIssue implements GitlabComponent {
     }
 
     public static class ProjectQuery extends GitlabQuery<GitlabIssue> {
-        private final int projectId;
+        private final GitlabProject project;
 
-         ProjectQuery(Config config, int projectId) {
+        ProjectQuery(Config config, GitlabProject project) {
             super(config, GitlabIssue[].class);
-            this.projectId = projectId;
+            this.project = project;
         }
 
         public ProjectQuery withAssigneeId(int assigneeId) {
@@ -476,7 +478,12 @@ public class GitlabIssue implements GitlabComponent {
 
         @Override
         public String getUrlPrefix() {
-            return String.format("/projects/%d/issues", projectId);
+            return String.format("/projects/%d/issues", project.getId());
+        }
+
+        @Override
+         void bind(GitlabIssue component) {
+            component.withProject(project);
         }
 
     }
@@ -635,6 +642,11 @@ public class GitlabIssue implements GitlabComponent {
         @Override
         public String getUrlPrefix() {
             return "/issues";
+        }
+
+        @Override
+         void bind(GitlabIssue component) {
+
         }
     }
 

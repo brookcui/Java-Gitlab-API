@@ -1,7 +1,6 @@
 package org.gitlab.api.http;
 
 import org.gitlab.api.core.AuthMethod;
-import org.gitlab.api.core.GitlabAPIClient;
 
 import java.net.Proxy;
 
@@ -14,8 +13,6 @@ public class Config {
     private final String apiNamespace;
     private int responseReadTimeout = DEFAULT_TIMEOUT;
     private int connectionTimeout = DEFAULT_TIMEOUT;
-    private String userAgent = GitlabAPIClient.class.getCanonicalName() + "/" + System.getProperty("java.version");
-    private boolean ignoreCertificateErrors = false;
     private Proxy proxy;
 
     public Config(String endpoint, String token, AuthMethod method) {
@@ -33,6 +30,13 @@ public class Config {
         return endpoint + apiNamespace + tailAPIUrl;
     }
 
+
+    public AuthMethod authMethod() {
+        return authMethod;
+    }
+
+
+    // future work
     public Proxy getProxy() {
         return proxy;
     }
@@ -41,9 +45,6 @@ public class Config {
         this.proxy = proxy;
     }
 
-    public AuthMethod authMethod() {
-        return authMethod;
-    }
 
     public int getResponseReadTimeout() {
         return responseReadTimeout;
@@ -59,22 +60,6 @@ public class Config {
 
     public void setConnectionTimeout(int connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
-    }
-
-    public String getUserAgent() {
-        return userAgent;
-    }
-
-    public void setUserAgent(String userAgent) {
-        this.userAgent = userAgent;
-    }
-
-    public boolean isIgnoreCertificateErrors() {
-        return ignoreCertificateErrors;
-    }
-
-    public void setIgnoreCertificateErrors(boolean ignoreCertificateErrors) {
-        this.ignoreCertificateErrors = ignoreCertificateErrors;
     }
 
     public String token() {

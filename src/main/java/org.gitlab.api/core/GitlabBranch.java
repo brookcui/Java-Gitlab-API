@@ -10,7 +10,7 @@ import org.gitlab.api.http.GitlabHttpClient;
 import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabBranch implements GitlabComponent {
+public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
 
     @JsonProperty("name")
     private final String name;
@@ -30,22 +30,37 @@ public class GitlabBranch implements GitlabComponent {
     private GitlabCommit commit; // corresponds to branch name or commit SHA to create branch from
     @JsonIgnore
     private GitlabProject project;
+    @JsonIgnore
+    private String ref;
 
-    GitlabBranch(@JsonProperty("name") String name) {
+    GitlabBranch(@JsonProperty("name") String name,@JsonProperty("ref") String ref) {
         this.name = name;
+        this.ref = ref;
     }
-
     @Override
-    public Config getConfig() {
-        return config;
+    public GitlabBranch create() {
+        Body body = new Body()
+                .putString("branch", name)
+                .putString("ref", ref);
+        return GitlabHttpClient
+                .post(config, String.format("/projects/%d/repository/branches", project.getId()), body, this);
     }
-
     @Override
-    public GitlabBranch withConfig(Config config) {
-        this.config = config;
+    public GitlabBranch delete() {
+        GitlabHttpClient.delete(config, String.format("/projects/%d/repository/branches/%s", project.getId(), name));
         return this;
     }
 
+    /**
+     * Get the {@link GitlabProject} that current the {@link GitlabBranch} belongs to
+     *
+     * @return the {@link GitlabProject} that current the {@link GitlabBranch} belongs to
+     */
+    public GitlabProject getProject() {
+        return project;
+    }
+
+    // -- getters --
     public String getName() {
         return name;
     }
@@ -74,18 +89,6 @@ public class GitlabBranch implements GitlabComponent {
         return commit;
     }
 
-    public GitlabBranch create(String ref) {
-        Body body = new Body()
-                .putString("branch", name)
-                .putString("ref", ref);
-        return GitlabHttpClient
-                .post(config, String.format("/projects/%d/repository/branches", project.getId()), body, this);
-    }
-
-    public GitlabBranch delete() {
-        GitlabHttpClient.delete(config, String.format("/projects/%d/repository/branches/%s", project.getId(), name));
-        return this;
-    }
 
     @Override
     public String toString() {
@@ -124,14 +127,6 @@ public class GitlabBranch implements GitlabComponent {
                 commit.equals(that.commit);
     }
 
-    /**
-     * Get the {@link GitlabProject} that current the {@link GitlabBranch} belongs to
-     *
-     * @return the {@link GitlabProject} that current the {@link GitlabBranch} belongs to
-     */
-    public GitlabProject getProject() {
-        return project;
-    }
 
     GitlabBranch withProject(GitlabProject project) {
         this.project = project;
@@ -141,17 +136,28 @@ public class GitlabBranch implements GitlabComponent {
         return this;
     }
 
+    @Override
+    public Config getConfig() {
+        return config;
+    }
+
+    @Override
+    public GitlabBranch withConfig(Config config) {
+        this.config = config;
+        return this;
+    }
+
     /**
      * Query class for the @link GitlabBranch} to support query operations
      * Gitlab Web API: https://docs.gitlab.com/ee/api/branches.html
      */
-    public static class Query extends GitlabQuery<GitlabBranch> {
+    public static class ProjectQuery extends GitlabQuery<GitlabBranch> {
 
-        private final int projectId;
+        private final GitlabProject project;
 
-        Query(Config config, int projectId) {
+        ProjectQuery(Config config, GitlabProject project) {
             super(config, GitlabBranch[].class);
-            this.projectId = projectId;
+            this.project = project;
         }
 
         /**
@@ -160,7 +166,7 @@ public class GitlabBranch implements GitlabComponent {
          * @param search - string to be searched
          * @return Current {@link GitlabBranch} with search parameter
          */
-        public Query withSearch(String search) {
+        public ProjectQuery withSearch(String search) {
             appendString("search", search);
             return this;
         }
@@ -172,18 +178,24 @@ public class GitlabBranch implements GitlabComponent {
          * @return Current {@link GitlabBranch} with the given peganation object
          */
         @Override
-        public Query withPagination(Pagination pagination) {
+        public ProjectQuery withPagination(Pagination pagination) {
             appendPagination(pagination);
             return this;
         }
 
         /**
          * Get the URL prefix for the HTTP request
+         *
          * @return The URL for current {@link GitlabBranch}
          */
         @Override
         public String getUrlPrefix() {
-            return String.format("/projects/%d/repository/branches", projectId);
+            return String.format("/projects/%d/repository/branches", project.getId());
+        }
+
+        @Override
+        void bind(GitlabBranch component) {
+            component.withProject(project);
         }
     }
 

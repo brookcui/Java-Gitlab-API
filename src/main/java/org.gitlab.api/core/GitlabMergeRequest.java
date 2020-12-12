@@ -11,9 +11,10 @@ import org.gitlab.api.http.GitlabHttpClient;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabMergeRequest implements GitlabComponent {
+public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMergeRequest> {
 
     @JsonProperty("source_branch")
     private final String sourceBranch; // required
@@ -22,6 +23,8 @@ public class GitlabMergeRequest implements GitlabComponent {
     private int id; // required, url of the project
     @JsonProperty("iid")
     private int iid;
+    @JsonProperty("project_id")
+    private int projectId;
     @JsonProperty("author")
     private GitlabUser author;
     @JsonProperty("description")
@@ -53,12 +56,12 @@ public class GitlabMergeRequest implements GitlabComponent {
     private String targetBranch; // required
     @JsonProperty("labels")
     private List<String> labels = new ArrayList<>(); // required
-
     @JsonIgnore
     private GitlabProject project;
-
     @JsonIgnore
     private Config config;
+
+
     public GitlabMergeRequest(@JsonProperty("source_branch") String sourceBranch,
                               @JsonProperty("target_branch") String targetBranch,
                               @JsonProperty("title") String title) {
@@ -67,23 +70,20 @@ public class GitlabMergeRequest implements GitlabComponent {
         this.title = title;
     }
 
-    @Override
-    public Config getConfig() {
-        return config;
+    public int getProjectId() {
+        return projectId;
     }
 
-    @Override
-    public GitlabMergeRequest withConfig(Config config) {
-        this.config = config;
-        return this;
-    }
 
     GitlabMergeRequest withProject(GitlabProject project) {
+        Objects.requireNonNull(project);
         this.project = project;
+        this.projectId = project.getId();
         return this;
     }
 
     // create a new gitlab issue
+    @Override
     public GitlabMergeRequest create() {
         Body body = new Body()
                 .putString("source_branch", sourceBranch)
@@ -94,15 +94,15 @@ public class GitlabMergeRequest implements GitlabComponent {
                 .putStringArray("labels", labels);
 
         return GitlabHttpClient
-                .post(config, String.format("/projects/%d/merge_requests", project.getId()), body,
+                .post(config, String.format("/projects/%d/merge_requests", projectId), body,
                         this);
     }
-
+    @Override
     public GitlabMergeRequest delete() {
-        GitlabHttpClient.delete(config, String.format("/projects/%d/merge_requests/%d", project.getId(), iid));
+        GitlabHttpClient.delete(config, String.format("/projects/%d/merge_requests/%d", projectId, iid));
         return this;
     }
-
+    @Override
     public GitlabMergeRequest update() {
         Body body = new Body()
                 .putString("target_branch", targetBranch)
@@ -111,49 +111,38 @@ public class GitlabMergeRequest implements GitlabComponent {
                 .putString("description", description)
                 .putStringArray("labels", labels);
         return GitlabHttpClient
-                .put(config, String.format("/projects/%d/merge_requests/%d", project.getId(), iid), body, this);
+                .put(config, String.format("/projects/%d/merge_requests/%d", projectId, iid), body, this);
     }
 
     public List<GitlabUser> getAllParticipants() {
         return GitlabHttpClient.getList(config,
-                String.format("/projects/%d/merge_requests/%d/participants", project.getId(), iid), GitlabUser[].class);
-    }
-
-    public List<GitlabUser> getAllParticipants(Pagination pagination) {
-        return null; // TODO
+                String.format("/projects/%d/merge_requests/%d/participants", projectId, iid), GitlabUser[].class);
     }
 
     public List<GitlabCommit> getAllCommits() {
         return GitlabHttpClient.getList(config, String
-                .format("/projects/%d/merge_requests/%d/commits", project.getId(), iid), GitlabCommit[].class);
+                .format("/projects/%d/merge_requests/%d/commits", projectId, iid), GitlabCommit[].class);
     }
 
-    public List<GitlabCommit> getAllCommits(Pagination pagination) {
-        return null; // TODO
-    }
-
-    public List<GitlabIssue> getAllIssues() {
+    public List<GitlabIssue> getAllIssuesClosedByMerge() {
         return GitlabHttpClient.getList(config, String
-                .format("/projects/%d/merge_requests/%d/closes_issues", project.getId(), iid), GitlabIssue[].class);
+                .format("/projects/%d/merge_requests/%d/closes_issues", projectId, iid), GitlabIssue[].class);
     }
 
-    public List<GitlabIssue> getAllIssues(Pagination pagination) {
-        return null; // TODO
-    }
 
     public GitlabMergeRequest accept() {
         return GitlabHttpClient.put(config, String
-                .format("/projects/%d/merge_requests/%d/merge", project.getId(), iid), null, this);
+                .format("/projects/%d/merge_requests/%d/merge", projectId, iid), null, this);
     }
 
     public GitlabMergeRequest approve() {
         return GitlabHttpClient.post(config, String
-                .format("/projects/%d/merge_requests/%d/approve", project.getId(), iid), null, this);
+                .format("/projects/%d/merge_requests/%d/approve", projectId, iid), null, this);
     }
 
     public GitlabMergeRequest decline() {
         return GitlabHttpClient.post(config, String
-                .format("/projects/%d/merge_requests/%d/unapprove", project.getId(), iid), null, this);
+                .format("/projects/%d/merge_requests/%d/unapprove", projectId, iid), null, this);
     }
 
 
@@ -164,7 +153,6 @@ public class GitlabMergeRequest implements GitlabComponent {
     public String getDescription() {
         return description;
     }
-    //TODO: diff??
 
     public String getState() {
         return state;
@@ -223,6 +211,9 @@ public class GitlabMergeRequest implements GitlabComponent {
     }
 
     public GitlabProject getProject() {
+        if (project == null) {
+            project = GitlabProject.fromId(config, projectId);
+        }
         return project;
     }
 
@@ -284,12 +275,23 @@ public class GitlabMergeRequest implements GitlabComponent {
                 '}';
     }
 
-    public static class ProjectQuery extends GitlabQuery<GitlabMergeRequest> {
-        private final int projectId;
+    @Override
+    public Config getConfig() {
+        return config;
+    }
 
-        ProjectQuery(Config config, int projectId) {
+    @Override
+    public GitlabMergeRequest withConfig(Config config) {
+        this.config = config;
+        return this;
+    }
+
+    public static class ProjectQuery extends GitlabQuery<GitlabMergeRequest> {
+        private final GitlabProject project;
+
+        ProjectQuery(Config config, GitlabProject project) {
             super(config, GitlabMergeRequest[].class);
-            this.projectId = projectId;
+            this.project = project;
         }
 
         @Override
@@ -426,7 +428,12 @@ public class GitlabMergeRequest implements GitlabComponent {
 
         @Override
         public String getUrlPrefix() {
-            return String.format("/projects/%d/merge_requests", projectId);
+            return String.format("/projects/%d/merge_requests", project.getId());
+        }
+
+        @Override
+         void bind(GitlabMergeRequest component) {
+            component.withProject(project);
         }
 
     }
@@ -586,6 +593,11 @@ public class GitlabMergeRequest implements GitlabComponent {
         @Override
         public String getUrlPrefix() {
             return "/merge_requests";
+        }
+
+        @Override
+         void bind(GitlabMergeRequest component) {
+
         }
     }
 

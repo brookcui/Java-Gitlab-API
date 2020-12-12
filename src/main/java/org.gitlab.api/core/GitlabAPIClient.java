@@ -7,7 +7,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
 
-
 public class GitlabAPIClient {
     private final Config config;
 
@@ -37,9 +36,6 @@ public class GitlabAPIClient {
         return new GitlabAPIClient(endpoint, accessToken, AuthMethod.ACCESS_TOKEN);
     }
 
-    public Config getConfig() {
-        return config;
-    }
 
     /**
      * Get all the issues that the current {@link GitlabAPIClient} are authorized to get
@@ -65,9 +61,6 @@ public class GitlabAPIClient {
         return new GitlabMergeRequest.Query(config);
     }
 
-    public List<GitlabProject> getUserProjects(String username) {
-        return GitlabHttpClient.getList(config, String.format("/users/%s/projects", username), GitlabProject[].class);
-    }
 
     /**
      * Get the the project based on the given projectId
@@ -101,6 +94,10 @@ public class GitlabAPIClient {
         }
     }
 
+    public List<GitlabProject> getUserProjects(String username) {
+        return GitlabHttpClient.getList(config, String.format("/users/%s/projects", username), GitlabProject[].class);
+    }
+
     /**
      * Create a new project instance with a given name from the current GitlabAPIClient.
      *
@@ -113,19 +110,21 @@ public class GitlabAPIClient {
 
     /**
      * Get the user based on the given userId
-     *
+     * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/users.html
-     * GET /users/:id
+     *
      * @param userId - id of the user
-     * @return the {@link GitlabUser} of the given userId
+     * @return
      */
     public GitlabUser getUser(int userId) {
         return GitlabHttpClient.get(config, "/users/" + userId, GitlabUser.class);
     }
 
-    // FIXME: or name with getCurrentAuthenticatedUser
     public GitlabUser getCurrentUser() {
         return GitlabHttpClient.get(config, "/user", GitlabUser.class);
     }
 
+    public Config getConfig() {
+        return config;
+    }
 }

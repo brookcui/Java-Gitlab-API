@@ -20,7 +20,7 @@ import java.util.Objects;
  * @throws IOException
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabProject implements GitlabComponent {
+public class GitlabProject implements GitlabModifiableComponent<GitlabModifiableComponent> {
     @JsonIgnore
     private Config config;
     private int id; // required
@@ -87,18 +87,6 @@ public class GitlabProject implements GitlabComponent {
         return GitlabHttpClient.get(config, "/projects/" + id, GitlabProject.class);
     }
 
-    @Override
-    public Config getConfig() {
-        return config;
-    }
-
-    @Override
-    public GitlabProject withConfig(Config config) {
-        this.config = config;
-        return this;
-    }
-
-
     /**
      * Get the issue based on the given issueIId (The internal ID of a project’s issue)
      * https://docs.gitlab.com/ee/api/issues.html#single-project-issue
@@ -160,8 +148,8 @@ public class GitlabProject implements GitlabComponent {
      * @param name - the name of the new branch
      * @return
      */
-    public GitlabBranch newBranch(String name) {
-        return new GitlabBranch(name).withConfig(config).withProject(this);
+    public GitlabBranch newBranch(String name, String ref) {
+        return new GitlabBranch(name, ref).withConfig(config).withProject(this);
     }
 
     public GitlabMergeRequest newMergeRequest(String sourceBranch, String targetBranch, String title) {
@@ -181,20 +169,20 @@ public class GitlabProject implements GitlabComponent {
         return new GitlabUser.ProjectQuery(config, id);
     }
 
-    public GitlabBranch.Query branches() {
-        return new GitlabBranch.Query(config, id);
+    public GitlabBranch.ProjectQuery branches() {
+        return new GitlabBranch.ProjectQuery(config, this);
     }
 
-    public GitlabCommit.Query commits() {
-        return new GitlabCommit.Query(config, id);
+    public GitlabCommit.ProjectQuery commits() {
+        return new GitlabCommit.ProjectQuery(config, this);
     }
 
     public GitlabIssue.ProjectQuery issues() {
-        return new GitlabIssue.ProjectQuery(config, id);
+        return new GitlabIssue.ProjectQuery(config, this);
     }
 
     public GitlabMergeRequest.ProjectQuery mergeRequests() {
-        return new GitlabMergeRequest.ProjectQuery(config, id);
+        return new GitlabMergeRequest.ProjectQuery(config, this);
     }
 
 
@@ -215,6 +203,7 @@ public class GitlabProject implements GitlabComponent {
      *
      * @return the new {@link GitlabProject} after creating
      */
+    @Override
     public GitlabProject create() {
         return GitlabHttpClient.post(config, "/projects", new Body().putString("name", name), this);
     }
@@ -225,6 +214,7 @@ public class GitlabProject implements GitlabComponent {
      *
      * @return the previous {@link GitlabProject} before deleting
      */
+    @Override
     public GitlabProject delete() {
         GitlabHttpClient.delete(config, "/projects/" + id);
         return this;
@@ -236,6 +226,7 @@ public class GitlabProject implements GitlabComponent {
      *
      * @return the updated {@link GitlabProject}
      */
+    @Override
     public GitlabProject update() {
         Body body = new Body()
                 .putString("name", name)
@@ -444,6 +435,19 @@ public class GitlabProject implements GitlabComponent {
                 '}';
     }
 
+
+    @Override
+    public Config getConfig() {
+        return config;
+    }
+
+    @Override
+    public GitlabProject withConfig(Config config) {
+        this.config = config;
+        return this;
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -612,6 +616,11 @@ public class GitlabProject implements GitlabComponent {
         @Override
         public String getUrlPrefix() {
             return "/projects";
+        }
+
+        @Override
+        void bind(GitlabProject component) {
+
         }
     }
 
