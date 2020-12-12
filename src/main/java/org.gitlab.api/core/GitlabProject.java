@@ -614,7 +614,7 @@ public class GitlabProject implements GitlabModifiableComponent<GitlabModifiable
         }
 
         @Override
-        public String getUrlPrefix() {
+        public String getUrlSuffix() {
             return "/projects";
         }
 

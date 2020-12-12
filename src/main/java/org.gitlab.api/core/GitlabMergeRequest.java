@@ -62,27 +62,19 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
     private Config config;
 
 
-    public GitlabMergeRequest(@JsonProperty("source_branch") String sourceBranch,
-                              @JsonProperty("target_branch") String targetBranch,
-                              @JsonProperty("title") String title) {
+    GitlabMergeRequest(@JsonProperty("source_branch") String sourceBranch,
+                       @JsonProperty("target_branch") String targetBranch,
+                       @JsonProperty("title") String title) {
         this.sourceBranch = sourceBranch;
         this.targetBranch = targetBranch;
         this.title = title;
     }
 
-    public int getProjectId() {
-        return projectId;
-    }
-
-
-    GitlabMergeRequest withProject(GitlabProject project) {
-        Objects.requireNonNull(project);
-        this.project = project;
-        this.projectId = project.getId();
-        return this;
-    }
-
-    // create a new gitlab issue
+    /**
+     * Invoke the http request and create the current {@link GitlabMergeRequest}
+     *
+     * @return {@link GitlabMergeRequest} that's been created
+     */
     @Override
     public GitlabMergeRequest create() {
         Body body = new Body()
@@ -97,11 +89,23 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
                 .post(config, String.format("/projects/%d/merge_requests", projectId), body,
                         this);
     }
+
+    /**
+     * Invoke the http request and delete the current {@link GitlabMergeRequest}
+     *
+     * @return {@link GitlabMergeRequest} that's been created
+     */
     @Override
     public GitlabMergeRequest delete() {
         GitlabHttpClient.delete(config, String.format("/projects/%d/merge_requests/%d", projectId, iid));
         return this;
     }
+
+    /**
+     * Invoke the http request and update the current {@link GitlabMergeRequest}
+     *
+     * @return {@link GitlabMergeRequest} that's been created
+     */
     @Override
     public GitlabMergeRequest update() {
         Body body = new Body()
@@ -114,37 +118,73 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
                 .put(config, String.format("/projects/%d/merge_requests/%d", projectId, iid), body, this);
     }
 
+    /**
+     * Get a list of {@link GitlabUser} that participated in the current merge request
+     *
+     * @return list of {@link GitlabUser} that participated in the current merge request
+     */
     public List<GitlabUser> getAllParticipants() {
         return GitlabHttpClient.getList(config,
                 String.format("/projects/%d/merge_requests/%d/participants", projectId, iid), GitlabUser[].class);
     }
 
+    /**
+     * Get a list of {@link GitlabCommit} that commits in the current merge request
+     *
+     * @return list of {@link GitlabCommit} in the current merge request
+     */
     public List<GitlabCommit> getAllCommits() {
         return GitlabHttpClient.getList(config, String
                 .format("/projects/%d/merge_requests/%d/commits", projectId, iid), GitlabCommit[].class);
     }
 
+    /**
+     * Get a list of {@link GitlabIssue} that will be closed after commit is merged
+     *
+     * @return list of {@link GitlabIssue} that will be closed after commit is merged
+     */
     public List<GitlabIssue> getAllIssuesClosedByMerge() {
         return GitlabHttpClient.getList(config, String
                 .format("/projects/%d/merge_requests/%d/closes_issues", projectId, iid), GitlabIssue[].class);
     }
 
-
+    /**
+     * Accept the current merge request
+     *
+     * @return {@link GitlabMergeRequest} after merge request has been accepted
+     */
     public GitlabMergeRequest accept() {
         return GitlabHttpClient.put(config, String
                 .format("/projects/%d/merge_requests/%d/merge", projectId, iid), null, this);
     }
 
+    /**
+     * Approve the current merge request
+     *
+     * @return {@link GitlabMergeRequest} after merge request has been approved
+     */
     public GitlabMergeRequest approve() {
         return GitlabHttpClient.post(config, String
                 .format("/projects/%d/merge_requests/%d/approve", projectId, iid), null, this);
     }
 
+    /**
+     * Decline the current merge request
+     *
+     * @return {@link GitlabMergeRequest} after merge request has been decline
+     */
     public GitlabMergeRequest decline() {
         return GitlabHttpClient.post(config, String
                 .format("/projects/%d/merge_requests/%d/unapprove", projectId, iid), null, this);
     }
 
+    /**
+     * Get the current project ID 
+     * @return
+     */
+    public int getProjectId() {
+        return projectId;
+    }
 
     public GitlabUser getAuthor() {
         return author;
@@ -225,6 +265,12 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         return iid;
     }
 
+    GitlabMergeRequest withProject(GitlabProject project) {
+        Objects.requireNonNull(project);
+        this.project = project;
+        this.projectId = project.getId();
+        return this;
+    }
 
     public GitlabMergeRequest withTitle(String title) {
         this.title = title;
@@ -427,12 +473,12 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         @Override
-        public String getUrlPrefix() {
+        public String getUrlSuffix() {
             return String.format("/projects/%d/merge_requests", project.getId());
         }
 
         @Override
-         void bind(GitlabMergeRequest component) {
+        void bind(GitlabMergeRequest component) {
             component.withProject(project);
         }
 
@@ -591,12 +637,12 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         @Override
-        public String getUrlPrefix() {
+        public String getUrlSuffix() {
             return "/merge_requests";
         }
 
         @Override
-         void bind(GitlabMergeRequest component) {
+        void bind(GitlabMergeRequest component) {
 
         }
     }

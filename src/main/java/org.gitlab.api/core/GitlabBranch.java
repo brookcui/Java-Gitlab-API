@@ -33,10 +33,11 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
     @JsonIgnore
     private String ref;
 
-    GitlabBranch(@JsonProperty("name") String name,@JsonProperty("ref") String ref) {
+    GitlabBranch(@JsonProperty("name") String name, @JsonProperty("ref") String ref) {
         this.name = name;
         this.ref = ref;
     }
+
     @Override
     public GitlabBranch create() {
         Body body = new Body()
@@ -45,6 +46,7 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
         return GitlabHttpClient
                 .post(config, String.format("/projects/%d/repository/branches", project.getId()), body, this);
     }
+
     @Override
     public GitlabBranch delete() {
         GitlabHttpClient.delete(config, String.format("/projects/%d/repository/branches/%s", project.getId(), name));
@@ -61,26 +63,57 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
     }
 
     // -- getters --
+
+    /**
+     * Get name of the branch
+     *
+     * @return name of the branch
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Get whether or not this branch is merged
+     *
+     * @return whether current branch is merged
+     */
     public boolean isMerged() {
         return merged;
     }
 
+    /**
+     * Get whether or not current branch is a protected branch
+     *
+     * @return whether current branch is a protected or not
+     */
     public boolean isProtected() {
         return isProtected;
     }
 
+    /**
+     * Get whether or not current branch is a default branch
+     *
+     * @return whether current branch is a default or not
+     */
     public boolean isDefault() {
         return isDefault;
     }
 
+    /**
+     * Get whether or new commit can be pushed to current branch
+     *
+     * @return whether whether or new commit can be pushed to current branch
+     */
     public boolean canPush() {
         return canPush;
     }
 
+    /**
+     * Get the web url of the current branch
+     *
+     * @return web url of the current branch
+     */
     public String getWebUrl() {
         return webUrl;
     }
@@ -136,11 +169,21 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
         return this;
     }
 
+    /**
+     * Get the config that is stored in current {@link GitlabBranch}
+     *
+     * @return
+     */
     @Override
     public Config getConfig() {
         return config;
     }
 
+    /**
+     * Add a config to the current {@link GitlabAPIClient}
+     * @param config a config with user details
+     * @return {@link GitlabBranch} with the config
+     */
     @Override
     public GitlabBranch withConfig(Config config) {
         this.config = config;
@@ -148,13 +191,21 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
     }
 
     /**
-     * Query class for the @link GitlabBranch} to support query operations
-     * Gitlab Web API: https://docs.gitlab.com/ee/api/branches.html
+     * Class to query {@link GitlabBranch} in a given {@link GitlabProject}
+     * Gitlab Web API: https://docs.gitlab.com/ee/api/branches.html#list-repository-branches
      */
     public static class ProjectQuery extends GitlabQuery<GitlabBranch> {
-
+        /**
+         * The project to query {@link GitlabBranch} from
+         */
         private final GitlabProject project;
 
+        /**
+         * Initialize the {@link ProjectQuery} with configuration and the {@link GitlabProject}
+         *
+         * @param config  - the configuration to be used
+         * @param project - the project to be queried from
+         */
         ProjectQuery(Config config, GitlabProject project) {
             super(config, GitlabBranch[].class);
             this.project = project;
@@ -164,7 +215,7 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
          * Add search parameter to the current query
          *
          * @param search - string to be searched
-         * @return Current {@link GitlabBranch} with search parameter
+         * @return this {@link ProjectQuery} with the given search parameter
          */
         public ProjectQuery withSearch(String search) {
             appendString("search", search);
@@ -172,10 +223,10 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
         }
 
         /**
-         * add pagination on top of the query
+         * Add pagination on top of the query
          *
          * @param pagination pagination object that defines page number and size
-         * @return Current {@link GitlabBranch} with the given peganation object
+         * @return this {@link ProjectQuery} with the given pagination object
          */
         @Override
         public ProjectQuery withPagination(Pagination pagination) {
@@ -184,15 +235,20 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
         }
 
         /**
-         * Get the URL prefix for the HTTP request
+         * Get the URL suffix for the HTTP request
          *
-         * @return The URL for current {@link GitlabBranch}
+         * @return The URL suffix to query {@link GitlabBranch} in the given {@link GitlabProject}
          */
         @Override
-        public String getUrlPrefix() {
+        public String getUrlSuffix() {
             return String.format("/projects/%d/repository/branches", project.getId());
         }
 
+        /**
+         * Bind the branch with the given {@link GitlabProject} after the response is parsed
+         *
+         * @param component - one {@link GitlabBranch} from the response
+         */
         @Override
         void bind(GitlabBranch component) {
             component.withProject(project);

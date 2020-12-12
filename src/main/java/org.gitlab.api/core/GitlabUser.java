@@ -201,7 +201,7 @@ public class GitlabUser implements GitlabComponent {
         }
 
         @Override
-        public String getUrlPrefix() {
+        public String getUrlSuffix() {
             return "/users";
         }
 
@@ -236,7 +236,7 @@ public class GitlabUser implements GitlabComponent {
         }
 
         @Override
-        public String getUrlPrefix() {
+        public String getUrlSuffix() {
             return String.format("/projects/%d/users", projectId);
         }
 

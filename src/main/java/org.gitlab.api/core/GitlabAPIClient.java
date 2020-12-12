@@ -65,7 +65,7 @@ public class GitlabAPIClient {
     /**
      * Get the the project based on the given projectId
      * <p>
-     * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html
+     * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#get-single-project
      * GET /projects/:id
      *
      * @param projectId - the ID of the a project
@@ -78,8 +78,8 @@ public class GitlabAPIClient {
     /**
      * Get the the project based on the given a namespace and the project path
      * <p>
-     * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html
-     * GET /projects/:namespace/:project_ath
+     * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#get-single-project
+     * GET /projects/:namespace/:project_path
      *
      * @param namespace   - namespace of the project
      * @param projectPath - path of the project
@@ -94,6 +94,14 @@ public class GitlabAPIClient {
         }
     }
 
+    /**
+     * Get the all projects by user name.
+     * <p>
+     * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#list-user-projects
+     * GET /users/:user_id/projects
+     * @param username - username of all the projects
+     * @return A list of {@link GitlabProject} belong to a user
+     */
     public List<GitlabProject> getUserProjects(String username) {
         return GitlabHttpClient.getList(config, String.format("/users/%s/projects", username), GitlabProject[].class);
     }

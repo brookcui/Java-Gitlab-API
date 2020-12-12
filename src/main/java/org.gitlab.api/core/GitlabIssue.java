@@ -477,7 +477,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         @Override
-        public String getUrlPrefix() {
+        public String getUrlSuffix() {
             return String.format("/projects/%d/issues", project.getId());
         }
 
@@ -640,7 +640,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         @Override
-        public String getUrlPrefix() {
+        public String getUrlSuffix() {
             return "/issues";
         }
 

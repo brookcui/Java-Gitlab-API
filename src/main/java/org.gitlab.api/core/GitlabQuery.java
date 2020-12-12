@@ -37,7 +37,7 @@ abstract class GitlabQuery<C extends GitlabComponent> implements GitlabComponent
         this.type = type;
     }
 
-    public abstract String getUrlPrefix();
+    public abstract String getUrlSuffix();
 
     abstract void bind(C component);
 
@@ -61,7 +61,7 @@ abstract class GitlabQuery<C extends GitlabComponent> implements GitlabComponent
     }
 
     public String getEntireUrl() {
-        return getUrlPrefix() + toString();
+        return getUrlSuffix() + toString();
     }
 
     protected Class<C[]> getType() {
