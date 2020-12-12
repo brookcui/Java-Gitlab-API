@@ -38,7 +38,7 @@ public class GitlabUserTest {
     @Test
     void testToString() {
         GitlabUser currentUser = CLIENT.getCurrentUser();
-        assertEquals(currentUser.getUsername(), currentUser.toString());
+        assertEquals(currentUser.getUsername(), currentUser.toString()); //fail now, wait for impl-dev
 
     }
 
@@ -49,6 +49,8 @@ public class GitlabUserTest {
         assertEquals(1, users1.size());
         List<GitlabUser> users2 = project.users().withSearch(currentUser.getUsername()).query();
         assertEquals(1, users2.size());
+        List<GitlabUser> users3 = CLIENT.users().query();
+        assertTrue(users3.size() >= 1);
     }
 
 }
