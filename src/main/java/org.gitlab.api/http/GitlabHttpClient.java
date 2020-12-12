@@ -94,8 +94,8 @@ public class GitlabHttpClient {
                                     null :
                                     RequestBody.create(MAPPER.writeValueAsString(data.getMap()), JSON))
                     .addHeader(
-                            config.authMethod().headerName(), // header name
-                            String.format(config.authMethod().headerFormat(), config.token()) // header token
+                            config.getAuthMethod().headerName(), // header name
+                            String.format(config.getAuthMethod().headerFormat(), config.token()) // header token
                     )
                     .build();
             System.out.println("URL:" + request.url());

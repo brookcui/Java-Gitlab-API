@@ -31,7 +31,7 @@ public class Config {
     }
 
 
-    public AuthMethod authMethod() {
+    public AuthMethod getAuthMethod() {
         return authMethod;
     }
 
