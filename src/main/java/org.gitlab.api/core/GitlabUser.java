@@ -95,6 +95,15 @@ public class GitlabUser implements GitlabComponent {
     }
 
     /**
+     * Get the name of the current user
+     *
+     * @return name of the current user
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
      * Get the state of the current user
      *
      * @return state of the current user
