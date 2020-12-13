@@ -7,10 +7,21 @@ import org.gitlab.api.http.Body;
 import org.gitlab.api.http.Config;
 import org.gitlab.api.http.GitlabHttpClient;
 
+import java.io.IOException;
 import java.util.Objects;
 
+
+/**
+ * This class is used to represent the gitlab branch model. It contains a config object inorder to make appropriate
+ * http request. all of the fields that tagged with JsonProperty are mapped to fields in the gitlab web page.
+ * This class also contains a ProjectQuery Class used to build query and get branches within a project.
+ * <p>
+ * This class implements GitlabWritableComponent to support create and delete methods.
+ * <p>
+ * Gitlab Web API: https://docs.gitlab.com/ee/api/branches.html
+ */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabBranch implements GitlabComponent {
+public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
 
     @JsonProperty("name")
     private final String name;
@@ -30,51 +41,23 @@ public class GitlabBranch implements GitlabComponent {
     private GitlabCommit commit; // corresponds to branch name or commit SHA to create branch from
     @JsonIgnore
     private GitlabProject project;
+    @JsonIgnore
+    private String ref;
 
-    GitlabBranch(@JsonProperty("name") String name) {
+    GitlabBranch(@JsonProperty("name") String name, @JsonProperty("ref") String ref) {
         this.name = name;
+        this.ref = ref;
     }
 
+    /**
+     * Issue a HTTP request to the Gitlab API endpoint to create this {@link GitlabBranch} based on
+     * the fields in this {@link GitlabBranch} currently
+     *
+     * @return the created {@link GitlabBranch} component
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     */
     @Override
-    public Config getConfig() {
-        return config;
-    }
-
-    @Override
-    public GitlabBranch withConfig(Config config) {
-        this.config = config;
-        return this;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public boolean isMerged() {
-        return merged;
-    }
-
-    public boolean isProtected() {
-        return isProtected;
-    }
-
-    public boolean isDefault() {
-        return isDefault;
-    }
-
-    public boolean canPush() {
-        return canPush;
-    }
-
-    public String getWebUrl() {
-        return webUrl;
-    }
-
-    public GitlabCommit getCommit() {
-        return commit;
-    }
-
-    public GitlabBranch create(String ref) {
+    public GitlabBranch create() {
         Body body = new Body()
                 .putString("branch", name)
                 .putString("ref", ref);
@@ -82,10 +65,92 @@ public class GitlabBranch implements GitlabComponent {
                 .post(config, String.format("/projects/%d/repository/branches", project.getId()), body, this);
     }
 
+    /**
+     * Issue a HTTP request to the Gitlab API endpoint to delete this {@link GitlabBranch}
+     *
+     * @return the {@link GitlabBranch} component before deleted
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     */
+    @Override
     public GitlabBranch delete() {
         GitlabHttpClient.delete(config, String.format("/projects/%d/repository/branches/%s", project.getId(), name));
         return this;
     }
+
+    /**
+     * Get the {@link GitlabProject} that current the {@link GitlabBranch} belongs to
+     *
+     * @return the {@link GitlabProject} that current the {@link GitlabBranch} belongs to
+     */
+    public GitlabProject getProject() {
+        return project;
+    }
+
+    // -- getters --
+
+    /**
+     * Get name of the branch
+     *
+     * @return name of the branch
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Get whether or not this branch is merged
+     *
+     * @return whether current branch is merged
+     */
+    public boolean isMerged() {
+        return merged;
+    }
+
+    /**
+     * Get whether or not current branch is a protected branch
+     *
+     * @return whether current branch is a protected or not
+     */
+    public boolean isProtected() {
+        return isProtected;
+    }
+
+    /**
+     * Get whether or not current branch is a default branch
+     *
+     * @return whether current branch is a default or not
+     */
+    public boolean isDefault() {
+        return isDefault;
+    }
+
+    /**
+     * Get whether or new commit can be pushed to current branch
+     *
+     * @return whether whether or new commit can be pushed to current branch
+     */
+    public boolean canPush() {
+        return canPush;
+    }
+
+    /**
+     * Get the web url of the current branch
+     *
+     * @return web url of the current branch
+     */
+    public String getWebUrl() {
+        return webUrl;
+    }
+
+    /**
+     * Get the top level commit in current branch
+     *
+     * @return a {@link GitlabCommit} that represent the top level commit
+     */
+    public GitlabCommit getCommit() {
+        return commit;
+    }
+
 
     @Override
     public String toString() {
@@ -124,9 +189,6 @@ public class GitlabBranch implements GitlabComponent {
                 commit.equals(that.commit);
     }
 
-    public GitlabProject getProject() {
-        return project;
-    }
 
     GitlabBranch withProject(GitlabProject project) {
         this.project = project;
@@ -136,30 +198,90 @@ public class GitlabBranch implements GitlabComponent {
         return this;
     }
 
-    public static class Query extends GitlabQuery<GitlabBranch> {
+    /**
+     * Get the config that is stored in current {@link GitlabBranch}
+     *
+     * @return the config with user detail
+     */
+    @Override
+    public Config getConfig() {
+        return config;
+    }
 
-        private final int projectId;
+    /**
+     * Add a config to the current {@link GitlabAPIClient}
+     *
+     * @param config a config with user details
+     * @return {@link GitlabBranch} with the config
+     */
+    @Override
+    public GitlabBranch withConfig(Config config) {
+        this.config = config;
+        return this;
+    }
 
-        Query(Config config, int projectId) {
+    /**
+     * Class to query {@link GitlabBranch} in a given {@link GitlabProject}
+     * Gitlab Web API: https://docs.gitlab.com/ee/api/branches.html#list-repository-branches
+     */
+    public static class ProjectQuery extends GitlabQuery<GitlabBranch> {
+        /**
+         * The project to query {@link GitlabBranch} from
+         */
+        private final GitlabProject project;
+
+        /**
+         * Initialize the {@link ProjectQuery} with configuration and the {@link GitlabProject}
+         *
+         * @param config  - the configuration to be used
+         * @param project - the project to be queried from
+         */
+        ProjectQuery(Config config, GitlabProject project) {
             super(config, GitlabBranch[].class);
-            this.projectId = projectId;
+            this.project = project;
         }
 
-
-        public Query withSearch(String search) {
+        /**
+         * Add search parameter to the current query
+         *
+         * @param search - string to be searched
+         * @return this {@link ProjectQuery} with the given search parameter
+         */
+        public ProjectQuery withSearch(String search) {
             appendString("search", search);
             return this;
         }
 
+        /**
+         * Add pagination on top of the query
+         *
+         * @param pagination pagination object that defines page number and size
+         * @return this {@link ProjectQuery} with the given pagination object
+         */
         @Override
-        public Query withPagination(Pagination pagination) {
+        public ProjectQuery withPagination(Pagination pagination) {
             appendPagination(pagination);
             return this;
         }
 
+        /**
+         * Get the URL suffix for the HTTP request
+         *
+         * @return The URL suffix to query {@link GitlabBranch} in the given {@link GitlabProject}
+         */
         @Override
-        public String getUrlPrefix() {
-            return String.format("/projects/%d/repository/branches", projectId);
+        public String getTailUrl() {
+            return String.format("/projects/%d/repository/branches", project.getId());
+        }
+
+        /**
+         * Bind the branch with the given {@link GitlabProject} after the response is parsed
+         *
+         * @param component - one {@link GitlabBranch} from the response
+         */
+        @Override
+        void bind(GitlabBranch component) {
+            component.withProject(project);
         }
     }
 

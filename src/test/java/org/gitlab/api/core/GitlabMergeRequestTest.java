@@ -22,8 +22,8 @@ public class GitlabMergeRequestTest {
         Random ran = new Random();
         String num = String.valueOf(ran.nextInt(100));
         project = CLIENT.newProject("test" + num).create();
-        src = project.newBranch("branch1");
-        target = project.newBranch("branch2");
+        src = project.newBranch("branch1", "master");
+        target = project.newBranch("branch2", "master");
     }
     @AfterEach
     void cleanup() {
@@ -151,11 +151,9 @@ public class GitlabMergeRequestTest {
     }
 
     @Test
-    void testChangeState() {
+    void testState() {
         GitlabMergeRequest mergeRequest = project.newMergeRequest(src.getName(), target.getName(), "req1").create();
         assertEquals("opened", mergeRequest.getState());
-//        mergeRequest.accept();
-//        assertEquals("merged", mergeRequest.getState());
         mergeRequest.delete();
     }
 
