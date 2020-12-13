@@ -10,8 +10,8 @@ public class GitlabBranchExample {
         GitlabProject project = CLIENT.newProject("example-project").create();
 
         // create new branches
-        GitlabBranch branch1 = project.newBranch("branch1").create("master");
-        GitlabBranch branch2 = project.newBranch("branch2").create("branch1");
+        GitlabBranch branch1 = project.newBranch("branch1", "master").create();
+        GitlabBranch branch2 = project.newBranch("branch2", branch1.getName()).create();
 
         // set to default branch
         project.withDefaultBranch(branch1.getName()).update();

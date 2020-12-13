@@ -10,8 +10,8 @@ public class GitlabMergeRequestExample {
                 GitlabAPIClient.fromAccessToken("https://gitlab.com", System.getenv("TOKEN"));
         GitlabProject project = CLIENT.newProject("example-project").create();
 
-        GitlabBranch branch1 = project.newBranch("branch1").create("master");
-        GitlabBranch branch2 = project.newBranch("branch2").create("branch1");
+        GitlabBranch branch1 = project.newBranch("branch1", "master").create();
+        GitlabBranch branch2 = project.newBranch("branch2", branch1.getName()).create();
 
         project.withDefaultBranch("master").update();
 
@@ -25,13 +25,11 @@ public class GitlabMergeRequestExample {
         System.out.println(req1.getTitle() + " status is now " + req1.getState());
 
         // get all commits in this merge request
-        Pagination page = Pagination.getDefault();
-        List<GitlabCommit> commits = req1.getAllCommits(page); //getAllCommits now return null
+        List<GitlabCommit> commits = req1.getAllCommits(); //getAllCommits now return null
         System.out.println(req1.getTitle() + " has " + commits.size() + " commits.");
 
         // get all participants in this merge request
-        Pagination page2 = Pagination.get(1, 5);
-        List<GitlabUser> participants = req1.getAllParticipants(page2); //getAllCommits now return null
+        List<GitlabUser> participants = req1.getAllParticipants(); //getAllCommits now return null
         System.out.println(req1.getTitle() + " has " + participants.size() + " participants.");
         for (GitlabUser participant : participants) {
             System.out.println(participant.getUsername() + " " + participant.getLinkedin());
@@ -39,15 +37,17 @@ public class GitlabMergeRequestExample {
         
         // approve a request
         req1.approve();
-        System.out.println(req1.getTitle() + " are approved by " + req1.getUpvotes());
 
-        // merge a request
-        req1.accept();
-        System.out.println(req1.getTitle() + " status is now " + req1.getState());
+        // merge a request (empty merge request cannot be accepted)
+        try {
+            req1.accept();
+            System.out.println(req1.getTitle() + " status is now " + req1.getState());
+        } catch (GitlabException e) {
+            System.out.println(e.getMessage());
+        }
 
         // decline a request
         req2.decline();
-        System.out.println(req2.getTitle() + " are declined by " + req1.getDownvotes());
 
         // update a request to a new target branch
         req1.withTargetBranch(branch2.getName()).update();
