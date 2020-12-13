@@ -7,11 +7,15 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
 
+/**
+ * This class is the top level of all {@link GitlabComponent} and can be created with either OAuth2 token
+ * or access token from gitlab.
+ */
 public class GitlabAPIClient {
     private final Config config;
 
     private GitlabAPIClient(String endpoint, String token, AuthMethod authMethod) {
-        config = new Config(endpoint, token, authMethod);
+        config = new Config(endpoint, authMethod, token);
     }
 
     /**
@@ -49,14 +53,38 @@ public class GitlabAPIClient {
         return new GitlabIssue.Query(config);
     }
 
+    /**
+     * Get all the users that the current {@link GitlabAPIClient} are authorized to get
+     * <p>
+     * Gitlab Web API: https://docs.gitlab.com/ee/api/users.html#list-users
+     * GET /users
+     *
+     * @return list of {@link GitlabUser} that the current {@link GitlabAPIClient} are authorized to get
+     */
     public GitlabUser.Query users() {
         return new GitlabUser.Query(config);
     }
 
+    /**
+     * Get all the projects that the current {@link GitlabAPIClient} are authorized to get
+     * <p>
+     * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#list-all-projects
+     * GET /projects
+     *
+     * @return list of {@link GitlabProject} that the current {@link GitlabAPIClient} are authorized to get
+     */
     public GitlabProject.Query projects() {
         return new GitlabProject.Query(config);
     }
 
+    /**
+     * Get all the merge requests that the current {@link GitlabAPIClient} are authorized to get
+     * <p>
+     * Gitlab Web API: https://docs.gitlab.com/ee/api/merge_requests.html#list-merge-requests
+     * GET /merge_requests
+     *
+     * @return list of {@link GitlabMergeRequest} that the current {@link GitlabAPIClient} are authorized to get
+     */
     public GitlabMergeRequest.Query mergeRequests() {
         return new GitlabMergeRequest.Query(config);
     }
@@ -99,6 +127,7 @@ public class GitlabAPIClient {
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#list-user-projects
      * GET /users/:user_id/projects
+     *
      * @param username - username of all the projects
      * @return A list of {@link GitlabProject} belong to a user
      */
@@ -122,16 +151,25 @@ public class GitlabAPIClient {
      * Gitlab Web API: https://docs.gitlab.com/ee/api/users.html
      *
      * @param userId - id of the user
-     * @return
+     * @return Get {@link GitlabUser} with the given userId
      */
     public GitlabUser getUser(int userId) {
         return GitlabHttpClient.get(config, "/users/" + userId, GitlabUser.class);
     }
 
+    /**
+     * Get the current user from the current GitlabAPIClient
+     * @return {@link GitlabUser} of the current GitlabAPIClient
+     */
     public GitlabUser getCurrentUser() {
         return GitlabHttpClient.get(config, "/user", GitlabUser.class);
     }
 
+    /**
+     * Get the config that is stored in current {@link GitlabAPIClient}
+     *
+     * @return the config with user detail
+     */
     public Config getConfig() {
         return config;
     }

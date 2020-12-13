@@ -8,11 +8,22 @@ import org.gitlab.api.http.Body;
 import org.gitlab.api.http.Config;
 import org.gitlab.api.http.GitlabHttpClient;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * This class is used to represent the gitlab merge request model. It contains a config object inorder to make
+ * appropriate http request. all of the fields that tagged with JsonProperty are mapped to fields in the gitlab web
+ * page. This class also contains a ProjectQuery Class used to build query and get merge requests within a project and
+ * Query class to get merge requests.
+ * <p>
+ * This class implements GitlabModifiableComponent to support create, read, update and delete.
+ * <p>
+ * Gitlab Web API: https://docs.gitlab.com/ee/api/merge_requests.html
+ */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMergeRequest> {
 
@@ -71,9 +82,11 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
     }
 
     /**
-     * Invoke the http request and create the current {@link GitlabMergeRequest}
+     * Issue a HTTP request to the Gitlab API endpoint to create this {@link GitlabMergeRequest} based on
+     * the fields in this {@link GitlabMergeRequest} currently
      *
-     * @return {@link GitlabMergeRequest} that's been created
+     * @return the created {@link GitlabMergeRequest} component
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
     @Override
     public GitlabMergeRequest create() {
@@ -91,9 +104,10 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
     }
 
     /**
-     * Invoke the http request and delete the current {@link GitlabMergeRequest}
+     * Issue a HTTP request to the Gitlab API endpoint to delete this {@link GitlabMergeRequest}
      *
-     * @return {@link GitlabMergeRequest} that's been created
+     * @return the {@link GitlabMergeRequest} component before deleted
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
     @Override
     public GitlabMergeRequest delete() {
@@ -102,9 +116,11 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
     }
 
     /**
-     * Invoke the http request and update the current {@link GitlabMergeRequest}
+     * Issue a HTTP request to the Gitlab API endpoint to update this {@link GitlabMergeRequest} based on
+     * the fields in this {@link GitlabMergeRequest} currently
      *
-     * @return {@link GitlabMergeRequest} that's been created
+     * @return the updated {@link GitlabMergeRequest} component
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
     @Override
     public GitlabMergeRequest update() {
@@ -784,7 +800,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
          * @return The URL suffix to query {@link GitlabMergeRequest} in the given {@link GitlabProject}
          */
         @Override
-        public String getUrlSuffix() {
+        public String getTailUrl() {
             return String.format("/projects/%d/merge_requests", project.getId());
         }
 
@@ -1148,7 +1164,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
          * @return The URL suffix to query {@link GitlabMergeRequest}
          */
         @Override
-        public String getUrlSuffix() {
+        public String getTailUrl() {
             return "/merge_requests";
         }
 

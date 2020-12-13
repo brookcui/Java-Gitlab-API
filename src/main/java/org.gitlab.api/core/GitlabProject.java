@@ -14,13 +14,16 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * @throws IllegalArgumentException
- * @throws NullPointerException
- * @throws UnsupportedOperationException
- * @throws IOException
+ * This class is used to represent the gitlab project model. It contains a config object inorder to make appropriate
+ * http request. all of the fields that tagged with JsonProperty are mapped to fields in the gitlab web page.
+ * This class also contains a Query class to get projects.
+ * <p>
+ * This class implements GitlabModifiableComponent to support create, read, update and delete.
+ * <p>
+ * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabProject implements GitlabModifiableComponent<GitlabModifiableComponent> {
+public class GitlabProject implements GitlabModifiableComponent<GitlabProject> {
     @JsonIgnore
     private Config config;
     private int id; // required
@@ -75,7 +78,6 @@ public class GitlabProject implements GitlabModifiableComponent<GitlabModifiable
 
     /**
      * Construct the project with name
-     * TODO: package private or protected
      *
      * @param name - the name of the new project
      */
@@ -113,13 +115,12 @@ public class GitlabProject implements GitlabModifiableComponent<GitlabModifiable
 
 
     /**
-     * TODO: rename sha?
      * Get a single commit based on the given commit hash or name of a repository branch or tag
      * https://docs.gitlab.com/ee/api/commits.html#get-a-single-commit
      * GET /projects/:id/repository/commits/:sha
      *
      * @param sha - commit hash or name of a repository branch or tag
-     * @return
+     * @return {@link GitlabCommit} of the sha
      */
     public GitlabCommit getCommit(String sha) {
         return GitlabHttpClient.get(config, String.format("/projects/%d/repository/commits/%s", id, sha),
@@ -143,9 +144,10 @@ public class GitlabProject implements GitlabModifiableComponent<GitlabModifiable
 
     /**
      * Create a new branch from this project
-     * No HTTP request will be issued until you call {@link GitlabBranch#()}
+     * No HTTP request will be issued until you call {@link GitlabBranch#create()}
      *
      * @param name - the name of the new branch
+     * @param ref -  reference of the branch
      * @return a new {@link GitlabBranch} instance created with name
      */
     public GitlabBranch newBranch(String name, String ref) {
@@ -154,7 +156,7 @@ public class GitlabProject implements GitlabModifiableComponent<GitlabModifiable
 
     /**
      * Create a new merge request from this project
-     * No HTTP request will be issued until you call {@link GitlabMergeRequest#()}
+     * No HTTP request will be issued until you call {@link GitlabMergeRequest#create()}
      *
      * @param sourceBranch - the source branch of the merge request
      * @param targetBranch - the target branch of the merge request
@@ -248,10 +250,11 @@ public class GitlabProject implements GitlabModifiableComponent<GitlabModifiable
     }
 
     /**
-     * Create a new {@link GitlabProject} with the given fields
-     * It will send HTTP requests to the endpoint
+     * Issue a HTTP request to the Gitlab API endpoint to create this {@link GitlabProject} based on
+     * the fields in this {@link GitlabProject} currently
      *
-     * @return the new {@link GitlabProject} after creating
+     * @return the created {@link GitlabProject} component
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
     @Override
     public GitlabProject create() {
@@ -259,10 +262,10 @@ public class GitlabProject implements GitlabModifiableComponent<GitlabModifiable
     }
 
     /**
-     * Delete this {@link GitlabProject}
-     * It will send HTTP requests to the endpoint
+     * Issue a HTTP request to the Gitlab API endpoint to delete this {@link GitlabProject}
      *
-     * @return the previous {@link GitlabProject} before deleting
+     * @return the {@link GitlabProject} component before deleted
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
     @Override
     public GitlabProject delete() {
@@ -271,10 +274,11 @@ public class GitlabProject implements GitlabModifiableComponent<GitlabModifiable
     }
 
     /**
-     * Update this {@link GitlabProject}
-     * It will send HTTP requests to the endpoint
+     * Issue a HTTP request to the Gitlab API endpoint to update this {@link GitlabProject} based on
+     * the fields in this {@link GitlabProject} currently
      *
-     * @return the updated {@link GitlabProject}
+     * @return the updated {@link GitlabProject} component
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
     @Override
     public GitlabProject update() {
@@ -1011,7 +1015,7 @@ public class GitlabProject implements GitlabModifiableComponent<GitlabModifiable
          * @return The URL suffix to query {@link GitlabProject}
          */
         @Override
-        public String getUrlSuffix() {
+        public String getTailUrl() {
             return "/projects";
         }
 

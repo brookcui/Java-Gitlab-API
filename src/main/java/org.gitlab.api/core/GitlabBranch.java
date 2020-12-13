@@ -7,8 +7,19 @@ import org.gitlab.api.http.Body;
 import org.gitlab.api.http.Config;
 import org.gitlab.api.http.GitlabHttpClient;
 
+import java.io.IOException;
 import java.util.Objects;
 
+
+/**
+ * This class is used to represent the gitlab branch model. It contains a config object inorder to make appropriate
+ * http request. all of the fields that tagged with JsonProperty are mapped to fields in the gitlab web page.
+ * This class also contains a ProjectQuery Class used to build query and get branches within a project.
+ * <p>
+ * This class implements GitlabWritableComponent to support create and delete methods.
+ * <p>
+ * Gitlab Web API: https://docs.gitlab.com/ee/api/branches.html
+ */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
 
@@ -38,6 +49,13 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
         this.ref = ref;
     }
 
+    /**
+     * Issue a HTTP request to the Gitlab API endpoint to create this {@link GitlabBranch} based on
+     * the fields in this {@link GitlabBranch} currently
+     *
+     * @return the created {@link GitlabBranch} component
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     */
     @Override
     public GitlabBranch create() {
         Body body = new Body()
@@ -47,6 +65,12 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
                 .post(config, String.format("/projects/%d/repository/branches", project.getId()), body, this);
     }
 
+    /**
+     * Issue a HTTP request to the Gitlab API endpoint to delete this {@link GitlabBranch}
+     *
+     * @return the {@link GitlabBranch} component before deleted
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     */
     @Override
     public GitlabBranch delete() {
         GitlabHttpClient.delete(config, String.format("/projects/%d/repository/branches/%s", project.getId(), name));
@@ -118,6 +142,11 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
         return webUrl;
     }
 
+    /**
+     * Get the top level commit in current branch
+     *
+     * @return a {@link GitlabCommit} that represent the top level commit
+     */
     public GitlabCommit getCommit() {
         return commit;
     }
@@ -181,6 +210,7 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
 
     /**
      * Add a config to the current {@link GitlabAPIClient}
+     *
      * @param config a config with user details
      * @return {@link GitlabBranch} with the config
      */
@@ -240,7 +270,7 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
          * @return The URL suffix to query {@link GitlabBranch} in the given {@link GitlabProject}
          */
         @Override
-        public String getUrlSuffix() {
+        public String getTailUrl() {
             return String.format("/projects/%d/repository/branches", project.getId());
         }
 

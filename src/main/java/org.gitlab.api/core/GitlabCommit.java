@@ -16,6 +16,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * This class is used to represent the gitlab commit model. It contains a config object inorder to make appropriate
+ * http request. all of the fields that tagged with JsonProperty are mapped to fields in the gitlab web page.
+ * This class also contains a ProjectQuery Class used to build query and get commits within a project.
+ * <p>
+ * This class implements GitlabComponent cause only read is supported
+ * <p>
+ * Gitlab Web API: https://docs.gitlab.com/ee/api/commits.html
+ */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class GitlabCommit implements GitlabComponent {
     @JsonProperty("id")
@@ -316,6 +325,7 @@ public class GitlabCommit implements GitlabComponent {
 
         /**
          * add a file path to the query
+         *
          * @param path the file path
          * @return {@link ProjectQuery} with the the file path
          */
@@ -326,6 +336,7 @@ public class GitlabCommit implements GitlabComponent {
 
         /**
          * Add a stat to the query, stats about each commit will be added to the response
+         *
          * @param withStats stat to add to the query
          * @return {@link ProjectQuery} with the stats
          */
@@ -336,6 +347,7 @@ public class GitlabCommit implements GitlabComponent {
 
         /**
          * Add a boolean to indicate whether to follow only the first parent commit upon seeing a merge commit
+         *
          * @param firstParent whether or not to follow only the first parent
          * @return {@link ProjectQuery} with the the boolean
          */
@@ -376,7 +388,7 @@ public class GitlabCommit implements GitlabComponent {
          * @return The URL suffix to query {@link GitlabCommit} in the given {@link GitlabProject}
          */
         @Override
-        public String getUrlSuffix() {
+        public String getTailUrl() {
             return String.format("/projects/%d/repository/commits", project.getId());
         }
 
@@ -392,12 +404,23 @@ public class GitlabCommit implements GitlabComponent {
     }
 
 
+    /**
+     * Helper class to deserialize a date time
+     */
     private static class LocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
+        /**
+         * Deserialize a date time in a json parser
+         *
+         * @param jsonParser             json parser
+         * @param deserializationContext context to deserialize the datetime
+         * @return a deserialized datetime
+         */
         @Override
         public LocalDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) {
             try {
                 return ZonedDateTime.parse(jsonParser.getText()).toLocalDateTime();
             } catch (IOException e) {
+                // should never happen unless Gitlab changes their date format in their API
                 throw new GitlabException(e);
             }
         }
