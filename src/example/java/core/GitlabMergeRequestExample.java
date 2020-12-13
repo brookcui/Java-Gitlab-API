@@ -29,6 +29,14 @@ public class GitlabMergeRequestExample {
         List<GitlabCommit> commits = req1.getAllCommits(page); //getAllCommits now return null
         System.out.println(req1.getTitle() + " has " + commits.size() + " commits.");
 
+        // get all participants in this merge request
+        Pagination page2 = Pagination.get(1, 5);
+        List<GitlabUser> participants = req1.getAllParticipants(page2); //getAllCommits now return null
+        System.out.println(req1.getTitle() + " has " + participants.size() + " participants.");
+        for (GitlabUser participant : participants) {
+            System.out.println(participant.getUsername() + " " + participant.getLinkedin());
+        }
+        
         // approve a request
         req1.approve();
         System.out.println(req1.getTitle() + " are approved by " + req1.getUpvotes());
