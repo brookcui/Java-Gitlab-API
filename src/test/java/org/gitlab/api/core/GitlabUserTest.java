@@ -38,7 +38,7 @@ public class GitlabUserTest {
     @Test
     void testToString() {
         GitlabUser currentUser = CLIENT.getCurrentUser();
-        assertEquals(currentUser.getUsername(), currentUser.toString()); //fail now, wait for impl-dev
+        assertEquals(currentUser.getName(), currentUser.toString());
 
     }
 
