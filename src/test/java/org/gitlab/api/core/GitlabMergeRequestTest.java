@@ -22,8 +22,8 @@ public class GitlabMergeRequestTest {
         Random ran = new Random();
         String num = String.valueOf(ran.nextInt(100));
         project = CLIENT.newProject("test" + num).create();
-        src = project.newBranch("branch1", "master");
-        target = project.newBranch("branch2", "master");
+        src = project.newBranch("branch1", "master").create();
+        target = project.newBranch("branch2", "master").create();
     }
     @AfterEach
     void cleanup() {
