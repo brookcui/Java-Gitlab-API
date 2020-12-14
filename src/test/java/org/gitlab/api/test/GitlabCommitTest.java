@@ -10,7 +10,7 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class GitLabCommitTest {
+public class GitlabCommitTest {
     private static final GitlabAPIClient CLIENT = new GitlabAPIClient
             .Builder("https://gitlab.com")
             .withAccessToken(System.getenv("TOKEN"))
