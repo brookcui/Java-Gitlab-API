@@ -1,104 +1,91 @@
-package org.gitlab.api.core;
+package org.gitlab.api.test;
 
-import org.gitlab.api.core.GitlabAPIClient;
+import org.gitlab.api.GitlabAPIClient;
+import org.gitlab.api.GitlabBranch;
+import org.gitlab.api.GitlabException;
+import org.gitlab.api.GitlabProject;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class GitlabBranchTest {
-    private static final String endpoint = "";
-    private static final String accessToken = "";
-    private static final GitlabAPIClient client =
-            new GitlabAPIClient.Builder(endpoint).withAccessToken(accessToken).build();
-    private static final int projectId = 0;
-    private static final GitlabProject project = client.getProject(projectId);
-    private static final GitlabBranch defaultBranch = project.newBranch("default", "ref");
-    private static final GitlabBranch newBranch = project.newBranch("branchName", "ref");
+    private static final GitlabAPIClient CLIENT =
+            new GitlabAPIClient.Builder("https://gitlab.com").withAccessToken(System.getenv("TOKEN")).build();
+    private GitlabProject project;
 
-    @Test
-    void testGetName() {
-        assertEquals("default", defaultBranch.getName());
+    @BeforeEach
+    void setUp() {
+        project = CLIENT.newProject("test" + ThreadLocalRandom.current()).create();
+    }
+
+    @AfterEach
+    void tearDown() {
+        project.delete();
     }
 
     @Test
-    void testIsMerged() {
-        assertFalse(defaultBranch.isMerged());
+    void testGetters() {
+        GitlabBranch branch = project.newBranch("branch", "ref").create();
+        assertNotNull(branch);
+        assertEquals(branch, project.getBranch("branch"));
+        assertEquals("branch", branch.getName());
+        assertEquals("", branch.getWebUrl());
+        assertEquals(project.getName(), branch.getProject().getName());
+        GitlabBranch deletedBranch = branch.delete();
+        assertNotNull(deletedBranch);
+        assertEquals(branch, deletedBranch);
     }
 
     @Test
-    void testIsProtected() {
-        assertFalse(defaultBranch.isProtected());
+    void testSequentialCRD() { // CRDR
+        GitlabBranch branch = project.newBranch("branch", "ref").create();
+        assertNotNull(branch);
+        assertEquals("branch", project.getBranch("branch"));
+        GitlabBranch deletedBranch = branch.delete();
+        assertNotNull(deletedBranch);
+        assertEquals(branch, deletedBranch);
     }
 
-    @Test
-    void testIsDefault() {
-        assertFalse(defaultBranch.isDefault());
-    }
 
     @Test
-    void testCanPush() {
-        assertFalse(defaultBranch.canPush());
-    }
-
-    @Test
-    void testGetWebUrl() {
-        assertNull(defaultBranch.getWebUrl());
-    }
-
-    @Test
-    void testGetCommit() {
-        assertNull(defaultBranch.getCommit());
-    }
-
-    @Test
-    void testToString() {
-        assertEquals("default", defaultBranch.toString());
-    }
-
-    @Test
-    void testSequentialCRD() {
-        final GitlabBranch[] branches = new GitlabBranch[2];
-        assertDoesNotThrow(() -> {
-            branches[0] = newBranch.create();
-            branches[1] = branches[0].delete();
+    void testDuplicateDelete() { //CRURDDR
+        GitlabBranch branch = project.newBranch("branch", "ref").create();
+        assertNotNull(branch);
+        assertEquals(branch, project.getBranch("branch"));
+        assertEquals("branch", branch.getName());
+        GitlabBranch deletedBranch = branch.delete();
+        assertNotNull(deletedBranch);
+        assertEquals(branch, deletedBranch);
+        assertThrows(GitlabException.class, () -> {
+            branch.delete();
         });
-        assertEquals("branchName", branches[0].getName());
-        assertEquals("branchName", branches[1].getName());
     }
 
     @Test
-    void testDuplicateCreate() {
-        final GitlabBranch[] branches = new GitlabBranch[3];
-        assertDoesNotThrow(() -> {
-            branches[0] = newBranch.create();
-        });
-        assertEquals("branchName", branches[0].getName());
-        assertThrows(IOException.class, () -> {
-            branches[1] = branches[0].create(); // create existent branch
-        });
-        assertEquals("branchName", branches[1].getName());
-        assertDoesNotThrow(() -> {
-            branches[2] = branches[1].delete();
-        });
-        assertEquals("branchName", branches[2].getName());
-    }
+    void testQuery() {
+        List<GitlabBranch> branches = project.getBranchesQuery().query();
+        assertEquals(0, branches.size());
 
-    @Test
-    void testDuplicateDelete() {
-        final GitlabBranch[] branches = new GitlabBranch[3];
-        assertDoesNotThrow(() -> {
-            branches[0] = newBranch.create();
-        });
-        assertEquals("branchName", branches[0].getName());
-        assertDoesNotThrow(() -> {
-            branches[1] = branches[0].delete();
-        });
-        assertEquals("branchName", branches[1].getName());
-        assertThrows(IOException.class, () -> {
-            branches[2] = branches[1].delete(); // delete non-existent branch
-        });
-        assertEquals("branchName", branches[2].getName());
+        GitlabBranch branch1 = project.newBranch("branch1", "ref1").create();
+        GitlabBranch branch2 = project.newBranch("branch2", "ref2").create();
+        GitlabBranch branch3 = project.newBranch("branch3", "ref3").create();
+
+        branches = project.getBranchesQuery().query();
+        assertEquals(3, branches.size());
+        assertEquals(branch1.getName(), branches.get(0).getName());
+        assertEquals(branch2.getName(), branches.get(1).getName());
+        assertEquals(branch3.getName(), branches.get(2).getName());
+
+        branch1.delete();
+        branch2.delete();
+        branch3.delete();
+
+        branches = project.getBranchesQuery().query();
+        assertEquals(0, branches.size());
     }
 }
