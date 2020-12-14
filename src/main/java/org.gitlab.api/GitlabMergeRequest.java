@@ -1,12 +1,9 @@
-package org.gitlab.api.core;
+package org.gitlab.api;
 
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.gitlab.api.http.Body;
-import org.gitlab.api.http.Config;
-import org.gitlab.api.http.GitlabHttpClient;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -15,17 +12,17 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This class is used to represent the gitlab merge request model. It contains a config object inorder to make
- * appropriate http request. all of the fields that tagged with JsonProperty are mapped to fields in the gitlab web
- * page. This class also contains a ProjectQuery Class used to build query and get merge requests within a project and
- * Query class to get merge requests.
+ * This class is used to represent the gitlab merge request.
  * <p>
- * This class implements GitlabModifiableComponent to support create, read, update and delete.
+ * This class also contains a {@link ProjectQuery} Class used to build query and get merge requests within a project
+ * and a {@link Query} class to get merge requests globally.
+ * <p>
+ * This class supports create, read, update and delete.
  * <p>
  * Gitlab Web API: https://docs.gitlab.com/ee/api/merge_requests.html
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMergeRequest> {
+public class GitlabMergeRequest extends GitlabComponent {
 
     @JsonProperty("source_branch")
     private final String sourceBranch; // required
@@ -69,10 +66,15 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
     private List<String> labels = new ArrayList<>(); // required
     @JsonIgnore
     private GitlabProject project;
-    @JsonIgnore
-    private Config config;
 
 
+    /**
+     * Constructor of the gitlab merge request
+     *
+     * @param sourceBranch source branch
+     * @param targetBranch target branch
+     * @param title        title of the merge request
+     */
     GitlabMergeRequest(@JsonProperty("source_branch") String sourceBranch,
                        @JsonProperty("target_branch") String targetBranch,
                        @JsonProperty("title") String title) {
@@ -88,7 +90,6 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
      * @return the created {@link GitlabMergeRequest} component
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
-    @Override
     public GitlabMergeRequest create() {
         Body body = new Body()
                 .putString("source_branch", sourceBranch)
@@ -98,8 +99,8 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
                 .putString("description", description)
                 .putStringArray("labels", labels);
 
-        return GitlabHttpClient
-                .post(config, String.format("/projects/%d/merge_requests", projectId), body,
+        return httpClient
+                .post(String.format("/projects/%d/merge_requests", projectId), body,
                         this);
     }
 
@@ -109,9 +110,8 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
      * @return the {@link GitlabMergeRequest} component before deleted
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
-    @Override
     public GitlabMergeRequest delete() {
-        GitlabHttpClient.delete(config, String.format("/projects/%d/merge_requests/%d", projectId, iid));
+        httpClient.delete(String.format("/projects/%d/merge_requests/%d", projectId, iid));
         return this;
     }
 
@@ -122,7 +122,6 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
      * @return the updated {@link GitlabMergeRequest} component
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
-    @Override
     public GitlabMergeRequest update() {
         Body body = new Body()
                 .putString("target_branch", targetBranch)
@@ -130,67 +129,73 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
                 .putIntArray("assignee_ids", assignees.stream().mapToInt(GitlabUser::getId).toArray())
                 .putString("description", description)
                 .putStringArray("labels", labels);
-        return GitlabHttpClient
-                .put(config, String.format("/projects/%d/merge_requests/%d", projectId, iid), body, this);
+        return httpClient
+                .put(String.format("/projects/%d/merge_requests/%d", projectId, iid), body, this);
     }
 
     /**
-     * Get a list of {@link GitlabUser} that participated in the current merge request
+     * Issue a HTTP request to the Gitlab API endpoint to get a list of {@link GitlabUser} that participated in this {@link GitlabMergeRequest}
      *
      * @return list of {@link GitlabUser} that participated in the current merge request
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
     public List<GitlabUser> getAllParticipants() {
-        return GitlabHttpClient.getList(config,
+        return httpClient.getList(
                 String.format("/projects/%d/merge_requests/%d/participants", projectId, iid), GitlabUser[].class);
     }
 
     /**
-     * Get a list of {@link GitlabCommit} that commits in the current merge request
+     * Issue a HTTP request to the Gitlab API endpoint to get a list of {@link GitlabCommit} that committed in this {@link GitlabMergeRequest}
      *
      * @return list of {@link GitlabCommit} in the current merge request
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
     public List<GitlabCommit> getAllCommits() {
-        return GitlabHttpClient.getList(config, String
+        return httpClient.getList(String
                 .format("/projects/%d/merge_requests/%d/commits", projectId, iid), GitlabCommit[].class);
     }
 
     /**
-     * Get a list of {@link GitlabIssue} that will be closed after commit is merged
+     * Issue a HTTP request to the Gitlab API endpoint to get a list of {@link GitlabIssue} that  will be closed after this {@link GitlabMergeRequest} is merged
      *
      * @return list of {@link GitlabIssue} that will be closed after commit is merged
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
     public List<GitlabIssue> getAllIssuesClosedByMerge() {
-        return GitlabHttpClient.getList(config, String
+        return httpClient.getList(String
                 .format("/projects/%d/merge_requests/%d/closes_issues", projectId, iid), GitlabIssue[].class);
     }
 
     /**
-     * Accept the current merge request
+     * Issue a HTTP request to the Gitlab API endpoint to accept this {@link GitlabMergeRequest}
      *
      * @return {@link GitlabMergeRequest} after merge request has been accepted
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
     public GitlabMergeRequest accept() {
-        return GitlabHttpClient.put(config, String
+        return httpClient.put(String
                 .format("/projects/%d/merge_requests/%d/merge", projectId, iid), null, this);
     }
 
     /**
-     * Approve the current merge request
+     * Issue a HTTP request to the Gitlab API endpoint to accept this {@link GitlabMergeRequest}
      *
      * @return {@link GitlabMergeRequest} after merge request has been approved
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
     public GitlabMergeRequest approve() {
-        return GitlabHttpClient.post(config, String
+        return httpClient.post(String
                 .format("/projects/%d/merge_requests/%d/approve", projectId, iid), null, this);
     }
 
     /**
-     * Decline the current merge request
+     * Issue a HTTP request to the Gitlab API endpoint to decline this {@link GitlabMergeRequest}
      *
      * @return {@link GitlabMergeRequest} after merge request has been decline
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
     public GitlabMergeRequest decline() {
-        return GitlabHttpClient.post(config, String
+        return httpClient.post(String
                 .format("/projects/%d/merge_requests/%d/unapprove", projectId, iid), null, this);
     }
 
@@ -354,7 +359,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
      */
     public GitlabProject getProject() {
         if (project == null) {
-            project = GitlabProject.fromId(config, projectId);
+            project = GitlabProject.fromId(httpClient, projectId);
         }
         return project;
     }
@@ -376,7 +381,12 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
     public int getIid() {
         return iid;
     }
-
+    /**
+     * Attach a project to this {@link GitlabMergeRequest}
+     *
+     * @param project the project to be attached
+     * @return this {@link GitlabMergeRequest}
+     */
     GitlabMergeRequest withProject(GitlabProject project) {
         Objects.requireNonNull(project);
         this.project = project;
@@ -394,7 +404,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
     }
 
     /**
-     * Add/update the title to the current merge request
+     * Set/update the title to the current merge request
      *
      * @param title title of the merge
      * @return a {@link GitlabMergeRequest} with given title
@@ -405,7 +415,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
     }
 
     /**
-     * Add/update the description to the current merge request
+     * Set/update the description to the current merge request
      *
      * @param description description of the merge
      * @return a {@link GitlabMergeRequest} with given description
@@ -416,7 +426,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
     }
 
     /**
-     * Add/update the description to the list of {@link GitlabUser} as assignees
+     * Set/update the description to the list of {@link GitlabUser} as assignees
      *
      * @param assignees list of {@link GitlabUser}
      * @return a {@link GitlabMergeRequest} with list of assignees
@@ -427,7 +437,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
     }
 
     /**
-     * Add/update the targetBranch to the current merge request
+     * Set/update the targetBranch to the current merge request
      *
      * @param targetBranch targetBranch of the merge
      * @return a {@link GitlabMergeRequest} with given targetBranch
@@ -437,12 +447,18 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         return this;
     }
 
-
+    /**
+     * The string representation of this {@link GitlabMergeRequest}
+     *
+     * @return the string representation of this {@link GitlabMergeRequest}
+     */
     @Override
     public String toString() {
         return "GitlabMergeRequest{" +
-                "id=" + id +
+                "sourceBranch=" + sourceBranch +
+                ", id=" + id +
                 ", iid=" + iid +
+                ", projectId=" + projectId +
                 ", author=" + author +
                 ", description=" + description +
                 ", state=" + state +
@@ -458,47 +474,63 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
                 ", subscribed=" + subscribed +
                 ", webUrl=" + webUrl +
                 ", targetBranch=" + targetBranch +
-                ", sourceBranch=" + sourceBranch +
                 ", labels=" + labels +
                 '}';
     }
 
     /**
-     * Get the config that is stored in current {@link GitlabMergeRequest}
+     * Two {@link GitlabMergeRequest}s are equal if and only if they belong to the same project and have the same id
      *
-     * @return the config with user detail
+     * @param o the reference object with which to compare.
+     * @return if the two merge request belong to the same project and have the same merge request id
      */
     @Override
-    public Config getConfig() {
-        return config;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GitlabMergeRequest that = (GitlabMergeRequest) o;
+        return projectId == that.projectId && id == that.id;
     }
 
     /**
-     * Add a config to the current {@link GitlabAPIClient}
+     * Two {@link GitlabMergeRequest}s will have the same hashcode if they belong to the same project and have the same id
      *
-     * @param config a config with user details
-     * @return {@link GitlabMergeRequest} with the config
+     * @return a hash code value for this object.
      */
     @Override
-    public GitlabMergeRequest withConfig(Config config) {
-        this.config = config;
+    public int hashCode() {
+        return Objects.hash(projectId, id);
+    }
+
+    /**
+     * Set a httpClient to the current {@link GitlabAPIClient}
+     *
+     * @param httpClient the http client used to make request
+     * @return {@link GitlabMergeRequest} with the httpClient
+     */
+    @Override
+    GitlabMergeRequest withHttpClient(HttpClient httpClient) {
+        super.httpClient = httpClient;
         return this;
     }
 
     /**
      * Class to query {@link GitlabMergeRequest} in a given {@link GitlabProject}
+     * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/merge_requests.html#list-project-merge-requests
+     * <p>
+     * GET /projects/:id/merge_requests
      */
     public static class ProjectQuery extends GitlabQuery<GitlabMergeRequest> {
         private final GitlabProject project;
 
-        ProjectQuery(Config config, GitlabProject project) {
-            super(config, GitlabMergeRequest[].class);
+        ProjectQuery(HttpClient httpClient, GitlabProject project) {
+            super(httpClient, GitlabMergeRequest[].class);
             this.project = project;
         }
 
         /**
-         * Add pagination on top of the query
+         * Set pagination on top of the query
          *
          * @param pagination pagination object that defines page number and size
          * @return this {@link ProjectQuery} with the given pagination object
@@ -510,7 +542,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a id of the project
+         * Set a id of the project
          *
          * @param id the id of a project
          * @return the project query with project id
@@ -521,7 +553,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a list of iids to the query so the result will return request having the given iid
+         * Set a list of iids to the query so the result will return request having the given iid
          *
          * @param iids list of iid
          * @return the project query with list of iids
@@ -532,7 +564,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a state to the query to return all merge requests or just those that are opened, closed, locked,
+         * Set a state to the query to return all merge requests or just those that are opened, closed, locked,
          * or merged
          *
          * @param state state of the merge requests
@@ -544,7 +576,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add an order by to return requests ordered by created_at or updated_at fields. Default is created_at
+         * Set an order by to return requests ordered by created_at or updated_at fields. Default is created_at
          *
          * @param orderBy how to order the return request
          * @return the project query with the given order by
@@ -555,7 +587,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a sort to return requests sorted in asc or desc order. Default is desc
+         * Set a sort to return requests sorted in asc or desc order. Default is desc
          *
          * @param sort how to sort the return request
          * @return the project query with the given sort
@@ -566,7 +598,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a milestone to Return merge requests for a specific milestone. None returns merge requests with no
+         * Set a milestone to Return merge requests for a specific milestone. None returns merge requests with no
          * milestone. Any returns merge requests that have an assigned milestone.
          *
          * @param milestone milestone to of all the resulting merge request
@@ -578,7 +610,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a view, If simple, returns the iid, URL, title, description, and basic state of merge request
+         * Set a view, If simple, returns the iid, URL, title, description, and basic state of merge request
          *
          * @param view parameter on whether to return siomple or normal view
          * @return the project query with the given view
@@ -589,7 +621,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a list of labels, Return merge requests matching a comma separated list of labels. None lists all merge
+         * Set a list of labels, Return merge requests matching a comma separated list of labels. None lists all merge
          * requests with no labels. Any lists all merge requests with at least one label. No+Label (Deprecated) lists
          * all merge requests with no labels. Predefined names are case-insensitive.
          *
@@ -602,7 +634,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add whether or not to return detail labels on each merge request. If true, response will return more details
+         * Set whether or not to return detail labels on each merge request. If true, response will return more details
          * for each label in labels field: :name, :color, :description, :description_html, :text_color. Default is false.
          *
          * @param withLabelsDetails whether or not to return labels with detail
@@ -614,7 +646,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add whether or not to asynchronously recalculate state
+         * Set whether or not to asynchronously recalculate state
          *
          * @param withMergeStatusRecheck whether or not to asynchronously recalculate state
          * @return the project query with the given boolean
@@ -625,7 +657,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add parameter to get merge requests created on or after the given time.
+         * Set parameter to get merge requests created on or after the given time.
          *
          * @param createdAfter get all merge requests after the date
          * @return the project query with the given created after
@@ -636,7 +668,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add parameter to get merge requests created on or before the given time.
+         * Set parameter to get merge requests created on or before the given time.
          *
          * @param createdBefore get all merge requests before the date
          * @return the project query with the given created before
@@ -647,7 +679,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add parameter to get merge requests updated on or after the given time.
+         * Set parameter to get merge requests updated on or after the given time.
          *
          * @param updatedAfter get all merge requests updated after the date
          * @return the project query with the given updated after
@@ -658,7 +690,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add parameter to get merge requests updated on or before the given time.
+         * Set parameter to get merge requests updated on or before the given time.
          *
          * @param updatedBefore get all merge requests updated before the date
          * @return the project query with the given updated before
@@ -669,7 +701,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a scope to the query and return merge request for the given scope
+         * Set a scope to the query and return merge request for the given scope
          *
          * @param scope scope of the merge request
          * @return the project query with the given scope
@@ -680,7 +712,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a author id to the query and return all merge requests created by the author id
+         * Set a author id to the query and return all merge requests created by the author id
          *
          * @param authorId id of the author
          * @return the project query with the given author id
@@ -691,7 +723,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a author username to the query and return all merge requests created by the author username
+         * Set a author username to the query and return all merge requests created by the author username
          *
          * @param authorUsername id of the author
          * @return the project query with the given author username
@@ -702,7 +734,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a assignee id to the query and return all merge requests assigned to the user
+         * Set a assignee id to the query and return all merge requests assigned to the user
          *
          * @param assigneeId id of the assignee
          * @return the project query with the given author username
@@ -713,7 +745,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a list of approver ids to the query and Returns merge requests which have specified all the users with
+         * Set a list of approver ids to the query and Returns merge requests which have specified all the users with
          * the given ids as individual approvers.
          *
          * @param approverIds list of approvers
@@ -725,7 +757,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a list of user ids to the query to Returns merge requests which have been approved by all the users with
+         * Set a list of user ids to the query to Returns merge requests which have been approved by all the users with
          * the given ids (Max: 5). None returns merge requests with no approvals. Any returns merge requests with
          * an approval.
          *
@@ -738,7 +770,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * add a reaction emoji to the query to Return merge requests reacted by the authenticated user by the given
+         * Set reaction emoji to the query to Return merge requests reacted by the authenticated user by the given
          * emoji. None returns issues not given a reaction.
          *
          * @param myReactionEmoji a emoji represented by a string
@@ -750,7 +782,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * add a source branch and Return merge requests with the given source branch
+         * Set source branch and Return merge requests with the given source branch
          *
          * @param sourceBranch the source branch
          * @return the project query with given source branch
@@ -761,7 +793,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * add a target branch and Return merge requests with the given target branch
+         * Set target branch and Return merge requests with the given target branch
          *
          * @param targetBranch the target branch
          * @return the project query with given target branch
@@ -772,7 +804,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * add a search to the query so the request will return merge requests against their title and description
+         * Set search to the query so the request will return merge requests against their title and description
          *
          * @param search search keyword
          * @return the project query with given search keyword
@@ -783,7 +815,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * add a wip status to query and Filter merge requests against their wip status. yes to return only WIP merge
+         * Set wip status to query and Filter merge requests against their wip status. yes to return only WIP merge
          * requests, no to return non WIP merge requests
          *
          * @param wip wip status
@@ -796,6 +828,10 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
 
         /**
          * Get the URL suffix for the HTTP request
+         * <p>
+         * Gitlab Web API: https://docs.gitlab.com/ee/api/merge_requests.html#list-project-merge-requests
+         * <p>
+         * GET /projects/:id/merge_requests
          *
          * @return The URL suffix to query {@link GitlabMergeRequest} in the given {@link GitlabProject}
          */
@@ -817,17 +853,20 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
     }
 
     /**
-     * Class to query {@link GitlabMergeRequest}
+     * Class to query {@link GitlabMergeRequest} globally
+     * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/merge_requests.html#list-merge-requests
+     * <p>
+     * GET /merge_requests
      */
     public static class Query extends GitlabQuery<GitlabMergeRequest> {
 
-        Query(Config config) {
-            super(config, GitlabMergeRequest[].class);
+        Query(HttpClient httpClient) {
+            super(httpClient, GitlabMergeRequest[].class);
         }
 
         /**
-         * Add pagination on top of the query
+         * Set pagination on top of the query
          *
          * @param pagination pagination object that defines page number and size
          * @return this {@link Query} with the given pagination object
@@ -839,7 +878,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a state to the query to return all merge requests or just those that are opened, closed, locked,
+         * Set a state to the query to return all merge requests or just those that are opened, closed, locked,
          * or merged
          *
          * @param state state of the merge requests
@@ -851,7 +890,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add an order by to return requests ordered by created_at or updated_at fields. Default is created_at
+         * Set an order by to return requests ordered by created_at or updated_at fields. Default is created_at
          *
          * @param orderBy how to order the return request
          * @return the query with the given order by
@@ -862,7 +901,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a sort to return requests sorted in asc or desc order. Default is desc
+         * Set a sort to return requests sorted in asc or desc order. Default is desc
          *
          * @param sort how to sort the return request
          * @return the query with the given sort
@@ -873,7 +912,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a milestone to Return merge requests for a specific milestone. None returns merge requests with no
+         * Set a milestone to Return merge requests for a specific milestone. None returns merge requests with no
          * milestone. Any returns merge requests that have an assigned milestone.
          *
          * @param milestone milestone to of all the resulting merge request
@@ -885,7 +924,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a view, If simple, returns the iid, URL, title, description, and basic state of merge request
+         * Set a view, If simple, returns the iid, URL, title, description, and basic state of merge request
          *
          * @param view parameter on whether to return siomple or normal view
          * @return the query with the given view
@@ -896,7 +935,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a list of labels, Return merge requests matching a comma separated list of labels. None lists all merge
+         * Set a list of labels, Return merge requests matching a comma separated list of labels. None lists all merge
          * requests with no labels. Any lists all merge requests with at least one label. No+Label (Deprecated) lists
          * all merge requests with no labels. Predefined names are case-insensitive.
          *
@@ -909,7 +948,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add whether or not to return detail labels on each merge request. If true, response will return more details
+         * Set whether or not to return detail labels on each merge request. If true, response will return more details
          * for each label in labels field: :name, :color, :description, :description_html, :text_color. Default is false.
          *
          * @param withLabelsDetails whether or not to return labels with detail
@@ -921,7 +960,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add whether or not to asynchronously recalculate state
+         * Set whether or not to asynchronously recalculate state
          *
          * @param withMergeStatusRecheck whether or not to asynchronously recalculate state
          * @return the project query with the given boolean
@@ -932,7 +971,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add parameter to get merge requests created on or after the given time.
+         * Set parameter to get merge requests created on or after the given time.
          *
          * @param createdAfter get all merge requests after the date
          * @return the query with the given created after
@@ -943,7 +982,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add parameter to get merge requests created on or before the given time.
+         * Set parameter to get merge requests created on or before the given time.
          *
          * @param createdBefore get all merge requests before the date
          * @return the query with the given created before
@@ -954,7 +993,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add parameter to get merge requests updated on or after the given time.
+         * Set parameter to get merge requests updated on or after the given time.
          *
          * @param updatedAfter get all merge requests updated after the date
          * @return the query with the given updated after
@@ -965,7 +1004,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add parameter to get merge requests updated on or before the given time.
+         * Set parameter to get merge requests updated on or before the given time.
          *
          * @param updatedBefore get all merge requests updated before the date
          * @return the query with the given updated before
@@ -976,7 +1015,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a scope to the query and return merge request for the given scope
+         * Set a scope to the query and return merge request for the given scope
          *
          * @param scope scope of the merge request
          * @return the query with the given scope
@@ -987,7 +1026,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a author id to the query and return all merge requests created by the author id
+         * Set a author id to the query and return all merge requests created by the author id
          *
          * @param authorId id of the author
          * @return the query with the given author id
@@ -998,7 +1037,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a author username to the query and return all merge requests created by the author username
+         * Set a author username to the query and return all merge requests created by the author username
          *
          * @param authorUsername id of the author
          * @return the query with the given author username
@@ -1009,7 +1048,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a assignee id to the query and return all merge requests assigned to the user
+         * Set a assignee id to the query and return all merge requests assigned to the user
          *
          * @param assigneeId id of the assignee
          * @return the query with the given author username
@@ -1020,7 +1059,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a list of approver ids to the query and Returns merge requests which have specified all the users with
+         * Set a list of approver ids to the query and Returns merge requests which have specified all the users with
          * the given ids as individual approvers.
          *
          * @param approverIds list of approvers
@@ -1032,7 +1071,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a list of user ids to the query to Returns merge requests which have been approved by all the users with
+         * Set a list of user ids to the query to Returns merge requests which have been approved by all the users with
          * the given ids (Max: 5). None returns merge requests with no approvals. Any returns merge requests with
          * an approval.
          *
@@ -1045,7 +1084,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * add a reaction emoji to the query to Return merge requests reacted by the authenticated user by the given
+         * Set reaction emoji to the query to Return merge requests reacted by the authenticated user by the given
          * emoji. None returns issues not given a reaction.
          *
          * @param myReactionEmoji a emoji represented by a string
@@ -1057,7 +1096,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * add a source branch and Return merge requests with the given source branch
+         * Set source branch and Return merge requests with the given source branch
          *
          * @param sourceBranch the source branch
          * @return the query with given source branch
@@ -1068,7 +1107,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * add a target branch and Return merge requests with the given target branch
+         * Set target branch and Return merge requests with the given target branch
          *
          * @param targetBranch the target branch
          * @return the query with given target branch
@@ -1079,7 +1118,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * add a search to the query so the request will return merge requests against their title and description
+         * Set search to the query so the request will return merge requests against their title and description
          *
          * @param search search keyword
          * @return the query with given search keyword
@@ -1090,7 +1129,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * add a in parameter to Modify the scope of the search attribute. title, description, or a string joining
+         * Set in parameter to Modify the scope of the search attribute. title, description, or a string joining
          * them with comma. Default is title,description
          *
          * @param in scope of the search
@@ -1102,7 +1141,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * add a wip status to query and Filter merge requests against their wip status. yes to return only WIP merge
+         * Set wip status to query and Filter merge requests against their wip status. yes to return only WIP merge
          * requests, no to return non WIP merge requests
          *
          * @param wip wip status
@@ -1114,7 +1153,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a parameter so the return merge request that do not match the parameters supplied. Accepts: labels,
+         * Set a parameter so the return merge request that do not match the parameters supplied. Accepts: labels,
          * milestone, author_id, author_username, assignee_id, assignee_username, my_reaction_emoji
          *
          * @param not parameter to filter merge requests
@@ -1126,7 +1165,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a parameter for the environment to returns merge requests deployed to the given environment.
+         * Set a parameter for the environment to returns merge requests deployed to the given environment.
          *
          * @param environment specific environment to filter
          * @return the query with the given environment
@@ -1137,7 +1176,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a date parameter to return merge requests deployed before the given datetime.
+         * Set a date parameter to return merge requests deployed before the given datetime.
          *
          * @param deployedBefore a date to add to the query
          * @return the query with the given date
@@ -1148,7 +1187,7 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
         }
 
         /**
-         * Add a date parameter to return merge requests deployed after the given datetime.
+         * Set a date parameter to return merge requests deployed after the given datetime.
          *
          * @param deployedAfter a date to add to the query
          * @return the query with the given date
@@ -1160,6 +1199,10 @@ public class GitlabMergeRequest implements GitlabModifiableComponent<GitlabMerge
 
         /**
          * Get the URL suffix for the HTTP request
+         * <p>
+         * Gitlab Web API: https://docs.gitlab.com/ee/api/merge_requests.html#list-merge-requests
+         * <p>
+         * GET /merge_requests
          *
          * @return The URL suffix to query {@link GitlabMergeRequest}
          */

@@ -1,4 +1,4 @@
-package org.gitlab.api.core;
+package org.gitlab.api;
 
 /**
  * This is the class to represent pagination in the gitlab api.
@@ -14,7 +14,7 @@ public final class Pagination {
      */
     private static final int MAX_PAGE_SIZE = 100;
     /**
-     * The default pagination is retrieve the firsthe firsttge with {@link #DEFAULT_PAGE_SIZE}
+     * The default pagination is retrieve the first page with {@link #DEFAULT_PAGE_SIZE}
      */
     private static final Pagination DEFAULT_PAGINATION = new Pagination(1, DEFAULT_PAGE_SIZE);
     /**
@@ -42,7 +42,7 @@ public final class Pagination {
      *
      * @return The default {@code Pagination} object
      */
-    public static Pagination getDefault() {
+    public static Pagination getDefaultPagination() {
         return DEFAULT_PAGINATION;
     }
 

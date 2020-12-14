@@ -1,4 +1,4 @@
-package org.gitlab.api.core;
+package org.gitlab.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -7,7 +7,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import org.gitlab.api.http.Config;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -17,22 +16,20 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This class is used to represent the gitlab commit model. It contains a config object inorder to make appropriate
- * http request. all of the fields that tagged with JsonProperty are mapped to fields in the gitlab web page.
- * This class also contains a ProjectQuery Class used to build query and get commits within a project.
+ * This class is used to represent the gitlab commit.
  * <p>
- * This class implements GitlabComponent cause only read is supported
+ * This class also contains a {@link ProjectQuery} Class used to build query and get commits within a project.
+ * <p>
+ * This class is immutable and cannot be modified.
  * <p>
  * Gitlab Web API: https://docs.gitlab.com/ee/api/commits.html
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabCommit implements GitlabComponent {
+public class GitlabCommit extends GitlabComponent {
     @JsonProperty("id")
     private final String id;
     @JsonProperty("parent_ids")
     private final List<String> parentIds = new ArrayList<>();
-    @JsonIgnore
-    private Config config;
     @JsonProperty("short_id")
     private String shortId;
     @JsonProperty("title")
@@ -63,15 +60,25 @@ public class GitlabCommit implements GitlabComponent {
     @JsonIgnore
     private GitlabProject project;
 
+    /**
+     * Constructor of the gitlab commit
+     *
+     * @param id sha of the commit
+     */
     GitlabCommit(@JsonProperty("id") String id) {
         this.id = id;
     }
 
-
+    /**
+     * The string representation of this {@link GitlabCommit}
+     *
+     * @return the string representation of this {@link GitlabCommit}
+     */
     @Override
     public String toString() {
         return "GitlabCommit{" +
                 "id=" + id +
+                ", parentIds=" + parentIds +
                 ", shortId=" + shortId +
                 ", title=" + title +
                 ", authorName=" + authorName +
@@ -82,17 +89,27 @@ public class GitlabCommit implements GitlabComponent {
                 ", message=" + message +
                 ", committedDate=" + committedDate +
                 ", authoredDate=" + authoredDate +
-                ", parentIds=" + parentIds +
                 ", status=" + status +
                 ", webUrl=" + webUrl +
                 '}';
     }
 
+    /**
+     * Two {@link GitlabCommit}s will have the same hashcode if they belong to the same project and have the same id
+     *
+     * @return a hash code value for this object.
+     */
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(project, id);
     }
 
+    /**
+     * Two {@link GitlabProject}s are equal if and only if they belong to the same project and have the same id
+     *
+     * @param o the reference object with which to compare.
+     * @return if the two commits belong to the same project and have the same commits
+     */
     @Override
     public boolean equals(Object o) {
         if (o == this) {
@@ -102,20 +119,7 @@ public class GitlabCommit implements GitlabComponent {
             return false;
         }
         GitlabCommit commit = (GitlabCommit) o;
-        return Objects.equals(commit.id, this.id) &&
-                Objects.equals(commit.shortId, this.shortId) &&
-                Objects.equals(commit.title, this.title) &&
-                Objects.equals(commit.authorName, this.authorName) &&
-                Objects.equals(commit.authorEmail, this.authorEmail) &&
-                Objects.equals(commit.committerName, this.committerName) &&
-                Objects.equals(commit.committerEmail, this.committerEmail) &&
-                Objects.equals(commit.createdAt, this.createdAt) &&
-                Objects.equals(commit.message, this.message) &&
-                Objects.equals(commit.committedDate, this.committedDate) &&
-                Objects.equals(commit.authoredDate, this.authoredDate) &&
-                Objects.equals(commit.parentIds, this.parentIds) &&
-                Objects.equals(commit.status, this.status) &&
-                Objects.equals(commit.webUrl, webUrl);
+        return Objects.equals(commit.project, this.project) && Objects.equals(commit.id, this.id);
     }
 
     /**
@@ -254,25 +258,21 @@ public class GitlabCommit implements GitlabComponent {
     }
 
     /**
-     * Get the config that is stored in current {@link GitlabCommit}
-     *
-     * @return config that contains user detail
+     * @param httpClient httpClient used to make http requests
+     * @return {@link GitlabCommit} with the httpClient
      */
     @Override
-    public Config getConfig() {
-        return config;
-    }
-
-    /**
-     * @param config config that contains user detail
-     * @return {@link GitlabCommit} with the config
-     */
-    @Override
-    public GitlabCommit withConfig(Config config) {
-        this.config = config;
+    GitlabCommit withHttpClient(HttpClient httpClient) {
+        super.withHttpClient(httpClient);
         return this;
     }
 
+    /**
+     * Attach a project to this {@link GitlabCommit}
+     *
+     * @param project the project to be attached
+     * @return this {@link GitlabCommit}
+     */
     GitlabCommit withProject(GitlabProject project) {
         this.project = project;
         return this;
@@ -280,13 +280,16 @@ public class GitlabCommit implements GitlabComponent {
 
     /**
      * Class to query {@link GitlabCommit} in a given {@link GitlabProject}
+     * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/commits.html#list-repository-commits
+     * <p>
+     * GET /projects/:id/repository/commits
      */
     public static class ProjectQuery extends GitlabQuery<GitlabCommit> {
         private final GitlabProject project;
 
-        ProjectQuery(Config config, GitlabProject project) {
-            super(config, GitlabCommit[].class);
+        ProjectQuery(HttpClient httpClient, GitlabProject project) {
+            super(httpClient, GitlabCommit[].class);
             this.project = project;
         }
 
@@ -313,7 +316,7 @@ public class GitlabCommit implements GitlabComponent {
         }
 
         /**
-         * add a date to the query and only commits before or on this date will be returned
+         * Set date to the query and only commits before or on this date will be returned
          *
          * @param until date in in ISO 8601 format YYYY-MM-DDTHH:MM:SSZ
          * @return {@link ProjectQuery} with the before
@@ -324,7 +327,7 @@ public class GitlabCommit implements GitlabComponent {
         }
 
         /**
-         * add a file path to the query
+         * Set file path to the query
          *
          * @param path the file path
          * @return {@link ProjectQuery} with the the file path
@@ -335,7 +338,7 @@ public class GitlabCommit implements GitlabComponent {
         }
 
         /**
-         * Add a stat to the query, stats about each commit will be added to the response
+         * Set stat to the query, stats about each commit will be added to the response
          *
          * @param withStats stat to add to the query
          * @return {@link ProjectQuery} with the stats
@@ -346,7 +349,7 @@ public class GitlabCommit implements GitlabComponent {
         }
 
         /**
-         * Add a boolean to indicate whether to follow only the first parent commit upon seeing a merge commit
+         * Set boolean to indicate whether to follow only the first parent commit upon seeing a merge commit
          *
          * @param firstParent whether or not to follow only the first parent
          * @return {@link ProjectQuery} with the the boolean
@@ -384,6 +387,11 @@ public class GitlabCommit implements GitlabComponent {
 
         /**
          * Get the URL suffix for the HTTP request
+         *
+         * <p>
+         * Gitlab Web API: https://docs.gitlab.com/ee/api/commits.html#list-repository-commits
+         * <p>
+         * GET /projects/:id/repository/commits
          *
          * @return The URL suffix to query {@link GitlabCommit} in the given {@link GitlabProject}
          */

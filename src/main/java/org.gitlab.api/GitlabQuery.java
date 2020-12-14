@@ -1,8 +1,5 @@
-package org.gitlab.api.core;
+package org.gitlab.api;
 
-
-import org.gitlab.api.http.Config;
-import org.gitlab.api.http.GitlabHttpClient;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -36,25 +33,23 @@ abstract class GitlabQuery<T extends GitlabComponent> {
     /**
      * The type representing a array of the given {@link GitlabComponent}
      */
+
+    private final HttpClient httpClient;
     private final Class<T[]> type;
     /**
      * The type of params is:
      * Tuple<name, Pair<value, URLEncoder.encode(value, "UTF-8")>>
      */
     private final List<Pair<String, Pair<String, String>>> params = new ArrayList<Pair<String, Pair<String, String>>>();
-    /**
-     *
-     */
-    private final Config config;
 
     /**
-     * Construct the query by the Gitlab configuration and the expected type for the query response
+     * Construct the query by the Gitlab httpClienturation and the expected type for the query response
      *
-     * @param config - the Gitlab configuration to be used
+     * @param httpClient - the {@link HttpClient} to be used
      * @param type   - the expected array type for the query response
      */
-    GitlabQuery(Config config, Class<T[]> type) {
-        this.config = config;
+    GitlabQuery(HttpClient httpClient, Class<T[]> type) {
+        this.httpClient = httpClient;
         this.type = type;
     }
 
@@ -80,14 +75,6 @@ abstract class GitlabQuery<T extends GitlabComponent> {
      */
     public abstract GitlabQuery<T> withPagination(Pagination pagination);
 
-    /**
-     * Get the config that is stored in current {@link GitlabQuery}
-     *
-     * @return the Gitlab configuration
-     */
-    public Config getConfig() {
-        return config;
-    }
 
     /**
      * Issue a HTTP request to perform the query
@@ -96,7 +83,7 @@ abstract class GitlabQuery<T extends GitlabComponent> {
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
     public List<T> query() {
-        List<T> components = GitlabHttpClient.getList(config, getEntireUrl(), type);
+        List<T> components = httpClient.getList(getEntireUrl(), type);
         components.forEach(this::bind);
         return components;
     }

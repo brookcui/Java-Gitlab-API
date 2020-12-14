@@ -1,11 +1,8 @@
-package org.gitlab.api.core;
+package org.gitlab.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.gitlab.api.http.Body;
-import org.gitlab.api.http.Config;
-import org.gitlab.api.http.GitlabHttpClient;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -15,20 +12,18 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This class is used to represent the gitlab issue model. It contains a config object inorder to make appropriate
- * http request. all of the fields that tagged with JsonProperty are mapped to fields in the gitlab web page.
- * This class also contains a ProjectQuery Class used to build query and get issues within a project and Query class
- * to get issues.
+ * This class is used to represent the gitlab issue.
  * <p>
- * This class implements GitlabModifiableComponent to support create, read, update and delete.
+ * This class also contains a {@link ProjectQuery} Class used to build query and get issues within a project and a {@link Query} class
+ * to get issues globally.
+ * <p>
+ * This class support create, read, update and delete.
  * <p>
  * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
+public class GitlabIssue extends GitlabComponent {
 
-    @JsonIgnore
-    private Config config;
     @JsonIgnore
     private GitlabProject project;
     @JsonProperty("id")
@@ -76,7 +71,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
     /**
      * Construct the issue with name
      *
-     * @param title
+     * @param title title of the issue
      */
     GitlabIssue(@JsonProperty("title") String title) {
         this.title = title;
@@ -89,7 +84,6 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
      * @return the created {@link GitlabIssue} component
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
-    @Override
     public GitlabIssue create() {
         Body body = new Body()
                 .putString("title", title)
@@ -97,7 +91,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
                 .putStringArray("labels", labels)
                 .putString("description", description)
                 .putDate("due_date", dueDate);
-        return GitlabHttpClient.post(config, String.format("/projects/%d/issues", projectId), body, this);
+        return httpClient.post(String.format("/projects/%d/issues", projectId), body, this);
     }
 
     /**
@@ -106,9 +100,8 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
      * @return the {@link GitlabIssue} component before deleted
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
-    @Override
     public GitlabIssue delete() {
-        GitlabHttpClient.delete(config, String.format("/projects/%d/issues/%d", projectId, iid));
+        httpClient.delete(String.format("/projects/%d/issues/%d", projectId, iid));
         return this;
     }
 
@@ -119,7 +112,6 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
      * @return the updated {@link GitlabIssue} component
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
-    @Override
     public GitlabIssue update() {
         Body body = new Body()
                 .putString("title", title)
@@ -127,11 +119,11 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
                 .putString("description", description)
                 .putStringArray("labels", labels)
                 .putDate("due_date", dueDate);
-        return GitlabHttpClient.put(config, String.format("/projects/%d/issues/%d", projectId, iid), body, this);
+        return httpClient.put(String.format("/projects/%d/issues/%d", projectId, iid), body, this);
     }
 
     /**
-     * This method will do a HTTP request and close an open issue.
+     * Issue a HTTP request to the Gitlab API endpoint to close this {@link GitlabIssue}.
      * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#edit-issue
      *
      * @return {@link GitlabIssue} after it is closed
@@ -139,11 +131,11 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
      */
     public GitlabIssue close() {
         Body body = new Body().putString("state_event", "close");
-        return GitlabHttpClient.put(config, String.format("/projects/%d/issues/%d", projectId, iid), body, this);
+        return httpClient.put(String.format("/projects/%d/issues/%d", projectId, iid), body, this);
     }
 
     /**
-     * This method will do a HTTP request and reopen a closed issue.
+     * Issue a HTTP request to the Gitlab API endpoint to reopen this {@link GitlabIssue}.
      * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#edit-issue
      *
      * @return {@link GitlabIssue} after it is closed
@@ -151,36 +143,35 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
      */
     public GitlabIssue reopen() {
         Body body = new Body().putString("state_event", "reopen");
-        return GitlabHttpClient.put(config, String.format("/projects/%d/issues/%d", projectId, iid), body, this);
+        return httpClient.put(String.format("/projects/%d/issues/%d", projectId, iid), body,
+                this);
     }
 
     /**
-     * This method will do a HTTP request and get all related merge requests
+     * Issue a HTTP request to the Gitlab API endpoint to get all related {@link GitlabMergeRequest} in this {@link GitlabIssue}
      * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#list-merge-requests-related-to-issue
      *
      * @return list of {@link GitlabMergeRequest} thats related to current issue
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
     public List<GitlabMergeRequest> getRelatedMergeRequests() {
-        List<GitlabMergeRequest> mergeRequests = GitlabHttpClient
-                .getList(config,
-                        String.format("/projects/%d/issues/%d/related_merge_requests", projectId, iid),
-                        GitlabMergeRequest[].class);
+        List<GitlabMergeRequest> mergeRequests = httpClient.getList(
+                String.format("/projects/%d/issues/%d/related_merge_requests", projectId, iid),
+                GitlabMergeRequest[].class);
         mergeRequests.forEach(mergeRequest -> mergeRequest.withProject(getProject()));
         return mergeRequests;
     }
 
     /**
-     * This method will do a HTTP request and get all merge requests that will be closed upon close
+     * Issue a HTTP request to the Gitlab API endpoint to get all related {@link GitlabMergeRequest} that will be close this {@link GitlabIssue} on merge
      * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#list-merge-requests-that-will-close-issue-on-merge
      *
-     * @return list of {@link GitlabMergeRequest} that will be closed upon close
+     * @return list of {@link GitlabMergeRequest} that will close this {@link GitlabIssue} on merge
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
     public List<GitlabMergeRequest> getMergeRequestsClosedOnMerge() {
-        List<GitlabMergeRequest> mergeRequests = GitlabHttpClient
-                .getList(config,
-                        String.format("/projects/%d/issues/%d/closed_by", projectId, iid),
+        List<GitlabMergeRequest> mergeRequests = httpClient
+                .getList(String.format("/projects/%d/issues/%d/closed_by", projectId, iid),
                         GitlabMergeRequest[].class);
         mergeRequests.forEach(mergeRequest -> mergeRequest.withProject(getProject()));
         return mergeRequests;
@@ -193,7 +184,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
      */
     public GitlabProject getProject() {
         if (project == null) {
-            project = GitlabProject.fromId(config, projectId);
+            project = GitlabProject.fromId(httpClient, projectId);
         }
         return project;
     }
@@ -386,8 +377,14 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
     public int getId() {
         return id;
     }
-
+    /**
+     * Attach a project to this {@link GitlabIssue}
+     *
+     * @param project the project to be attached
+     * @return this {@link GitlabIssue}
+     */
     GitlabIssue withProject(GitlabProject project) {
+        Objects.requireNonNull(project);
         this.project = project;
         this.projectId = project.getId();
         return this;
@@ -395,7 +392,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
 
     /*
      * Setters
-     * There will be no setter for projectId, id, author, upvotes, downvotes, mergeRequestCount, updatedAt, createdAt,
+     * There will be no Setter for projectId, id, author, upvotes, downvotes, mergeRequestCount, updatedAt, createdAt,
      * closedAt, closedBy, subscribed, webUrl, hasTasks, epicId
      *
      */
@@ -455,29 +452,24 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         return this;
     }
 
-    /**
-     * Get the config that is stored in current {@link GitlabUser}
-     *
-     * @return the config with user detail
-     */
-    @Override
-    public Config getConfig() {
-        return config;
-    }
 
     /**
-     * Add a config to the current {@link GitlabAPIClient}
+     * Set a httpClient to the current {@link GitlabAPIClient}
      *
-     * @param config a config with user details
-     * @return {@link GitlabIssue} with the config
+     * @param httpClient a http client used for making http request
+     * @return {@link GitlabIssue} with the httpClient
      */
     @Override
-    public GitlabIssue withConfig(Config config) {
-        this.config = config;
+    GitlabIssue withHttpClient(HttpClient httpClient) {
+        super.withHttpClient(httpClient);
         return this;
     }
 
-
+    /**
+     * The string representation of this {@link GitlabIssue}
+     *
+     * @return the string representation of this {@link GitlabIssue}
+     */
     @Override
     public String toString() {
         return "GitlabIssue{" +
@@ -505,55 +497,46 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
                 '}';
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(project, iid);
-    }
-
+    /**
+     * Two {@link GitlabIssue}s are equal if and only if they belong to the same project and have the issue id
+     *
+     * @param o the reference object with which to compare.
+     * @return if the two issues belong to the same project and have the issue id
+     */
     @Override
     public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        }
-        if (!(o instanceof GitlabIssue)) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         GitlabIssue that = (GitlabIssue) o;
-        return project == that.project &&
-                iid == that.iid &&
-                upvotes == that.upvotes &&
-                downvotes == that.downvotes &&
-                mergeRequestCount == that.mergeRequestCount &&
-                epicId == that.epicId &&
-                subscribed == that.subscribed &&
-                hasTasks == that.hasTasks &&
-                Objects.equals(author, that.author) &&
-                Objects.equals(description, that.description) &&
-                Objects.equals(state, that.state) &&
-                Objects.equals(title, that.title) &&
-                Objects.equals(assignees, that.assignees) &&
-                Objects.equals(updatedAt, that.updatedAt) &&
-                Objects.equals(createdAt, that.createdAt) &&
-                Objects.equals(closedAt, that.closedAt) &&
-                Objects.equals(closedBy, that.closedBy) &&
-                Objects.equals(dueDate, that.dueDate) &&
-                Objects.equals(webUrl, that.webUrl);
+        return projectId == that.projectId && iid == that.iid;
+    }
+    /**
+     * Two {@link GitlabIssue}s will have the same hashcode if they belong to the same project and have the same issue id
+     *
+     * @return a hash code value for this object.
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(projectId, iid);
     }
 
     /**
      * Class to query {@link GitlabIssue} in a given {@link GitlabProject}
+     * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#list-project-issues
+     * <p>
+     * GET /projects/:id/issues
      */
     public static class ProjectQuery extends GitlabQuery<GitlabIssue> {
         private final GitlabProject project;
 
-        ProjectQuery(Config config, GitlabProject project) {
-            super(config, GitlabIssue[].class);
+        ProjectQuery(HttpClient httpClient, GitlabProject project) {
+            super(httpClient, GitlabIssue[].class);
             this.project = project;
         }
 
         /**
-         * add a parameter to return issues assigned to the given user id. Mutually exclusive with assignee_username.
+         * Set parameter to return issues assigned to the given user id. Mutually exclusive with assignee_username.
          * None returns unassigned issues. Any returns issues with an assignee.
          *
          * @param assigneeId id of the assignee
@@ -565,7 +548,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         /**
-         * add a list of username to return issues assigned to the given username. Similar to assignee_id and mutually
+         * Set list of username to return issues assigned to the given username. Similar to assignee_id and mutually
          * exclusive with assignee_id. In GitLab CE, the assignee_username array should only contain a single value.
          * Otherwise, an invalid parameter error is returned.
          *
@@ -578,7 +561,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         /**
-         * add a author id to return issues created by the given user id. Mutually exclusive with author_username.
+         * Set author id to return issues created by the given user id. Mutually exclusive with author_username.
          * Combine with scope=all or scope=assigned_to_me
          *
          * @param authorId id of the author
@@ -590,7 +573,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         /**
-         * add a author id to return issues created by the given user username. Mutually exclusive with
+         * Set author id to return issues created by the given user username. Mutually exclusive with
          * author_username. Combine with scope=all or scope=assigned_to_me
          *
          * @param authorUsername username of the author
@@ -602,7 +585,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         /**
-         * add a whether or not to filter confidential or public issues
+         * aSetwhether or not to filter confidential or public issues
          *
          * @param confidential whether or not to filter confidential or public issues
          * @return this {@link ProjectQuery} with the boolean
@@ -613,7 +596,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         /**
-         * Add a date to return issues created on or after the given time.
+         * Set date to return issues created on or after the given time.
          *
          * @param createdAfter a date to get issues after this date
          * @return this {@link ProjectQuery} with the date
@@ -624,7 +607,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         /**
-         * Add a date to return issues created on or before the given time.
+         * Set date to return issues created on or before the given time.
          *
          * @param createdBefore a date to get issues before this date
          * @return this {@link ProjectQuery} with the date
@@ -799,7 +782,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         /**
-         * Add whether or not to return labels with detail
+         * Set whether or not to return labels with detail
          *
          * @param labelsDetails whether or not to return labels with detail
          * @return this {@link ProjectQuery} with the boolean
@@ -810,7 +793,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         /**
-         * Add pagination on top of the query
+         * Set pagination on top of the query
          *
          * @param pagination pagination object that defines page number and size
          * @return this {@link ProjectQuery} with the given pagination object
@@ -823,6 +806,11 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
 
         /**
          * Get the URL suffix for the HTTP request
+         *
+         * <p>
+         * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#list-project-issues
+         * <p>
+         * GET /projects/:id/issues
          *
          * @return The URL suffix to query {@link GitlabIssue} in the given {@link GitlabProject}
          */
@@ -844,17 +832,20 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
     }
 
     /**
-     * Class to query {@link GitlabIssue}
+     * Class to query {@link GitlabIssue} globally
+     * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#list-issues
+     * <p>
+     * GET /issues
      */
     public static class Query extends GitlabQuery<GitlabIssue> {
 
-        Query(Config config) {
-            super(config, GitlabIssue[].class);
+        Query(HttpClient httpClient) {
+            super(httpClient, GitlabIssue[].class);
         }
 
         /**
-         * add a parameter to return issues assigned to the given user id. Mutually exclusive with assignee_username.
+         * Set parameter to return issues assigned to the given user id. Mutually exclusive with assignee_username.
          * None returns unassigned issues. Any returns issues with an assignee.
          *
          * @param assigneeId id of the assignee
@@ -866,7 +857,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         /**
-         * add a list of username to return issues assigned to the given username. Similar to assignee_id and mutually
+         * Set list of username to return issues assigned to the given username. Similar to assignee_id and mutually
          * exclusive with assignee_id. In GitLab CE, the assignee_username array should only contain a single value.
          * Otherwise, an invalid parameter error is returned.
          *
@@ -879,7 +870,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         /**
-         * add a author id to return issues created by the given user id. Mutually exclusive with author_username.
+         * Set author id to return issues created by the given user id. Mutually exclusive with author_username.
          * Combine with scope=all or scope=assigned_to_me
          *
          * @param authorId id of the author
@@ -891,7 +882,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         /**
-         * add a author id to return issues created by the given user username. Mutually exclusive with
+         * Set author id to return issues created by the given user username. Mutually exclusive with
          * author_username. Combine with scope=all or scope=assigned_to_me
          *
          * @param authorUsername username of the author
@@ -903,7 +894,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         /**
-         * add a whether or not to filter confidential or public issues
+         * Set whether or not to filter confidential or public issues
          *
          * @param confidential whether or not to filter confidential or public issues
          * @return this {@link Query} with the boolean
@@ -914,7 +905,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         /**
-         * Add a date to return issues created on or after the given time.
+         * Set a date to return issues created on or after the given time.
          *
          * @param createdAfter a date to get issues after this date
          * @return this {@link Query} with the date
@@ -925,7 +916,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         /**
-         * Add a date to return issues created on or before the given time.
+         * Set date to return issues created on or before the given time.
          *
          * @param createdBefore a date to get issues before this date
          * @return this {@link Query} with the date
@@ -975,6 +966,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         /**
          * Return issues assigned to the given iteration ID. None returns issues that do not belong to an iteration.
          * Any returns issues that belong to an iteration. Mutually exclusive with iteration_title.
+         *
          * @param iterationId iteration id
          * @return this {@link Query} with the iteration id
          */
@@ -1140,7 +1132,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         /**
-         * Add whether or not to return labels with detail
+         * Set whether or not to return labels with detail
          *
          * @param labelsDetails whether or not to return labels with detail
          * @return this {@link Query} with the boolean
@@ -1151,7 +1143,7 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
         }
 
         /**
-         * Add pagination on top of the query
+         * Set pagination on top of the query
          *
          * @param pagination pagination object that defines page number and size
          * @return this {@link Query} with the given pagination object
@@ -1164,7 +1156,10 @@ public class GitlabIssue implements GitlabModifiableComponent<GitlabIssue> {
 
         /**
          * Get the URL suffix for the HTTP request
-         *
+         * <p>
+         * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#list-issues
+         * <p>
+         * GET /issues
          * @return The URL suffix to query {@link GitlabIssue}
          */
         @Override

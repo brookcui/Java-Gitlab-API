@@ -1,32 +1,26 @@
-package org.gitlab.api.core;
+package org.gitlab.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.gitlab.api.http.Body;
-import org.gitlab.api.http.Config;
-import org.gitlab.api.http.GitlabHttpClient;
 
 import java.io.IOException;
 import java.util.Objects;
 
 
 /**
- * This class is used to represent the gitlab branch model. It contains a config object inorder to make appropriate
- * http request. all of the fields that tagged with JsonProperty are mapped to fields in the gitlab web page.
- * This class also contains a ProjectQuery Class used to build query and get branches within a project.
+ * This class is used to represent the gitlab branch.
  * <p>
- * This class implements GitlabWritableComponent to support create and delete methods.
+ * This class also contains a {@link ProjectQuery} Class used to build query and get branches within a project.
+ * <p>
+ * This class supports create and delete methods.
  * <p>
  * Gitlab Web API: https://docs.gitlab.com/ee/api/branches.html
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
-
+public class GitlabBranch extends GitlabComponent {
     @JsonProperty("name")
     private final String name;
-    @JsonIgnore
-    private Config config;
     @JsonProperty("merged")
     private boolean merged;
     @JsonProperty("protected")
@@ -41,9 +35,16 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
     private GitlabCommit commit; // corresponds to branch name or commit SHA to create branch from
     @JsonIgnore
     private GitlabProject project;
-    @JsonIgnore
-    private String ref;
 
+    @JsonIgnore
+    private final String ref;
+
+    /**
+     * Constructor of gitlab branch
+     *
+     * @param name name of the new branch
+     * @param ref  reference sha of the commit to create branch from
+     */
     GitlabBranch(@JsonProperty("name") String name, @JsonProperty("ref") String ref) {
         this.name = name;
         this.ref = ref;
@@ -56,13 +57,12 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
      * @return the created {@link GitlabBranch} component
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
-    @Override
     public GitlabBranch create() {
         Body body = new Body()
                 .putString("branch", name)
                 .putString("ref", ref);
-        return GitlabHttpClient
-                .post(config, String.format("/projects/%d/repository/branches", project.getId()), body, this);
+        return httpClient
+                .post(String.format("/projects/%d/repository/branches", project.getId()), body, this);
     }
 
     /**
@@ -71,9 +71,8 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
      * @return the {@link GitlabBranch} component before deleted
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
-    @Override
     public GitlabBranch delete() {
-        GitlabHttpClient.delete(config, String.format("/projects/%d/repository/branches/%s", project.getId(), name));
+        httpClient.delete(String.format("/projects/%d/repository/branches/%s", project.getId(), name));
         return this;
     }
 
@@ -127,7 +126,7 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
     /**
      * Get whether or new commit can be pushed to current branch
      *
-     * @return whether whether or new commit can be pushed to current branch
+     * @return whether or new commit can be pushed to current branch
      */
     public boolean canPush() {
         return canPush;
@@ -151,7 +150,20 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
         return commit;
     }
 
+    /**
+     * Get the ref branch for this {@link GitlabBranch} when it is created
+     *
+     * @return a ref branch this {@link GitlabBranch} referenced when it is created
+     */
+    public String getRef() {
+        return ref;
+    }
 
+    /**
+     * The string representation of this {@link GitlabBranch}
+     *
+     * @return the string representation of this {@link GitlabBranch}
+     */
     @Override
     public String toString() {
         return "GitlabBranch{" +
@@ -162,34 +174,43 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
                 ", canPush=" + canPush +
                 ", webUrl=" + webUrl +
                 ", commit=" + commit +
-                ", project=" + project +
                 '}';
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(name);
-    }
-
+    /**
+     * Two {@link GitlabBranch}es are equal if and only if they belong to the same project and have the same branch name
+     *
+     * @param o the reference object with which to compare.
+     * @return if the two branches belong to the same project and have the same branch name
+     */
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
+        if (o == this) {
             return true;
         }
         if (!(o instanceof GitlabBranch)) {
             return false;
         }
-        GitlabBranch that = (GitlabBranch) o;
-        return merged == that.merged &&
-                isProtected == that.isProtected &&
-                isDefault == that.isDefault &&
-                canPush == that.canPush &&
-                name.equals(that.name) &&
-                webUrl.equals(that.webUrl) &&
-                commit.equals(that.commit);
+        GitlabBranch branch = (GitlabBranch) o;
+        return Objects.equals(project, branch.project) && Objects.equals(name, branch.name);
     }
 
+    /**
+     * Two {@link GitlabBranch}es  will have the same hashcode if they belong to the same project and have the same branch name
+     *
+     * @return a hash code value for this object.
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(project, name);
+    }
 
+    /**
+     * Attach a project to this {@link GitlabBranch}
+     * It will link the commit to the project as well
+     * @param project the project to be attached
+     * @return this {@link GitlabBranch}
+     */
     GitlabBranch withProject(GitlabProject project) {
         this.project = project;
         if (this.commit != null) {
@@ -199,30 +220,23 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
     }
 
     /**
-     * Get the config that is stored in current {@link GitlabBranch}
+     * Set a httpClient to the current {@link GitlabAPIClient}
      *
-     * @return the config with user detail
+     * @param httpClient the http client used to make http request
+     * @return {@link GitlabBranch} with the httpClient
      */
     @Override
-    public Config getConfig() {
-        return config;
-    }
-
-    /**
-     * Add a config to the current {@link GitlabAPIClient}
-     *
-     * @param config a config with user details
-     * @return {@link GitlabBranch} with the config
-     */
-    @Override
-    public GitlabBranch withConfig(Config config) {
-        this.config = config;
+    GitlabBranch withHttpClient(HttpClient httpClient) {
+        super.withHttpClient(httpClient);
         return this;
     }
 
     /**
      * Class to query {@link GitlabBranch} in a given {@link GitlabProject}
+     * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/branches.html#list-repository-branches
+     * <p>
+     * GET /projects/:id/repository/branches
      */
     public static class ProjectQuery extends GitlabQuery<GitlabBranch> {
         /**
@@ -231,18 +245,18 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
         private final GitlabProject project;
 
         /**
-         * Initialize the {@link ProjectQuery} with configuration and the {@link GitlabProject}
+         * Initialize the {@link ProjectQuery} with httpClienturation and the {@link GitlabProject}
          *
-         * @param config  - the configuration to be used
-         * @param project - the project to be queried from
+         * @param httpClient - the http client used to make request
+         * @param project    - the project to be queried from
          */
-        ProjectQuery(Config config, GitlabProject project) {
-            super(config, GitlabBranch[].class);
+        ProjectQuery(HttpClient httpClient, GitlabProject project) {
+            super(httpClient, GitlabBranch[].class);
             this.project = project;
         }
 
         /**
-         * Add search parameter to the current query
+         * Set search parameter to the current query
          *
          * @param search - string to be searched
          * @return this {@link ProjectQuery} with the given search parameter
@@ -253,7 +267,7 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
         }
 
         /**
-         * Add pagination on top of the query
+         * Set pagination on top of the query
          *
          * @param pagination pagination object that defines page number and size
          * @return this {@link ProjectQuery} with the given pagination object
@@ -266,6 +280,10 @@ public class GitlabBranch implements GitlabWritableComponent<GitlabBranch> {
 
         /**
          * Get the URL suffix for the HTTP request
+         * <p>
+         * Gitlab Web API: https://docs.gitlab.com/ee/api/branches.html#list-repository-branches
+         * <p>
+         * GET /projects/:id/repository/branches
          *
          * @return The URL suffix to query {@link GitlabBranch} in the given {@link GitlabProject}
          */
