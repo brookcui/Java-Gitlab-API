@@ -1,5 +1,5 @@
 package org.gitlab.api.test;
-import org.gitlab.api.core.*;
+import org.gitlab.api.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,8 +9,10 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 public class GitlabUserTest {
-    private static final GitlabAPIClient CLIENT =
-            GitlabAPIClient.fromAccessToken("https://gitlab.com", System.getenv("TOKEN"));
+    private static final GitlabAPIClient CLIENT = new GitlabAPIClient
+            .Builder("https://gitlab.com")
+            .withAccessToken(System.getenv("TOKEN"))
+            .build();
     private GitlabProject project;
     @BeforeEach
     void setup() {
@@ -39,18 +41,37 @@ public class GitlabUserTest {
     @Test
     void testToString() {
         GitlabUser currentUser = CLIENT.getCurrentUser();
-        assertEquals(currentUser.getName(), currentUser.toString());
+        String expected = "GitlabUser{" +
+                "id=" + currentUser.getId() +
+                ", username=" + currentUser.getUsername() +
+                ", name=" + currentUser.getName() +
+                ", state=" + currentUser.getState() +
+                ", avatarUrl=" + currentUser.getAvatarUrl() +
+                ", webUrl=" + currentUser.getWebUrl() +
+                ", createdAt=" + currentUser.getCreatedAt() +
+                ", bio=" + currentUser.getBio() +
+                ", bioHtml=" + currentUser.getBioHtml() +
+                ", publicEmail=" + currentUser.getPublicEmail() +
+                ", skype=" + currentUser.getSkype() +
+                ", linkedin=" + currentUser.getLinkedin() +
+                ", twitter=" + currentUser.getTwitter() +
+                ", websiteUrl=" + currentUser.getWebsiteUrl() +
+                ", organization=" + currentUser.getOrganization() +
+                ", jobTitle=" + currentUser.getJobTitle() +
+                '}';
+
+        assertEquals(expected, currentUser.toString());
 
     }
 
     @Test
     void testQuery() {
         GitlabUser currentUser = CLIENT.getCurrentUser();
-        List<GitlabUser> users1 = project.users().query();
+        List<GitlabUser> users1 = project.getUsersQuery().query();
         assertEquals(1, users1.size());
-        List<GitlabUser> users2 = project.users().withSearch(currentUser.getUsername()).query();
+        List<GitlabUser> users2 = project.getUsersQuery().withSearch(currentUser.getUsername()).query();
         assertEquals(1, users2.size());
-        List<GitlabUser> users3 = CLIENT.users().query();
+        List<GitlabUser> users3 = CLIENT.getUsersQuery().query();
         assertTrue(users3.size() >= 1);
     }
 
