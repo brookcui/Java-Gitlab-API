@@ -16,12 +16,11 @@ class GitlabProjectTest {
 
     @Test
     void testCRUD() {
-        String projectName = "test" + ThreadLocalRandom.current();
+        String projectName = "test" + ThreadLocalRandom.current().nextInt();
         GitlabProject project = CLIENT.newProject(projectName).create();
         assertEquals(projectName, project.getName());
-        GitlabProject updatedProject = project.withDefaultBranch("default").withDescription("desc").update();
+        GitlabProject updatedProject = project.withDescription("desc").update();
         assertEquals(project, updatedProject);
-        assertEquals("default", updatedProject.getDefaultBranch());
         assertEquals("desc", updatedProject.getDescription());
         GitlabProject deletedProject = project.delete();
         assertEquals(project, deletedProject);
@@ -29,7 +28,7 @@ class GitlabProjectTest {
 
     @Test
     void testDuplicateDelete() {
-        String projectName = "test" + ThreadLocalRandom.current();
+        String projectName = "test" + ThreadLocalRandom.current().nextInt();
         GitlabProject project = CLIENT.newProject(projectName).create();
         assertEquals(projectName, project.getName());
         GitlabProject deletedProject = project.delete();
@@ -42,17 +41,24 @@ class GitlabProjectTest {
     @Test
     void testQuery() {
         List<GitlabProject> projects = CLIENT.getProjectsQuery().query();
-        String projectName = "test" + ThreadLocalRandom.current();
+        String projectName = "test" + ThreadLocalRandom.current().nextInt();
         for (GitlabProject project : projects) {
             assertNotEquals(projectName, project.getName());
+            System.out.println(project.getName());
         }
-        int count = projects.size();
         GitlabProject createdProject = CLIENT.newProject(projectName).create();
         assertNotNull(createdProject);
         assertEquals(projectName, createdProject.getName());
         projects = CLIENT.getProjectsQuery().query();
-        assertEquals(count+1, projects.size());
+        int count = 0;
+        for (GitlabProject project : projects) {
+            if (project.equals(createdProject)) {
+                count += 1;
+            }
+        }
+        assertEquals(1, count);
         GitlabProject deletedProject = createdProject.delete();
+        assertNotNull(deletedProject);
         assertEquals(createdProject, deletedProject);
     }
 }

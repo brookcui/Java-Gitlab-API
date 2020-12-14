@@ -10,7 +10,7 @@ class PaginationTest {
     @Test
     void getDefaultPagination() {
         Pagination defaultPagination = Pagination.getDefaultPagination();
-        assertEquals(0, defaultPagination.getPageNumber());
+        assertEquals(1, defaultPagination.getPageNumber());
         assertEquals(20, defaultPagination.getPageSize());
     }
 
@@ -42,7 +42,7 @@ class PaginationTest {
     @Test
     void getPageNumber() {
         Pagination defaultPagination = Pagination.getDefaultPagination();
-        assertEquals(0, defaultPagination.getPageNumber());
+        assertEquals(1, defaultPagination.getPageNumber());
         Pagination pagination = Pagination.of(1, 5);
         assertEquals(1, pagination.getPageNumber());
     }

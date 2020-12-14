@@ -20,7 +20,8 @@ class GitlabBranchTest {
 
     @BeforeEach
     void setUp() {
-        project = CLIENT.newProject("test" + ThreadLocalRandom.current()).create();
+        String projectName = "test" + ThreadLocalRandom.current().nextInt();
+        project = CLIENT.newProject(projectName).create();
     }
 
     @AfterEach
@@ -30,12 +31,16 @@ class GitlabBranchTest {
 
     @Test
     void testGetters() {
-        GitlabBranch branch = project.newBranch("branch", "ref").create();
+        GitlabBranch branch = project.newBranch("branch", "master").create();
         assertNotNull(branch);
-        assertEquals(branch, project.getBranch("branch"));
         assertEquals("branch", branch.getName());
-        assertEquals("", branch.getWebUrl());
         assertEquals(project.getName(), branch.getProject().getName());
+        assertEquals("master", branch.getRef());
+        assertEquals(project.getName(), branch.getProject().getName());
+        assertEquals(false, branch.isDefault());
+        assertEquals(false, branch.isMerged());
+        assertEquals(false, branch.isProtected());
+        assertEquals(true, branch.canPush());
         GitlabBranch deletedBranch = branch.delete();
         assertNotNull(deletedBranch);
         assertEquals(branch, deletedBranch);
@@ -43,9 +48,9 @@ class GitlabBranchTest {
 
     @Test
     void testSequentialCRD() { // CRDR
-        GitlabBranch branch = project.newBranch("branch", "ref").create();
+        GitlabBranch branch = project.newBranch("branch", "master").create();
         assertNotNull(branch);
-        assertEquals("branch", project.getBranch("branch"));
+        assertEquals(branch, project.getBranch("branch"));
         GitlabBranch deletedBranch = branch.delete();
         assertNotNull(deletedBranch);
         assertEquals(branch, deletedBranch);
@@ -54,7 +59,7 @@ class GitlabBranchTest {
 
     @Test
     void testDuplicateDelete() { //CRURDDR
-        GitlabBranch branch = project.newBranch("branch", "ref").create();
+        GitlabBranch branch = project.newBranch("branch", "master").create();
         assertNotNull(branch);
         assertEquals(branch, project.getBranch("branch"));
         assertEquals("branch", branch.getName());
@@ -71,12 +76,12 @@ class GitlabBranchTest {
         List<GitlabBranch> branches = project.getBranchesQuery().query();
         assertEquals(0, branches.size());
 
-        GitlabBranch branch1 = project.newBranch("branch1", "ref1").create();
-        GitlabBranch branch2 = project.newBranch("branch2", "ref2").create();
-        GitlabBranch branch3 = project.newBranch("branch3", "ref3").create();
+        GitlabBranch branch1 = project.newBranch("branch1", "master").create();
+        GitlabBranch branch2 = project.newBranch("branch2", "master").create();
+        GitlabBranch branch3 = project.newBranch("branch3", "master").create();
 
         branches = project.getBranchesQuery().query();
-        assertEquals(3, branches.size());
+        assertEquals(4, branches.size());
         assertEquals(branch1.getName(), branches.get(0).getName());
         assertEquals(branch2.getName(), branches.get(1).getName());
         assertEquals(branch3.getName(), branches.get(2).getName());
@@ -86,6 +91,7 @@ class GitlabBranchTest {
         branch3.delete();
 
         branches = project.getBranchesQuery().query();
-        assertEquals(0, branches.size());
+
+        assertEquals(1, branches.size());
     }
 }
