@@ -1,27 +1,24 @@
-package org.gitlab.api.core;
+package org.gitlab.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.gitlab.api.http.Config;
-import org.gitlab.api.http.GitlabHttpClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
 /**
- * This class is used to represent the gitlab user model. It contains a config object inorder to make appropriate
- * http request. all of the fields that tagged with JsonProperty are mapped to fields in the gitlab web page.
- * This class also contains a ProjectQuery Class used to build query and get users in a project, as well as a Query
- * class to build query to get users.
- *
- * This class implements GitlabComponent since only read is being supported.
+ * This class is used to represent the gitlab user.
+ * <p>
+ * This class also contains a {@link ProjectQuery} Class used to build query and get users in a project, as well as a
+ * {@link Query} class to build query to get users globally.
+ * <p>
+ * This class is read only.
  * <p>
  * Gitlab Web API: https://docs.gitlab.com/ee/api/users.html
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabUser implements GitlabComponent {
+public class GitlabUser extends GitlabComponent {
 
     @JsonProperty(value = "id")
     private final int id;
@@ -56,24 +53,26 @@ public class GitlabUser implements GitlabComponent {
     @JsonProperty(value = "job_title")
     private String jobTitle;
 
-    @JsonIgnore
-    private Config config;
-
+    /**
+     * Constructor a gitlab user instance
+     *
+     * @param id id of the user
+     */
     GitlabUser(@JsonProperty("id") int id) {
         this.id = id;
     }
 
     /**
-     * Get the all projects by current user.
+     * Get a {@link GitlabProject.UserQuery} that can be used to query projects accessible by the current authenticated user
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#list-user-projects
+     * <p>
      * GET /users/:user_id/projects
      *
-     * @return A list of {@link GitlabProject} belong to current user
+     * @return a {@link GitlabProject.UserQuery}
      */
-    public List<GitlabProject> getUserProjects() {
-        return GitlabHttpClient.getList(config, String.format("/users/%d/projects", id), GitlabProject[].class);
-
+    public GitlabProject.UserQuery getUserProjectsQuery() {
+        return new GitlabProject.UserQuery(httpClient, String.valueOf(id));
     }
 
     /**
@@ -219,76 +218,84 @@ public class GitlabUser implements GitlabComponent {
     public String getJobTitle() {
         return jobTitle;
     }
-
+    /**
+     * The string representation of this {@link GitlabUser}
+     *
+     * @return the string representation of this {@link GitlabUser}
+     */
     @Override
     public String toString() {
-        return name;
+        return "GitlabUser{" +
+                "id=" + id +
+                ", username=" + username +
+                ", name=" + name +
+                ", state=" + state +
+                ", avatarUrl=" + avatarUrl +
+                ", webUrl=" + webUrl +
+                ", createdAt=" + createdAt +
+                ", bio=" + bio +
+                ", bioHtml=" + bioHtml +
+                ", publicEmail=" + publicEmail +
+                ", skype=" + skype +
+                ", linkedin=" + linkedin +
+                ", twitter=" + twitter +
+                ", websiteUrl=" + websiteUrl +
+                ", organization=" + organization +
+                ", jobTitle=" + jobTitle +
+                '}';
     }
 
+    /**
+     * Two {@link GitlabUser}s are equal if and only if they have the same id
+     *
+     * @param o the reference object with which to compare.
+     * @return if and only if they have the same id
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GitlabUser that = (GitlabUser) o;
+        return id == that.id;
+    }
+
+    /**
+     * Two {@link GitlabUser}s will have the same hashcode if they the same id
+     *
+     * @return a hash code value for this object.
+     */
     @Override
     public int hashCode() {
         return Objects.hash(id);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        }
-        if (!(o instanceof GitlabUser)) {
-            return false;
-        }
-        GitlabUser that = (GitlabUser) o;
-        return id == that.id &&
-                Objects.equals(username, that.username) &&
-                Objects.equals(state, that.state) &&
-                Objects.equals(avatarUrl, that.avatarUrl) &&
-                Objects.equals(webUrl, that.webUrl) &&
-                Objects.equals(createdAt, that.createdAt) &&
-                Objects.equals(bio, that.bio) &&
-                Objects.equals(bioHtml, that.bioHtml) &&
-                Objects.equals(publicEmail, that.publicEmail) &&
-                Objects.equals(skype, that.skype) &&
-                Objects.equals(linkedin, that.linkedin) &&
-                Objects.equals(twitter, that.twitter) &&
-                Objects.equals(websiteUrl, that.websiteUrl) &&
-                Objects.equals(organization, that.organization) &&
-                Objects.equals(jobTitle, that.jobTitle);
-    }
 
     /**
-     * Get the config that is stored in current {@link GitlabUser}
+     * Set a httpClient to the current {@link GitlabAPIClient}
      *
-     * @return the config with user detail
+     * @param httpClient the {@link HttpClient} to be used
+     * @return {@link GitlabUser} with the httpClient
      */
     @Override
-    public Config getConfig() {
-        return config;
-    }
-
-    /**
-     * Add a config to the current {@link GitlabAPIClient}
-     *
-     * @param config a config with user details
-     * @return {@link GitlabUser} with the config
-     */
-    @Override
-    public GitlabUser withConfig(Config config) {
-        this.config = config;
+    GitlabUser withHttpClient(HttpClient httpClient) {
+        super.withHttpClient(httpClient);
         return this;
     }
 
     /**
      * Class to query {@link GitlabUser}
+     * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/users.html#list-users
+     * <p>
+     * GET /users
      */
     public static class Query extends GitlabQuery<GitlabUser> {
-        Query(Config config) {
-            super(config, GitlabUser[].class);
+        Query(HttpClient httpClient) {
+            super(httpClient, GitlabUser[].class);
         }
 
         /**
-         * Add pagination on top of the query
+         * Set pagination on top of the query
          *
          * @param pagination pagination object that defines page number and size
          * @return this {@link Query} with the given pagination object
@@ -300,7 +307,7 @@ public class GitlabUser implements GitlabComponent {
         }
 
         /**
-         * Add a username to the query and limit the user by username
+         * Set a username to the query and limit the user by username
          *
          * @param username username to query
          * @return this {@link Query} with the username
@@ -311,7 +318,7 @@ public class GitlabUser implements GitlabComponent {
         }
 
         /**
-         * Add whether to query active user
+         * Set whether to query active user
          *
          * @param active whether user is active
          * @return this {@link Query} with whether user is active
@@ -322,7 +329,7 @@ public class GitlabUser implements GitlabComponent {
         }
 
         /**
-         * Add whether to query blocked user
+         * Set whether to query blocked user
          *
          * @param blocked whether user is blocked
          * @return this {@link Query} with whether user is blocked
@@ -333,7 +340,7 @@ public class GitlabUser implements GitlabComponent {
         }
 
         /**
-         * Add whether to exclude internal which excludes alert bot and support bot
+         * Set whether to exclude internal which excludes alert bot and support bot
          *
          * @param excludeInternal whether to excludes alert bot and support bot
          * @return this {@link Query} with whether user is blocked
@@ -360,19 +367,22 @@ public class GitlabUser implements GitlabComponent {
     }
 
     /**
-     * Class to query {@link GitlabUser} with configuration and the {@link GitlabProject}
+     * Class to query {@link GitlabUser} with httpClienturation and the {@link GitlabProject}
+     * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#get-project-users
+     * <p>
+     * GET /projects/:id/users
      */
     public static class ProjectQuery extends GitlabQuery<GitlabUser> {
         private final int projectId;
 
-        ProjectQuery(Config config, int projectId) {
-            super(config, GitlabUser[].class);
+        ProjectQuery(HttpClient httpClient, int projectId) {
+            super(httpClient, GitlabUser[].class);
             this.projectId = projectId;
         }
 
         /**
-         * Add pagination on top of the query
+         * Set pagination on top of the query
          *
          * @param pagination pagination object that defines page number and size
          * @return this {@link ProjectQuery} with the given pagination object
@@ -384,7 +394,7 @@ public class GitlabUser implements GitlabComponent {
         }
 
         /**
-         * Add a search parameter to the query to search for a specific user
+         * Set a search parameter to the query to search for a specific user
          *
          * @param search specific user
          * @return this {@link ProjectQuery} with the user specified
@@ -395,7 +405,7 @@ public class GitlabUser implements GitlabComponent {
         }
 
         /**
-         * Add a list of user ids to filter out
+         * Set a list of user ids to filter out
          *
          * @param skipUsers users to be skipped
          * @return this {@link ProjectQuery} with the list of users to be skipped
@@ -407,7 +417,10 @@ public class GitlabUser implements GitlabComponent {
 
         /**
          * Get the URL suffix for the HTTP request
-         *
+         * <p>
+         * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#get-project-users
+         * <p>
+         * GET /projects/:id/users
          * @return The URL suffix to query {@link GitlabUser} in the given {@link GitlabProject}
          */
         @Override
