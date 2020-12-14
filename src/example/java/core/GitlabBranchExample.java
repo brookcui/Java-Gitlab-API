@@ -1,12 +1,15 @@
 package core;
-import org.gitlab.api.core.*;
+import org.gitlab.api.GitlabAPIClient;
+import org.gitlab.api.*;
 
 import java.util.List;
 public class GitlabBranchExample {
     public static void main(String[] args) {
         // Connect to Gitlab via access token
-        GitlabAPIClient CLIENT =
-                GitlabAPIClient.fromAccessToken("https://gitlab.com", System.getenv("TOKEN"));
+        GitlabAPIClient CLIENT = new GitlabAPIClient
+                .Builder("https://gitlab.com")
+                .withAccessToken(System.getenv("TOKEN"))
+                .build();
         GitlabProject project = CLIENT.newProject("example-project").create();
 
         // create new branches
@@ -18,7 +21,7 @@ public class GitlabBranchExample {
         if (branch1.isDefault()) System.out.println(branch1.getName() + " is the default branch");
 
         // query all branches under a project
-        List<GitlabBranch> branchesInProject = project.branches().query();
+        List<GitlabBranch> branchesInProject = project.getBranchesQuery().query();
         System.out.println(project.getName() + " has " + branchesInProject.size() + " branches");
 
         // delete branch (default branch cannot be deleted)

@@ -1,25 +1,28 @@
 package core;
-import org.gitlab.api.core.*;
+import org.gitlab.api.GitlabAPIClient;
+import org.gitlab.api.*;
 
 import java.util.List;
 
 public class GitlabProjectExample {
     public static void main(String[] args) {
         // Connect to Gitlab via access token
-        GitlabAPIClient CLIENT =
-                GitlabAPIClient.fromAccessToken("https://gitlab.com", System.getenv("TOKEN"));
+        GitlabAPIClient CLIENT = new GitlabAPIClient
+                .Builder("https://gitlab.com")
+                .withAccessToken(System.getenv("TOKEN"))
+                .build();
         // create a new project
         GitlabProject project = CLIENT.newProject("project1").create();
 
         // get all projects of a specific user
-        List<GitlabProject> projects = CLIENT.getUserProjects(CLIENT.getCurrentUser().getUsername());
+        List<GitlabProject> projects = CLIENT.getUserProjectsQuery(CLIENT.getCurrentUser().getUsername()).query();
         for (GitlabProject p : projects) {
             System.out.println("ProjectID: " + p.getId() + " Title: " + p.getName());
         }
 
         // update project field, add a default branch
         project.withDefaultBranch("master").update();
-        project.newBranch("branch1").create("master");
+        project.newBranch("branch1", "master").create();
 
         // fork a project
         GitlabProject projectForked = project.fork();
@@ -27,10 +30,10 @@ public class GitlabProjectExample {
         System.out.println("Project " +project.getId() + "is forked " + project.getForksCount() + " times");
 
         // query issues, branch, mergeRequest, commits under a project
-        List<GitlabIssue> issues = project.issues().query();
-        List<GitlabBranch> branches = project.branches().query();
-        List<GitlabMergeRequest> mergeRequests = project.mergeRequests().query();
-        List<GitlabCommit> commits = project.commits().query();
+        List<GitlabIssue> issues = project.getIssuesQuery().query();
+        List<GitlabBranch> branches = project.getBranchesQuery().query();
+        List<GitlabMergeRequest> mergeRequests = project.getMergeRequestsQuery().query();
+        List<GitlabCommit> commits = project.getCommitsQuery().query();
 
         System.out.println(project.getName() + " has " + issues.size() + " issues.");
         System.out.println(project.getName() + " has " + branches.size() + " branches.");

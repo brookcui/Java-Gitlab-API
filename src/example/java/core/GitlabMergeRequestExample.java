@@ -1,13 +1,16 @@
 package core;
-import org.gitlab.api.core.*;
+import org.gitlab.api.GitlabAPIClient;
+import org.gitlab.api.*;
 
 import java.util.List;
 
 public class GitlabMergeRequestExample {
     public static void main(String[] args) {
         // Connect to Gitlab via access token
-        GitlabAPIClient CLIENT =
-                GitlabAPIClient.fromAccessToken("https://gitlab.com", System.getenv("TOKEN"));
+        GitlabAPIClient CLIENT = new GitlabAPIClient
+                .Builder("https://gitlab.com")
+                .withAccessToken(System.getenv("TOKEN"))
+                .build();
         GitlabProject project = CLIENT.newProject("example-project").create();
 
         GitlabBranch branch1 = project.newBranch("branch1", "master").create();
@@ -43,20 +46,20 @@ public class GitlabMergeRequestExample {
             req1.accept();
             System.out.println(req1.getTitle() + " status is now " + req1.getState());
         } catch (GitlabException e) {
-            System.out.println(e.getMessage());
+            System.out.println("Merge request cannot be performed, " + e.getMessage());
         }
 
         // decline a request
-        req2.decline();
+        req1.decline();
 
         // update a request to a new target branch
         req1.withTargetBranch(branch2.getName()).update();
 
         // query all merge requests
-        List<GitlabMergeRequest> requests = CLIENT.mergeRequests().query();
+        List<GitlabMergeRequest> requests = CLIENT.getMergeRequestsQuery().query();
         System.out.println("Visible merge requests: " + requests.size());
         // query all merge requests under a project
-        List<GitlabMergeRequest> requestsInProject = project.mergeRequests().withState("opened").query();
+        List<GitlabMergeRequest> requestsInProject = project.getMergeRequestsQuery().withState("opened").query();
         System.out.println(project.getName() + " has " + requestsInProject.size() + " open merge requests");
 
         // delete a request
