@@ -1,6 +1,6 @@
 package org.gitlab.api.test;
 
-import org.gitlab.api.core.*;
+import org.gitlab.api.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,8 +11,10 @@ import java.util.Random;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GitLabCommitTest {
-    private static final GitlabAPIClient CLIENT =
-            GitlabAPIClient.fromAccessToken("https://gitlab.com", System.getenv("TOKEN"));
+    private static final GitlabAPIClient CLIENT = new GitlabAPIClient
+            .Builder("https://gitlab.com")
+            .withAccessToken(System.getenv("TOKEN"))
+            .build();
     private GitlabProject project;
     @BeforeEach
     void setup() {
@@ -27,10 +29,10 @@ public class GitLabCommitTest {
 
     @Test
     void testQuery() {
-        assertDoesNotThrow(()->{project.commits().query();});
-        List<GitlabProject> projects = CLIENT.getUserProjects(CLIENT.getCurrentUser().getUsername());
+        assertDoesNotThrow(()->{project.getCommitsQuery().query();});
+        List<GitlabProject> projects = CLIENT.getUserProjectsQuery(CLIENT.getCurrentUser().getUsername()).query();
         for (GitlabProject p : projects) {
-            List<GitlabCommit> commits = project.commits().query();
+            List<GitlabCommit> commits = p.getCommitsQuery().query();
             assertTrue(commits.size() >= 0);
         }
     }
