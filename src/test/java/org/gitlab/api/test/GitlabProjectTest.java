@@ -1,106 +1,58 @@
-package org.gitlab.api.core;
+package org.gitlab.api.test;
 
-import org.gitlab.api.core.GitlabAPIClient;
+import org.gitlab.api.GitlabAPIClient;
+import org.gitlab.api.GitlabException;
+import org.gitlab.api.GitlabProject;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class GitlabProjectTest {
-    private static final String endpoint = "";
-    private static final String accessToken = "";
-    private static final GitlabAPIClient client =
-            new GitlabAPIClient.Builder(endpoint).withAccessToken(accessToken).build();
-    private static final int projectId = 0;
-    private static final GitlabProject project = client.getProject(projectId);
-    private static final GitlabProject newProject = client.newProject("newProjectName");
+    private static final GitlabAPIClient CLIENT =
+            new GitlabAPIClient.Builder("https://gitlab.com").withAccessToken(System.getenv("TOKEN")).build();
 
     @Test
-    void testSequentialCRUD() {
-        final GitlabProject[] projects = new GitlabProject[3];
-        assertDoesNotThrow(() -> {
-            projects[0] = newProject.create();
-        });
-        assertEquals("newProjectName", projects[0].getName());
-        assertDoesNotThrow(() -> {
-            projects[1] = projects[0].withPath("path").update();
-        });
-        assertEquals("newProjectName", projects[1].getName());
-        assertEquals("path", projects[1].getPath());
-        assertDoesNotThrow(() -> {
-            projects[2] = projects[1].delete();
-        });
-        assertEquals("newProjectName", projects[2].getName());
-    }
-
-    @Test
-    void testSequentialCRD() {
-        final GitlabProject[] projects = new GitlabProject[2];
-        assertDoesNotThrow(() -> {
-            projects[0] = newProject.create();
-            projects[1] = projects[0].delete();
-        });
-        assertEquals("newProjectName", projects[0].getName());
-        assertEquals("newProjectName", projects[1].getName());
-    }
-
-    @Test
-    void testDuplicateCreate() {
-        final GitlabProject[] projects = new GitlabProject[3];
-        assertDoesNotThrow(() -> {
-            projects[0] = newProject.create();
-        });
-        assertEquals("newProjectName", projects[0].getName());
-        assertThrows(IOException.class, () -> {
-            projects[1] = projects[0].create(); // create existent project
-        });
-        assertEquals("newProjectName", projects[1].getName());
-        assertDoesNotThrow(() -> {
-            projects[2] = projects[1].delete();
-        });
-        assertEquals("newProjectName", projects[2].getName());
-    }
-
-    @Test
-    void testDuplicateUpdate() {
-        final GitlabProject[] projects = new GitlabProject[4];
-        assertDoesNotThrow(() -> {
-            projects[0] = newProject.create();
-        });
-        assertEquals("newProjectName", projects[0].getName());
-        assertNotEquals("path", projects[0].getPath());
-        assertNotEquals("desc", projects[0].getDescription());
-        assertDoesNotThrow(() -> {
-            projects[1] = projects[0].withPath("path").update();
-            projects[2] = projects[1].withDescription("desc").update();
-        });
-        assertEquals("newProjectName", projects[1].getName());
-        assertEquals("path", projects[1].getPath());
-        assertNotEquals("desc", projects[1].getDescription());
-        assertEquals("newProjectName", projects[2].getName());
-        assertEquals("path", projects[2].getPath());
-        assertEquals("desc", projects[2].getDescription());
-        assertDoesNotThrow(() -> {
-            projects[3] = projects[2].delete();
-        });
-        assertEquals("newProjectName", projects[3].getName());
+    void testCRUD() {
+        String projectName = "test" + ThreadLocalRandom.current();
+        GitlabProject project = CLIENT.newProject(projectName).create();
+        assertEquals(projectName, project.getName());
+        GitlabProject updatedProject = project.withDefaultBranch("default").withDescription("desc").update();
+        assertEquals(project, updatedProject);
+        assertEquals("default", updatedProject.getDefaultBranch());
+        assertEquals("desc", updatedProject.getDescription());
+        GitlabProject deletedProject = project.delete();
+        assertEquals(project, deletedProject);
     }
 
     @Test
     void testDuplicateDelete() {
-        final GitlabProject[] projects = new GitlabProject[3];
-        assertDoesNotThrow(() -> {
-            projects[0] = newProject.create();
+        String projectName = "test" + ThreadLocalRandom.current();
+        GitlabProject project = CLIENT.newProject(projectName).create();
+        assertEquals(projectName, project.getName());
+        GitlabProject deletedProject = project.delete();
+        assertEquals(project, deletedProject);
+        assertThrows(GitlabException.class, () -> {
+            project.delete();
         });
-        assertEquals("newProjectName", projects[0].getName());
-        assertDoesNotThrow(() -> {
-            projects[1] = projects[0].delete();
-        });
-        assertEquals("newProjectName", projects[1].getName());
-        assertThrows(IOException.class, () -> {
-            projects[2] = projects[1].delete(); // delete non-existent project
-        });
-        assertEquals("newProjectName", projects[2].getName());
+    }
+
+    @Test
+    void testQuery() {
+        List<GitlabProject> projects = CLIENT.getProjectsQuery().query();
+        String projectName = "test" + ThreadLocalRandom.current();
+        for (GitlabProject project : projects) {
+            assertNotEquals(projectName, project.getName());
+        }
+        int count = projects.size();
+        GitlabProject createdProject = CLIENT.newProject(projectName).create();
+        assertNotNull(createdProject);
+        assertEquals(projectName, createdProject.getName());
+        projects = CLIENT.getProjectsQuery().query();
+        assertEquals(count+1, projects.size());
+        GitlabProject deletedProject = createdProject.delete();
+        assertEquals(createdProject, deletedProject);
     }
 }
