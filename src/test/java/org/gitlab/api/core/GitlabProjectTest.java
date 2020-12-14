@@ -1,106 +1,66 @@
 package org.gitlab.api.core;
 
-import org.gitlab.api.core.GitlabAPIClient;
+import org.gitlab.api.GitlabAPIClient;
+import org.gitlab.api.GitlabBranch;
+import org.gitlab.api.GitlabIssue;
+import org.gitlab.api.GitlabMergeRequest;
+import org.gitlab.api.GitlabProject;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GitlabProjectTest {
-    private static final String endpoint = "";
-    private static final String accessToken = "";
-    private static final GitlabAPIClient client =
-            new GitlabAPIClient.Builder(endpoint).withAccessToken(accessToken).build();
-    private static final int projectId = 0;
-    private static final GitlabProject project = client.getProject(projectId);
-    private static final GitlabProject newProject = client.newProject("newProjectName");
+    private static final GitlabAPIClient CLIENT =
+            new GitlabAPIClient.Builder("https://gitlab.com").withAccessToken(System.getenv("TOKEN")).build();
 
     @Test
-    void testSequentialCRUD() {
-        final GitlabProject[] projects = new GitlabProject[3];
-        assertDoesNotThrow(() -> {
-            projects[0] = newProject.create();
-        });
-        assertEquals("newProjectName", projects[0].getName());
-        assertDoesNotThrow(() -> {
-            projects[1] = projects[0].withPath("path").update();
-        });
-        assertEquals("newProjectName", projects[1].getName());
-        assertEquals("path", projects[1].getPath());
-        assertDoesNotThrow(() -> {
-            projects[2] = projects[1].delete();
-        });
-        assertEquals("newProjectName", projects[2].getName());
+    void getIssue() {
+        GitlabProject project = CLIENT.newProject("test").create();
+        GitlabIssue issue = project.newIssue("new issue").create();
+        assertEquals("new issue", project.getIssue(issue.getIid()).getTitle());
+        project.delete();
     }
 
     @Test
-    void testSequentialCRD() {
-        final GitlabProject[] projects = new GitlabProject[2];
-        assertDoesNotThrow(() -> {
-            projects[0] = newProject.create();
-            projects[1] = projects[0].delete();
-        });
-        assertEquals("newProjectName", projects[0].getName());
-        assertEquals("newProjectName", projects[1].getName());
+    void query() {
+        List<GitlabProject> projects = CLIENT.getProjectsQuery().withArchived(false).query();
+        projects.forEach(System.out::println);
+
     }
 
     @Test
-    void testDuplicateCreate() {
-        final GitlabProject[] projects = new GitlabProject[3];
-        assertDoesNotThrow(() -> {
-            projects[0] = newProject.create();
-        });
-        assertEquals("newProjectName", projects[0].getName());
-        assertThrows(IOException.class, () -> {
-            projects[1] = projects[0].create(); // create existent project
-        });
-        assertEquals("newProjectName", projects[1].getName());
-        assertDoesNotThrow(() -> {
-            projects[2] = projects[1].delete();
-        });
-        assertEquals("newProjectName", projects[2].getName());
+    void queryIssues() {
+        GitlabProject project = CLIENT.getProject(22777636);
+        List<GitlabIssue> issues = project.getIssuesQuery().withLabels(Collections.singletonList("ccc")).query();
+        assertEquals(1, issues.size());
+        assertEquals(22777636, issues.get(0).getProjectId());
+        System.out.println(issues);
     }
 
     @Test
-    void testDuplicateUpdate() {
-        final GitlabProject[] projects = new GitlabProject[4];
-        assertDoesNotThrow(() -> {
-            projects[0] = newProject.create();
-        });
-        assertEquals("newProjectName", projects[0].getName());
-        assertNotEquals("path", projects[0].getPath());
-        assertNotEquals("desc", projects[0].getDescription());
-        assertDoesNotThrow(() -> {
-            projects[1] = projects[0].withPath("path").update();
-            projects[2] = projects[1].withDescription("desc").update();
-        });
-        assertEquals("newProjectName", projects[1].getName());
-        assertEquals("path", projects[1].getPath());
-        assertNotEquals("desc", projects[1].getDescription());
-        assertEquals("newProjectName", projects[2].getName());
-        assertEquals("path", projects[2].getPath());
-        assertEquals("desc", projects[2].getDescription());
-        assertDoesNotThrow(() -> {
-            projects[3] = projects[2].delete();
-        });
-        assertEquals("newProjectName", projects[3].getName());
+    void queryBranch() {
+        GitlabProject project = CLIENT.getProject(22777636);
+        List<GitlabBranch> branches = project.getBranchesQuery().withSearch("test1").query();
+        assertEquals(2, branches.size());
+        assertTrue(branches.get(0).getName().contains("test1"));
     }
 
     @Test
-    void testDuplicateDelete() {
-        final GitlabProject[] projects = new GitlabProject[3];
-        assertDoesNotThrow(() -> {
-            projects[0] = newProject.create();
-        });
-        assertEquals("newProjectName", projects[0].getName());
-        assertDoesNotThrow(() -> {
-            projects[1] = projects[0].delete();
-        });
-        assertEquals("newProjectName", projects[1].getName());
-        assertThrows(IOException.class, () -> {
-            projects[2] = projects[1].delete(); // delete non-existent project
-        });
-        assertEquals("newProjectName", projects[2].getName());
+    void queryMergeRequest() {
+        GitlabProject project = CLIENT.getProject(22777636);
+        List<GitlabMergeRequest> mergeRequests =
+                project.getMergeRequestsQuery().withAuthorId(project.getCreatorId()).withState("closed").query();
+        assertEquals(2, mergeRequests.size());
     }
+
+    @Test
+    void listUserProjects() {
+        List<GitlabProject> projects = CLIENT.getUserProjectsQuery("apiteam4").query();
+        System.out.println(projects);
+    }
+
 }

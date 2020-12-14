@@ -1,4 +1,4 @@
-package org.gitlab.api.http;
+package org.gitlab.api;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This class is used to construct a HTTP request body in n a JSONormat
+ * This class is used to construct a HTTP request body in a JSON format
  */
-public final class Body {
+class Body {
     /**
      * The formatter specially for the Gitlab API format
      */
@@ -27,7 +27,7 @@ public final class Body {
      * @param value - the value
      * @return this Body
      */
-    public Body putInt(String key, int value) {
+    Body putInt(String key, int value) {
         map.put(key, value);
         return this;
     }
@@ -39,7 +39,7 @@ public final class Body {
      * @param value - the value
      * @return this Body
      */
-    public Body putDate(String key, LocalDate value) {
+    Body putDate(String key, LocalDate value) {
         map.put(key, value == null ? null : value.format(FORMATTER));
         return this;
     }
@@ -51,7 +51,7 @@ public final class Body {
      * @param value - the value
      * @return this Body
      */
-    public Body putString(String key, String value) {
+    Body putString(String key, String value) {
         map.put(key, value);
         return this;
     }
@@ -63,7 +63,7 @@ public final class Body {
      * @param value - the value
      * @return this Body
      */
-    public Body putBoolean(String key, boolean value) {
+    Body putBoolean(String key, boolean value) {
         map.put(key, value);
         return this;
     }
@@ -75,7 +75,7 @@ public final class Body {
      * @param value - the value
      * @return this Body
      */
-    public Body putIntArray(String key, int[] value) {
+    Body putIntArray(String key, int[] value) {
         map.put(key, value);
         return this;
     }
@@ -87,7 +87,7 @@ public final class Body {
      * @param value - the value
      * @return this Body
      */
-    public Body putIntArray(String key, List<Integer> value) {
+    Body putIntArray(String key, List<Integer> value) {
         map.put(key, value.stream().mapToInt(i -> i).toArray());
         return this;
     }
@@ -99,7 +99,7 @@ public final class Body {
      * @param value - the value
      * @return this Body
      */
-    public Body putStringArray(String key, String[] value) {
+    Body putStringArray(String key, String[] value) {
         map.put(key, value);
         return this;
     }
@@ -111,7 +111,7 @@ public final class Body {
      * @param value - the value
      * @return this Body
      */
-    public Body putStringArray(String key, List<String> value) {
+    Body putStringArray(String key, List<String> value) {
         map.put(key, value.toArray(new String[0]));
         return this;
     }
@@ -121,7 +121,7 @@ public final class Body {
      *
      * @return the underlying unmodifiable map of this body
      */
-    public Map<String, Object> getMap() {
+    Map<String, Object> getMap() {
         return Collections.unmodifiableMap(map);
     }
 

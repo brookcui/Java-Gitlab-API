@@ -1,4 +1,4 @@
-package org.gitlab.api.core;
+package org.gitlab.api;
 
 /**
  * This is a custom exception class that wraps other exceptions to provide user with more detailed exceptions.

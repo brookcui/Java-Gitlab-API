@@ -1,5 +1,6 @@
-package org.gitlab.api.core;
+package org.gitlab.api.test;
 
+import org.gitlab.api.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,8 +12,10 @@ import java.util.Random;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GitlabIssueTest {
-    private static final GitlabAPIClient CLIENT =
-            GitlabAPIClient.fromAccessToken("https://gitlab.com", System.getenv("TOKEN"));
+    private static final GitlabAPIClient CLIENT = new GitlabAPIClient
+            .Builder("https://gitlab.com")
+            .withAccessToken(System.getenv("TOKEN"))
+            .build();
     private GitlabProject project;
 
     @BeforeEach
@@ -160,35 +163,35 @@ public class GitlabIssueTest {
         GitlabIssue issue3 = project.newIssue("issue3").withDueDate(tomorrow).create();
 
         // Query all merge requests visible to current user
-        List<GitlabIssue> allIssues = CLIENT.issues().query();
+        List<GitlabIssue> allIssues = CLIENT.getIssuesQuery().query();
         assertTrue(allIssues.size() >= 3);
 
         // Query all issues under this project
-        List<GitlabIssue> allProjectIssues = project.issues().query();
+        List<GitlabIssue> allProjectIssues = project.getIssuesQuery().query();
         assertEquals(3, allProjectIssues.size());
 
         // Valid query field
-        List<GitlabIssue> res1 = project.issues().withDueDate("0").query();
+        List<GitlabIssue> res1 = project.getIssuesQuery().withDueDate("0").query();
         assertEquals(1, res1.size());
 
         // Invalid query field
-        List<GitlabIssue> res2 = project.issues().withAuthorUsername("invalid name").query();
+        List<GitlabIssue> res2 = project.getIssuesQuery().withAuthorUsername("invalid name").query();
         assertEquals(0, res2.size());
 
         // Sort
-        List<GitlabIssue> res3 = project.issues().withDueDate("week").withSort("desc").query();
+        List<GitlabIssue> res3 = project.getIssuesQuery().withDueDate("week").withSort("desc").query();
         assertEquals(2, res3.size());
         assertEquals(issue3.getIid(), res3.get(0).getIid());
         assertEquals(issue2.getIid(), res3.get(1).getIid());
 
         // Order by
-        List<GitlabIssue> res4 = project.issues().withDueDate("week").withOrderBy("created_at").query();
+        List<GitlabIssue> res4 = project.getIssuesQuery().withDueDate("week").withOrderBy("created_at").query();
         assertEquals(2, res4.size());
         assertEquals(issue3.getIid(), res4.get(0).getIid());
         assertEquals(issue2.getIid(), res4.get(1).getIid());
 
         // Search
-        List<GitlabIssue> res5 = project.issues().withSearch("new issue1").query();
+        List<GitlabIssue> res5 = project.getIssuesQuery().withSearch("new issue1").query();
         assertEquals(1, res5.size());
         assertEquals(issue1.getIid(), res5.get(0).getIid());
 

@@ -1,5 +1,7 @@
-package org.gitlab.api.core;
+package org.gitlab.api.test;
 
+import org.gitlab.api.GitlabAPIClient;
+import org.gitlab.api.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,8 +13,10 @@ import java.util.Random;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GitlabMergeRequestTest {
-    private static final GitlabAPIClient CLIENT =
-            GitlabAPIClient.fromAccessToken("https://gitlab.com", System.getenv("TOKEN"));
+    private static final GitlabAPIClient CLIENT = new GitlabAPIClient
+            .Builder("https://gitlab.com")
+            .withAccessToken(System.getenv("TOKEN"))
+            .build();
 
     private GitlabProject project;
     private GitlabBranch src, target;
@@ -107,8 +111,10 @@ public class GitlabMergeRequestTest {
     void testToString() {
         GitlabMergeRequest mergeRequest = project.newMergeRequest(src.getName(), target.getName(), "req1").create();
         String expected = "GitlabMergeRequest{" +
-                "id=" + mergeRequest.getId() +
+                "sourceBranch=" + mergeRequest.getSourceBranch() +
+                ", id=" + mergeRequest.getId() +
                 ", iid=" + mergeRequest.getIid() +
+                ", projectId=" + mergeRequest.getProjectId() +
                 ", author=" + mergeRequest.getAuthor() +
                 ", description=" + mergeRequest.getDescription() +
                 ", state=" + mergeRequest.getState() +
@@ -124,7 +130,6 @@ public class GitlabMergeRequestTest {
                 ", subscribed=" + mergeRequest.isSubscribed() +
                 ", webUrl=" + mergeRequest.getWebUrl() +
                 ", targetBranch=" + mergeRequest.getTargetBranch() +
-                ", sourceBranch=" + mergeRequest.getSourceBranch() +
                 ", labels=" + mergeRequest.getLabels() +
                 '}';
         assertEquals(expected, mergeRequest.toString());
@@ -170,29 +175,29 @@ public class GitlabMergeRequestTest {
                 .withDescription("new req3").create();
 
         // Query all merge requests visible to current user
-        List<GitlabMergeRequest> allMergeRequests = CLIENT.mergeRequests().query();
+        List<GitlabMergeRequest> allMergeRequests = CLIENT.getMergeRequestsQuery().query();
         assertTrue(allMergeRequests.size() >= 3);
 
         // Query all merge requests under the current project
-        List<GitlabMergeRequest> allProjectMergeRequests = project.mergeRequests().query();
+        List<GitlabMergeRequest> allProjectMergeRequests = project.getMergeRequestsQuery().query();
         assertEquals(3, allProjectMergeRequests.size());
 
         // Valid query field
-        List<GitlabMergeRequest> res1 = project.mergeRequests().withTargetBranch(target.getName()).query();
+        List<GitlabMergeRequest> res1 = project.getMergeRequestsQuery().withTargetBranch(target.getName()).query();
         assertEquals(1, res1.size());
 
         // Invalid query field
-        List<GitlabMergeRequest> res2 = project.mergeRequests().withCreatedAfter(LocalDateTime.now()).query();
+        List<GitlabMergeRequest> res2 = project.getMergeRequestsQuery().withCreatedAfter(LocalDateTime.now()).query();
         assertEquals(0, res2.size());
 
         // Sort
-        List<GitlabMergeRequest> res3 = project.mergeRequests().withTargetBranch("master").withSort("desc").query();
+        List<GitlabMergeRequest> res3 = project.getMergeRequestsQuery().withTargetBranch("master").withSort("desc").query();
         assertEquals(2, res3.size());
         assertEquals(mergeRequest3.getIid(), res3.get(0).getIid());
         assertEquals(mergeRequest2.getIid(), res3.get(1).getIid());
 
         // Order by
-        List<GitlabMergeRequest> res4 = project.mergeRequests().
+        List<GitlabMergeRequest> res4 = project.getMergeRequestsQuery().
                 withTargetBranch("master").
                 withOrderBy("created_at").
                 query();
@@ -201,7 +206,7 @@ public class GitlabMergeRequestTest {
         assertEquals(mergeRequest2.getIid(), res4.get(1).getIid());
 
         // Search
-        List<GitlabMergeRequest> res5 = project.mergeRequests().withSearch("new req").query();
+        List<GitlabMergeRequest> res5 = project.getMergeRequestsQuery().withSearch("new req").query();
         assertEquals(3, res5.size());
 
         mergeRequest1.delete();

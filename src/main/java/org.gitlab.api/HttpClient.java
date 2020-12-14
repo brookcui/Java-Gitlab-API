@@ -1,4 +1,4 @@
-package org.gitlab.api.http;
+package org.gitlab.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -9,19 +9,18 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import org.gitlab.api.core.GitlabComponent;
-import org.gitlab.api.core.GitlabException;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
- * This class is used to send HTTP request to the with the given Gitlab configuration,
+ * This class is used to send HTTP request to the with the given Gitlab httpClienturation,
  * and then deserialize the JSON response to the corresponding {@link GitlabComponent} class.
  */
-public class GitlabHttpClient {
+class HttpClient {
     /**
      * The Jackson Mapper
      */
@@ -31,7 +30,7 @@ public class GitlabHttpClient {
     /**
      * The internal OkHttpClient
      */
-    private static final OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient client;
     /**
      * The default media type to be sent in PUT and POST
      */
@@ -41,54 +40,93 @@ public class GitlabHttpClient {
      */
     private static final RequestBody EMPTY_BODY = RequestBody.create("", null);
 
+    private final String apiPrefix;
+    private final String authHeaderName;
+    private final String authHeaderValue;
+
     /**
-     * Attach a config to a given {@link GitlabComponent} then return it
+     * Given the tailUrl, e.g. /projects/1234,
+     * return the entire API url based on {@link #apiPrefix}
+     * e.g. https://gitlab.com/api/v4/projects/1234
      *
-     * @param component the {@link GitlabComponent} to be attached the config with
-     * @param config    the config to be attached
-     * @param <T>       the type of the {@link GitlabComponent}
-     * @return the component after attaching the config
+     * @param tailUrl the API tail Url, e.g.  /projects/1234
+     * @return the entire API url based on apiPrefix
+     * e.g. https://gitlab.com/api/v4/projects/1234
      */
-    private static <T extends GitlabComponent> T withConfig(T component, Config config) {
-        component.withConfig(config);
+    private String getAPIUrl(String tailUrl) {
+        if (!tailUrl.startsWith("/")) {
+            tailUrl = "/" + tailUrl;
+        }
+        return apiPrefix + tailUrl;
+    }
+
+    /**
+     * Initialize the {@link HttpClient} based on timeouts, proxy, api endpoint namespace as well as the authentication.
+     *
+     * @param gitlabAPIClient the {@link GitlabAPIClient} for creating this {@link HttpClient}
+     */
+    HttpClient(GitlabAPIClient gitlabAPIClient) {
+        client = new OkHttpClient.Builder()
+                .connectTimeout(gitlabAPIClient.getConnectionTimeout(), TimeUnit.MILLISECONDS)
+                .readTimeout(gitlabAPIClient.getReadTimeout(), TimeUnit.MILLISECONDS)
+                .writeTimeout(gitlabAPIClient.getReadTimeout(), TimeUnit.MILLISECONDS)
+                .proxy(gitlabAPIClient.getProxy())
+                .build();
+        apiPrefix = gitlabAPIClient.getEndpoint() + gitlabAPIClient.getApiNamespace();
+        if (gitlabAPIClient.getAuthMethod() != null) {
+            authHeaderName = gitlabAPIClient.getAuthMethod().headerName();
+            authHeaderValue = String.format(gitlabAPIClient.getAuthMethod().headerFormat(), gitlabAPIClient.getToken());
+        } else {
+            authHeaderName = null;
+            authHeaderValue = null;
+        }
+
+    }
+
+    /**
+     * Attach a httpClient to a given {@link GitlabComponent} then return it
+     *
+     * @param component the {@link GitlabComponent} to be attached the httpClient with
+     * @param <T>       the type of the {@link GitlabComponent}
+     * @return the component after attaching the httpClient
+     */
+    private <T extends GitlabComponent> T attachHttpClient(T component) {
+        component.withHttpClient(this);
         return component;
     }
 
     /**
-     * Given the Gitlab configuration, the endpoint tail url and the expected return type,
+     * Given the Gitlab httpClienturation, the endpoint tail url and the expected return type,
      * issue a GET request to the endpoint and deserialize the JSON response to a object with the given type
      *
-     * @param config  the configuration to be used in this request
      * @param tailUrl the tail url of the endpoint
      * @param type    the class of the expected result
      * @param <T>     the type
      * @return a {@link GitlabComponent} with the given type
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
-    public static <T extends GitlabComponent> T get(Config config, String tailUrl, Class<T> type) {
-        return withConfig(create(request(config, tailUrl, Method.GET, null), type), config);
+    <T extends GitlabComponent> T get(String tailUrl, Class<T> type) {
+        return attachHttpClient(create(request(tailUrl, Method.GET, null), type));
     }
 
     /**
-     * Given the Gitlab configuration, the endpoint tail url and the expected return type (which expects a list)
+     * Given the Gitlab httpClienturation, the endpoint tail url and the expected return type (which expects a list)
      * issue a get request to the endpoint and deserialize the JSON response to a list of object with the given type
      *
-     * @param config  the configuration to be used in this request
      * @param tailUrl the tail url of the endpoint
      * @param type    the class of the expected result
      * @param <T>     the type
      * @return a list of {@link GitlabComponent} with the given type
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
-    public static <T extends GitlabComponent> List<T> getList(Config config, String tailUrl, Class<T[]> type) {
-        return createList(request(config, tailUrl, Method.GET, null), type, config);
+    <T extends GitlabComponent> List<T> getList(String tailUrl, Class<T[]> type) {
+        return createList(request(tailUrl, Method.GET, null), type);
     }
 
     /**
-     * Given the Gitlab configuration, the endpoint tail url, the body and the component to be updated,
+     * Given the Gitlab httpClienturation, the endpoint tail url, the body and the component to be updated,
      * issue a PUT request to the endpoint and deserialize the JSON response to update the given component
      *
-     * @param config    the configuration to be used in this request
      * @param tailUrl   the tail url of the endpoint
      * @param body      the body of the PUT request
      * @param component the component to be updated in place
@@ -96,15 +134,14 @@ public class GitlabHttpClient {
      * @return the {@code component} after being updated
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
-    public static <T extends GitlabComponent> T put(Config config, String tailUrl, Body body, T component) {
-        return withConfig(update(request(config, tailUrl, Method.PUT, body), component), config);
+    <T extends GitlabComponent> T put(String tailUrl, Body body, T component) {
+        return attachHttpClient(update(request(tailUrl, Method.PUT, body), component));
     }
 
     /**
-     * Given the Gitlab configuration, the endpoint tail url, the body and the component to be updated,
+     * Given the Gitlab httpClienturation, the endpoint tail url, the body and the component to be updated,
      * issue a POST request to the endpoint and deserialize the JSON response to update the given component
      *
-     * @param config    the configuration to be used in this request
      * @param tailUrl   the tail url of the endpoint
      * @param body      the body of the PUT request
      * @param component the component to be updated in place
@@ -112,40 +149,38 @@ public class GitlabHttpClient {
      * @return the {@code component} after being updated
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
-    public static <T extends GitlabComponent> T post(Config config, String tailUrl, Body body, T component) {
-        return withConfig(update(request(config, tailUrl, Method.POST, body), component), config);
+    <T extends GitlabComponent> T post(String tailUrl, Body body, T component) {
+        return attachHttpClient(update(request(tailUrl, Method.POST, body), component));
     }
 
     /**
-     * Given the Gitlab configuration and the endpoint tail url
+     * Given the Gitlab httpClienturation and the endpoint tail url
      * issue a DELETE request to the endpoint
      *
-     * @param config  the configuration to be used in this request
      * @param tailUrl the tail url of the endpoint
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
-    public static void delete(Config config, String tailUrl) {
-        request(config, tailUrl, Method.DELETE, null);
+    void delete(String tailUrl) {
+        request(tailUrl, Method.DELETE, null);
     }
 
     /**
-     * Create a list based of {@link GitlabComponent} based on the JSON response, and array type and attach the config
+     * Create a list based of {@link GitlabComponent} based on the JSON response, and array type and attach the httpClient
      *
      * @param response the JSON response
      * @param type     the array type for deserialization
-     * @param config   the config to be attached
      * @param <T>      the type
-     * @return the list of {@link GitlabComponent} with config attached
+     * @return the list of {@link GitlabComponent} with httpClient attached
      * @throws GitlabException if {@link IOException} occurs
      */
-    private static <T extends GitlabComponent> List<T> createList(String response, Class<T[]> type, Config config) {
+    <T extends GitlabComponent> List<T> createList(String response, Class<T[]> type) {
         try {
             T[] array = MAPPER.readValue(response, type);
             if (array == null) {
                 return Collections.emptyList();
             }
             List<T> instances = Arrays.asList(array);
-            instances.forEach(instance -> instance.withConfig(config));
+            instances.forEach(instance -> instance.withHttpClient(this));
             return instances;
         } catch (IOException e) {
             throw new GitlabException("Response cannot be parsed", e);
@@ -187,30 +222,28 @@ public class GitlabHttpClient {
     }
 
     /**
-     * Issue a HTTP request to the Gitlab endpoint from the given config, tail url, HTTP method the the body data
+     * Issue a HTTP request to the Gitlab endpoint from the given httpClient, tail url, HTTP method the the body data
      *
-     * @param config  the configuration to be used in this request
      * @param tailUrl the tail url of the endpoint
-     * @param method method he HTTP method to be used in this request
+     * @param method  method he HTTP method to be used in this request
      * @param body    the body to be used
      * @return the JSON response
      * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
-    private static String request(Config config, String tailUrl, Method method, Body body) {
+    private String request(String tailUrl, Method method, Body body) {
         Request request;
         try {
-            request = new Request.Builder()
-                    .url(config.getAPIUrl(tailUrl))
+            Request.Builder builder = new Request.Builder()
+                    .url(getAPIUrl(tailUrl))
                     .method(method.name(),
                             body == null ?
                                     // send empty body for post and put if no body is provided
                                     method.equals(Method.POST) || method.equals(Method.PUT) ? EMPTY_BODY : null :
-                                    RequestBody.create(MAPPER.writeValueAsString(body.getMap()), JSON))
-                    .addHeader(
-                            config.getAuthMethod().headerName(), // header name
-                            String.format(config.getAuthMethod().headerFormat(), config.getToken()) // header token
-                    )
-                    .build();
+                                    RequestBody.create(MAPPER.writeValueAsString(body.getMap()), JSON));
+            if (authHeaderName != null) {
+                builder.addHeader(authHeaderName, authHeaderValue);
+            }
+            request = builder.build();
             System.out.println("URL:" + request.url());
             System.out.println("Body:" + request.body());
         } catch (JsonProcessingException e) {
@@ -222,7 +255,8 @@ public class GitlabHttpClient {
             if (response.isSuccessful()) {
                 return responseBody;
             }
-            throw new GitlabException(responseBody);
+            throw new GitlabException(String
+                    .format("Response code %d: %s\n%s", response.code(), response.message(), responseBody));
         } catch (IOException e) {
             throw new GitlabException(e);
         }
