@@ -58,6 +58,9 @@ public final class Pagination {
         if (pageSize < 1 || pageSize > MAX_PAGE_SIZE) {
             throw new IllegalArgumentException("cannot have page size less than 1 or greater than " + MAX_PAGE_SIZE);
         }
+        if (pageNumber < 0) {
+            throw new IllegalArgumentException("cannot have a negative page number");
+        }
         return new Pagination(pageNumber, pageSize);
     }
 
