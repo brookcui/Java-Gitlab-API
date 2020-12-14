@@ -7,15 +7,15 @@ import java.util.List;
 public class GitlabProjectExample {
     public static void main(String[] args) {
         // Connect to Gitlab via access token
-        GitlabAPIClient CLIENT = new GitlabAPIClient
+        GitlabAPIClient client = new GitlabAPIClient
                 .Builder("https://gitlab.com")
                 .withAccessToken(System.getenv("TOKEN"))
                 .build();
         // create a new project
-        GitlabProject project = CLIENT.newProject("project1").create();
+        GitlabProject project = client.newProject("project1").create();
 
         // get all projects of a specific user
-        List<GitlabProject> projects = CLIENT.getUserProjectsQuery(CLIENT.getCurrentUser().getUsername()).query();
+        List<GitlabProject> projects = client.getUserProjectsQuery(client.getCurrentUser().getUsername()).query();
         for (GitlabProject p : projects) {
             System.out.println("ProjectID: " + p.getId() + " Title: " + p.getName());
         }

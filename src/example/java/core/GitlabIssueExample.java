@@ -6,11 +6,11 @@ import java.util.List;
 public class GitlabIssueExample {
     public static void main(String[] args) {
         // Connect to Gitlab via access token
-        GitlabAPIClient CLIENT = new GitlabAPIClient
+        GitlabAPIClient client = new GitlabAPIClient
                 .Builder("https://gitlab.com")
                 .withAccessToken(System.getenv("TOKEN"))
                 .build();
-        GitlabProject project = CLIENT.newProject("example-project").create();
+        GitlabProject project = client.newProject("example-project").create();
 
         // create a new issue
         GitlabIssue issue1 = project.newIssue("issue1").create();
@@ -25,7 +25,7 @@ public class GitlabIssueExample {
         issue1.delete();
 
         // query all issues on Gitlab visible to current client
-        List<GitlabIssue> issues = CLIENT.getIssuesQuery().query();
+        List<GitlabIssue> issues = client.getIssuesQuery().query();
         System.out.println("Title of the first issue is " + issues.get(0).getTitle());
 
         // query all issues under a project

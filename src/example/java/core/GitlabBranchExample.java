@@ -6,11 +6,11 @@ import java.util.List;
 public class GitlabBranchExample {
     public static void main(String[] args) {
         // Connect to Gitlab via access token
-        GitlabAPIClient CLIENT = new GitlabAPIClient
+        GitlabAPIClient client = new GitlabAPIClient
                 .Builder("https://gitlab.com")
                 .withAccessToken(System.getenv("TOKEN"))
                 .build();
-        GitlabProject project = CLIENT.newProject("example-project").create();
+        GitlabProject project = client.newProject("example-project").create();
 
         // create new branches
         GitlabBranch branch1 = project.newBranch("branch1", "master").create();
