@@ -1,13 +1,15 @@
 package org.gitlab.api.test;
 
-import org.gitlab.api.core.*;
+import org.gitlab.api.*;
 import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GitlabAPIClientTest {
-    private static final GitlabAPIClient CLIENT =
-            GitlabAPIClient.fromAccessToken("https://gitlab.com", System.getenv("TOKEN"));
+    private static final GitlabAPIClient CLIENT = new GitlabAPIClient
+            .Builder("https://gitlab.com")
+            .withAccessToken(System.getenv("TOKEN"))
+            .build();
 
     @Test
     void testGetSingleProject() {
@@ -19,9 +21,9 @@ public class GitlabAPIClientTest {
     @Test
     void testGetProjects() {
         GitlabUser currentUser = CLIENT.getCurrentUser();
-        int projectSize1 = CLIENT.getUserProjects(currentUser.getUsername()).size();
+        int projectSize1 = CLIENT.getUserProjectsQuery(currentUser.getUsername()).query().size();
         GitlabProject newProject = CLIENT.newProject("test2").create();
-        int projectSize2 = CLIENT.getUserProjects(currentUser.getUsername()).size();
+        int projectSize2 = CLIENT.getUserProjectsQuery(currentUser.getUsername()).query().size();
         assertEquals(projectSize1+1, projectSize2);
         newProject.delete();
     }
