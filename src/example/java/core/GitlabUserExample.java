@@ -7,18 +7,18 @@ import java.util.List;
 public class GitlabUserExample {
     public static void main(String[] args) {
         // connect to Gitlab via access token
-        GitlabAPIClient CLIENT = new GitlabAPIClient
+        GitlabAPIClient client = new GitlabAPIClient
                 .Builder("https://gitlab.com")
                 .withAccessToken(System.getenv("TOKEN"))
                 .build();
-        GitlabProject project = CLIENT.newProject("example-project").create();
+        GitlabProject project = client.newProject("example-project").create();
         // get current user info
-        GitlabUser current = CLIENT.getCurrentUser();
+        GitlabUser current = client.getCurrentUser();
         System.out.println("current user is " + current.getUsername()
                 + ", created at " + current.getCreatedAt().toString());
 
         // query all visible active users and get their email
-        List<GitlabUser> users = CLIENT.getUsersQuery().withActive(true).query();
+        List<GitlabUser> users = client.getUsersQuery().withActive(true).query();
         for (GitlabUser user : users) {
             System.out.println(user.getUsername() + " " + user.getPublicEmail());
         }
@@ -26,7 +26,7 @@ public class GitlabUserExample {
         // query all users in a project and get a list of their projects
         List<GitlabUser> usersInProject = project.getUsersQuery().query();
         for (GitlabUser user : usersInProject) {
-            List<GitlabProject> projects = CLIENT.getUserProjectsQuery(user.getUsername()).query();
+            List<GitlabProject> projects = client.getUserProjectsQuery(user.getUsername()).query();
             System.out.println(user.getUsername() + " " + projects.size() + " projects");
             for (GitlabProject p : projects) {
                 System.out.print(p.getName() + ",");
