@@ -1,4 +1,5 @@
-package org.gitlab.api.core;
+package org.gitlab.api.test;
+import org.gitlab.api.core.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

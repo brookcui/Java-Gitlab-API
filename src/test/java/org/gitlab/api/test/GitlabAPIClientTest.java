@@ -1,6 +1,7 @@
-package org.gitlab.api.core;
+package org.gitlab.api.test;
 
-import org.junit.jupiter.api.Test;
+import org.gitlab.api.core.*;
+import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
