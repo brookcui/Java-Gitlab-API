@@ -38,10 +38,13 @@ public class GitlabUserTest {
     }
 
     @Test
-    void testEqual() {
+    void testEquals() {
         GitlabUser currentUser = CLIENT.getCurrentUser();
-        GitlabUser user = CLIENT.getUser(CLIENT.getProject(23057280).getOwner().getId());
-        assertEquals(user, currentUser);
+        List<GitlabProject> projects = CLIENT.getUserProjectsQuery(currentUser.getUsername()).query();
+        if (!projects.isEmpty()) {
+            GitlabUser user = projects.get(0).getOwner();
+            assertEquals(user, currentUser);
+        }
     }
 
     @Test
