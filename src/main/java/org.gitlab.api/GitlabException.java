@@ -1,31 +1,34 @@
 package org.gitlab.api;
 
 /**
- * This is a custom exception class that wraps other exceptions to provide user with more detailed exceptions.
+ * Signals that an exception occurring during invoking Gitlab REST API. This
+ * class is the general class of exceptions produced by failed or interrupted
+ * Gitlab API calls. This supports providing detailed error message and root
+ * causes.
  */
 public class GitlabException extends RuntimeException {
 
     /**
-     * Constructor of the gitlab exception
+     * Constructs {@code GitlabException} with given root cause.
      *
-     * @param cause cause of the exception
+     * @param cause the cause of this exception
      */
     public GitlabException(Throwable cause) {
         super(cause);
     }
 
     /**
-     * Constructor of the gitlab exception
+     * Constructs {@code GitlabException} with given message and root cause.
      *
      * @param message error message
-     * @param cause   cause of the exception
+     * @param cause   the cause of this exception
      */
     public GitlabException(String message, Throwable cause) {
         super(message, cause);
     }
 
     /**
-     * Constructor of the gitlab exception
+     * Constructs {@code GitlabException} with error message.
      *
      * @param message error message
      */

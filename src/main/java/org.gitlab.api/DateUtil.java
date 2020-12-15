@@ -12,7 +12,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * The static utility class for handle date and time format
+ * This is a static utility class to handle date and time format in Gitlab API.
  */
 class DateUtil {
     /**

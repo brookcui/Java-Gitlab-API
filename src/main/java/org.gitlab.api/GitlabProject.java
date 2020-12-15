@@ -13,17 +13,19 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This class is used to represent the gitlab project.
- * <p>
- * This class also contains a {@link Query} class to get projects globally and a {@link UserQuery} to query projects
- * owned by a specific user
- * <p>
- * This supports create, read, update and delete.
+ * This class serves as instance of Gitlab component Project.
+ *
+ * To create, update, or delete this issue, call {@code create()},
+ * {@code update()}, or {@code delete()} explicitly.
+ *
+ * This supports query for projects globally that are visible by current user or
+ * projects owned by a specific user. See {@link Query} and {@link UserQuery}.
+ *
  * <p>
  * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabProject extends GitlabComponent {
+public final class GitlabProject extends GitlabComponent {
     @JsonProperty("id")
     private int id; // required
     private String description;
@@ -80,9 +82,9 @@ public class GitlabProject extends GitlabComponent {
     private boolean publicJobs;
 
     /**
-     * Construct the project with name
+     * Construct the {@link GitlabProject} with project name.
      *
-     * @param name - the name of the new project
+     * @param name - the name of this project
      */
     GitlabProject(@JsonProperty("name") String name) {
         this.name = name;
@@ -93,8 +95,52 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Issue a HTTP request to the Gitlab API endpoint to get the issue based on the given issue IId (The internal ID of a project’s issue)
-     * in this {@link GitlabProject}
+     * Returns a string representation of this {@link GitlabProject} in the
+     * format of Gitlab component type and project id and project name.
+     *
+     * @return a string representation of this {@link GitlabProject}
+     */
+    @Override
+    public String toString() {
+        return "GitlabProject{" +
+                       "id=" + id +
+                       ", name=" + name +
+                       '}';
+    }
+
+    /**
+     * Returns the hash code value for this {@link GitlabProject} identified
+     * by project id.
+     *
+     * @return a hash code value for this object
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    /**
+     * Compares the specified {@code Object} with this {@link GitlabProject}
+     * for equality. Note that two {@link GitlabProject}s are equal if and only
+     * if they have same project id.
+     *
+     * @param o object to be compared for equality with this {@link GitlabProject}
+     * @return true if the specified Object is equal to this {@link GitlabProject}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof GitlabProject)) {
+            return false;
+        }
+        GitlabProject that = (GitlabProject) o;
+        return id == that.id;
+    }
+
+    /**
+     * Issues a HTTP request to Gitlab API endpoint to get issue based on given
+     * issue internal id in this {@link GitlabProject}.
+     *
      * <p>
      * https://docs.gitlab.com/ee/api/issues.html#single-project-issue
      * <p>
@@ -102,7 +148,8 @@ public class GitlabProject extends GitlabComponent {
      *
      * @param issueIId - the given issueIId
      * @return the {@link GitlabIssue} of the given issueIId
-     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     * @throws GitlabException if {@link IOException} occurs or API endpoint fails
+     * to give a valid response (response code within [200,400))
      */
     public GitlabIssue getIssue(int issueIId) {
         return httpClient.get(String.format("/projects/%d/issues/%d", id, issueIId), GitlabIssue.class)
@@ -110,11 +157,12 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Construct a new issue from this project of the given name
-     * No HTTP request will be issued until you call {@link GitlabIssue#create()}
+     * Returns a newly created {@link GitlabIssue} with given issue title that
+     * can build parameters for the new issue and remember to call
+     * {@link GitlabIssue#create()} to create this issue explicitly.
      *
-     * @param title - the title of the issue
-     * @return the new issue from this project
+     * @param title title of new issue
+     * @return a {@link GitlabIssue} instance
      */
     public GitlabIssue newIssue(String title) {
         return new GitlabIssue(title).withHttpClient(httpClient).withProject(this);
@@ -122,8 +170,10 @@ public class GitlabProject extends GitlabComponent {
 
 
     /**
-     * Issue a HTTP request to the Gitlab API endpoint to get a single commit based on the given commit hash or
-     * name of a repository branch or tag from this {@link GitlabProject}
+     * Issues a HTTP request to Gitlab API endpoint to get a single commit
+     * based on given commit hash or name of a repository branch or tag from
+     * this {@link GitlabProject}
+     *
      * <p>
      * https://docs.gitlab.com/ee/api/commits.html#get-a-single-commit
      * <p>
@@ -131,7 +181,8 @@ public class GitlabProject extends GitlabComponent {
      *
      * @param sha - commit hash or name of a repository branch or tag
      * @return {@link GitlabCommit} of the sha
-     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     * @throws GitlabException if {@link IOException} occurs or API endpoint fails
+     * to give a valid response (response code within [200,400))
      */
     public GitlabCommit getCommit(String sha) {
         return httpClient.get(String.format("/projects/%d/repository/commits/%s", id, sha), GitlabCommit.class)
@@ -140,15 +191,18 @@ public class GitlabProject extends GitlabComponent {
 
 
     /**
-     * Get a single project repository branch based on the branch name
+     * Issues a HTTP request to Gitlab API endpoint to get a single branch
+     * based on given branch name.
+     *
      * <p>
      * https://docs.gitlab.com/ee/api/branches.html#get-single-repository-branch
      * <p>
      * GET /projects/:id/repository/branches/:branch
      *
      * @param name - the name of the branch
-     * @return the {@link GitlabBranch} of the given branch name
-     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     * @return the {@link GitlabBranch} of given branch name
+     * @throws GitlabException if {@link IOException} occurs or API endpoint fails
+     * to give a valid response (response code within [200,400))
      */
     public GitlabBranch getBranch(String name) {
         return httpClient.get(String.format("/projects/%d/repository/branches/%s", id, name), GitlabBranch.class)
@@ -156,20 +210,23 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Create a new branch from this project
-     * No HTTP request will be issued until you call {@link GitlabBranch#create()}
+     * Returns a newly created {@link GitlabBranch} with given branch name and
+     * ref that can build parameters for the new branch and remember to call
+     * {@link GitlabBranch#create()} to create this issue explicitly.
      *
      * @param name - the name of the new branch
      * @param ref  -  reference of the branch
-     * @return a new {@link GitlabBranch} instance created with name
+     * @return a {@link GitlabBranch} instance
      */
     public GitlabBranch newBranch(String name, String ref) {
         return new GitlabBranch(name, ref).withHttpClient(httpClient).withProject(this);
     }
 
     /**
-     * Create a new merge request from this project
-     * No HTTP request will be issued until you call {@link GitlabMergeRequest#create()}
+     * Returns a newly created {@link GitlabMergeRequest} with given source
+     * branch and target branch and title that can build parameters for the new
+     * merge request and remember to call {@link GitlabBranch#create()} to
+     * create this merge request explicitly.
      *
      * @param sourceBranch - the source branch of the merge request
      * @param targetBranch - the target branch of the merge request
@@ -183,7 +240,9 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Issue a HTTP request to the Gitlab API endpoint to get a single merge request based on the internal id in this {@link GitlabProject}
+     * Issues a HTTP request to Gitlab API endpoint to get a single merge
+     * request based on given internal id in this {@link GitlabProject}.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/merge_requests.html#get-single-mr
      * <p>
@@ -191,7 +250,8 @@ public class GitlabProject extends GitlabComponent {
      *
      * @param mergeRequestIId - internal id of the merge request
      * @return the {@link GitlabMergeRequest} of the given branch name
-     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     * @throws GitlabException if {@link IOException} occurs or API endpoint fails
+     * to give a valid response (response code within [200,400))
      */
     public GitlabMergeRequest getMergeRequest(int mergeRequestIId) {
         return httpClient.get(
@@ -200,7 +260,9 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Get a {@link GitlabUser.ProjectQuery} that can be used to query list of users that belong to current project
+     * Returns a {@link GitlabUser.ProjectQuery} that can be used to query
+     * users that belong to this project.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#get-project-users
      * <p>
@@ -213,7 +275,9 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Get a {@link GitlabBranch.ProjectQuery} that can be used to query list of users that belong to current project
+     * Returns a {@link GitlabBranch.ProjectQuery} that can be used to query
+     * branches that belong to this project.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/branches.html#list-repository-branches
      * <p>
@@ -226,7 +290,9 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Get a {@link GitlabCommit.ProjectQuery} that can be used to query list of users that belong to current project
+     * Returns a {@link GitlabCommit.ProjectQuery} that can be used to query
+     * commits that belong to this project.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/commits.html#list-repository-commits
      * <p>
@@ -239,7 +305,8 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Get a {@link GitlabIssue.ProjectQuery} that can be used to query list of users that belong to current project
+     * Returns a {@link GitlabIssue.ProjectQuery} that can be used to query
+     * issues that belong to this project.
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#list-project-issues
      * <p>
@@ -252,7 +319,8 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Get a {@link GitlabMergeRequest.ProjectQuery} that can be used to query list of users that belong to current project
+     * Returns a {@link GitlabMergeRequest.ProjectQuery} that can be used to
+     * query merge request that belong to this project.
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/merge_requests.html#list-project-merge-requests
      * <p>
@@ -264,37 +332,42 @@ public class GitlabProject extends GitlabComponent {
         return new GitlabMergeRequest.ProjectQuery(httpClient, this);
     }
 
-
     /**
-     * Issue a HTTP request to the Gitlab API endpoint to fork this {@link GitlabProject} into current user's repo
+     * Issues a HTTP request to Gitlab API endpoint to fork this
+     * {@link GitlabProject} into current user's repo.
+     *
      * <p>
      * https://docs.gitlab.com/ee/api/projects.html#fork-project
      * <p>
      * POST /projects/:id/fork
      *
      * @return the new GitlabProject which is the result of forking this project
-     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     * @throws GitlabException if {@link IOException} occurs or API endpoint fails
+     * to give a valid response (response code within [200,400))
      */
     public GitlabProject fork() {
         return httpClient.get(String.format("/projects/%d/fork", id), GitlabProject.class);
     }
 
     /**
-     * Issue a HTTP request to the Gitlab API endpoint to create this {@link GitlabProject} based on
-     * the fields in this {@link GitlabProject} currently
+     * Issues a HTTP request to Gitlab API endpoint to create a project based
+     * on this {@link GitlabProject}.
      *
-     * @return the created {@link GitlabProject} component
-     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     * @return the created {@link GitlabProject} instance
+     * @throws GitlabException if {@link IOException} occurs or API endpoint fails
+     * to give a valid response (response code within [200,400))
      */
     public GitlabProject create() {
         return httpClient.post("/projects", new Body().putString("name", name), this);
     }
 
     /**
-     * Issue a HTTP request to the Gitlab API endpoint to delete this {@link GitlabProject}
+     * Issues a HTTP request to Gitlab API endpoint to delete a project
+     * based on this project id of this {@link GitlabProject}.
      *
-     * @return the {@link GitlabProject} component before deleted
-     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     * @return the {@link GitlabProject} instance before deleted
+     * @throws GitlabException if {@link IOException} occurs or API endpoint fails
+     * to give a valid response (response code within [200,400))
      */
     public GitlabProject delete() {
         httpClient.delete("/projects/" + id);
@@ -302,11 +375,12 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Issue a HTTP request to the Gitlab API endpoint to update this {@link GitlabProject} based on
-     * the fields in this {@link GitlabProject} currently
+     * Issues a HTTP request to Gitlab API endpoint to update this
+     * {@link GitlabProject} based on its current fields.
      *
-     * @return the updated {@link GitlabProject} component
-     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     * @return the updated {@link GitlabProject} instance
+     * @throws GitlabException if {@link IOException} occurs or API endpoint fails
+     * to give a valid response (response code within [200,400))
      */
     public GitlabProject update() {
         Body body = new Body()
@@ -324,25 +398,25 @@ public class GitlabProject extends GitlabComponent {
 
 
     /**
-     * Get the ID of the project
+     * Returns the ID of this project.
      *
-     * @return id of the project
+     * @return id of this project
      */
     public int getId() {
         return id;
     }
 
     /**
-     * Get the description of the project
+     * Returns the description of this project.
      *
-     * @return description of the project
+     * @return description of this project
      */
     public String getDescription() {
         return description;
     }
 
     /**
-     * Get the name along with namespace
+     * Returns the name along with namespace.
      *
      * @return name along with namespace
      */
@@ -351,7 +425,7 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Get the path along with namespace
+     * Returns the path along with namespace.
      *
      * @return path with namespace
      */
@@ -360,25 +434,25 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Get the default branch of the project
+     * Returns the default branch of this project.
      *
-     * @return default branch of the project
+     * @return default branch of this project
      */
     public String getDefaultBranch() {
         return defaultBranch;
     }
 
     /**
-     * Get the current visibility of the project
+     * Returns the current visibility of this project.
      *
-     * @return current visibility of the project
+     * @return current visibility of this project
      */
     public String getVisibility() {
         return visibility;
     }
 
     /**
-     * get the current ssh url to repo
+     * Returns the current ssh url to repo.
      *
      * @return ssh url to repo
      */
@@ -387,7 +461,7 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * get the current http url to repo
+     * Returns the current http url to repo.
      *
      * @return http url to repo
      */
@@ -396,70 +470,70 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Get the web url of the project
+     * Returns the web url of this project.
      *
-     * @return web url of the project
+     * @return web url of this project
      */
     public String getWebUrl() {
         return webUrl;
     }
 
     /**
-     * Get the web url of the readme
+     * Returns the web url of the README.
      *
-     * @return web url of the readme
+     * @return web url of the README
      */
     public String getReadmeUrl() {
         return readmeUrl;
     }
 
     /**
-     * Get a list of tags of the project
+     * Returns tags of this project.
      *
-     * @return list of tags of the porject
+     * @return a list of tags of the project
      */
     public List<String> getTagList() {
         return tagList;
     }
 
     /**
-     * get the owner of the project
+     * Returns the owner of this project.
      *
-     * @return owner of the porject
+     * @return owner of the project
      */
     public GitlabUser getOwner() {
         return owner;
     }
 
     /**
-     * Get the name of the project
+     * Returns the name of this project.
      *
-     * @return name of the project
+     * @return name of this project
      */
     public String getName() {
         return name;
     }
 
     /**
-     * get the path of the project
+     * Returns the path of this project.
      *
-     * @return path of the project
+     * @return path of this project
      */
     public String getPath() {
         return path;
     }
 
     /**
-     * Get if issues are enabled
+     * Tests if issues are enabled for this project.
      *
-     * @return if issues are enabled
+     * @return true if issues are enabled for this project
      */
     public boolean isIssuesEnabled() {
         return issuesEnabled;
     }
 
     /**
-     * Get the number of open issue counts
+     * Returns the number of open issue counts.
      *
      * @return number of open issue counts
      */
@@ -468,34 +542,34 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Get whether merge requests are enabled
+     * Tests if merge requests are enabled for this project.
      *
-     * @return whether merge requests are enabled
+     * @return true if merge requests are enabled for this project
      */
     public boolean isMergeRequestsEnabled() {
         return mergeRequestsEnabled;
     }
 
     /**
-     * Get whether jobs are enabled
+     * Tests if jobs are enabled for this project.
      *
-     * @return whether jobs are enabled
+     * @return true if jobs are enabled for this project
      */
     public boolean isJobsEnabled() {
         return jobsEnabled;
     }
 
     /**
-     * Get whether Wiki is enabled for the project
+     * Tests if wiki is enabled for this project.
      *
-     * @return whether wiki is enabled
+     * @return if wiki is enabled for this project
      */
     public boolean isWikiEnabled() {
         return wikiEnabled;
     }
 
     /**
-     * Get the created date of project
+     * Returns the created date of project.
      *
      * @return created date
      */
@@ -504,7 +578,7 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Get the date of last activity
+     * Returns the date of last activity.
      *
      * @return date of last activity
      */
@@ -513,7 +587,7 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Get the id of the creator
+     * Returns the id of the creator.
      *
      * @return id of the creator
      */
@@ -522,36 +596,36 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Get whether or not project is archived
+     * Tests if this project has been archived.
      *
-     * @return whether project is archived
+     * @return true if this project has been archived
      */
     public boolean isArchived() {
         return archived;
     }
 
     /**
-     * Get number of forked counts of the current project
+     * Returns the number of forked counts of this project.
      *
-     * @return number of forked counts
+     * @return the number of forked counts
      */
     public int getForksCount() {
         return forksCount;
     }
 
     /**
-     * Get number of star count of current project
+     * Returns the number of star count of this project.
      *
-     * @return number of star counts
+     * @return the number of star counts
      */
     public int getStarCount() {
         return starCount;
     }
 
     /**
-     * Get whether current project is a public job
+     * Tests if this project is a public job.
      *
-     * @return whether current project is a public job
+     * @return true if this project is a public job
      */
     public boolean isPublicJobs() {
         return publicJobs;
@@ -559,15 +633,15 @@ public class GitlabProject extends GitlabComponent {
 
 
     /*
-     * Setters
-     * There will be no Setter for id, nameWithNamespace, ssh_url_to_repo, http_url_to_repo, web_url, readme_url,
-     * owner, with_issues_enabled, open_issues_count, with_merge_requests_enabled, created_at, last_activity_at,
-     * last_activity_at, archived, forks_count, star_count, public_jobs
-     *
+     * Note that there will be no setters for id, nameWithNamespace,
+     * ssh_url_to_repo, http_url_to_repo, web_url, readme_url, owner,
+     * with_issues_enabled, open_issues_count, with_merge_requests_enabled,
+     * created_at, last_activity_at, last_activity_at, archived, forks_count,
+     * star_count, public_jobs because they are not modifiable.
      */
 
     /**
-     * Set the description of current project
+     * Sets the description of this project.
      *
      * @param description new description
      * @return updated {@link GitlabProject} with new description
@@ -578,7 +652,7 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Set the defaultBranch of current project
+     * Sets the defaultBranch of this project.
      *
      * @param defaultBranch new defaultBranch
      * @return updated {@link GitlabProject} with new defaultBranch
@@ -589,7 +663,7 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Set the visibility of current project
+     * Sets the visibility of this project.
      *
      * @param visibility new visibility
      * @return updated {@link GitlabProject} with new visibility
@@ -600,7 +674,7 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Set the tag List of current project
+     * Sets the tag List of this project.
      *
      * @param tagList new list of tags
      * @return updated {@link GitlabProject} with new tag List
@@ -611,7 +685,7 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Set the name of current project
+     * Sets the name of this project.
      *
      * @param name new name
      * @return updated {@link GitlabProject} with new name
@@ -623,7 +697,7 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Set the path of current project
+     * Sets the path of this project.
      *
      * @param path new path
      * @return updated {@link GitlabProject} with new path
@@ -634,7 +708,8 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Set the whether issues are enabled
+     * Enables this project's issues if issuesEnabled is true; otherwise,
+     * disable issues.
      *
      * @param issuesEnabled whether issues are enabled
      * @return updated {@link GitlabProject} with whether issues are enabled
@@ -645,7 +720,8 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Set the whether jobs are enabled
+     * Enables this project's jobs if jobEnabled is true; otherwise, disable
+     * jobs.
      *
      * @param jobsEnabled whether jobs are enabled
      * @return updated {@link GitlabProject} with whether jobs are enabled
@@ -656,7 +732,8 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Set the whether wiki are enabled
+     * Enables this project's wiki if wikiEnabled is true; otherwise, disable
+     * wiki.
      *
      * @param wikiEnabled whether wiki are enabled
      * @return updated {@link GitlabProject} with whether wiki are enabled
@@ -667,20 +744,7 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * The string representation of this {@link GitlabProject}
-     *
-     * @return the string representation of this {@link GitlabProject}
-     */
-    @Override
-    public String toString() {
-        return "GitlabProject{" +
-                "id=" + id +
-                ", name=" + name +
-                '}';
-    }
-
-    /**
-     * Set a httpClient to the current {@link GitlabAPIClient}
+     * Sets a httpClient to the current {@link GitlabAPIClient}.
      *
      * @param httpClient a httpclient used for making request
      * @return {@link GitlabProject} with the httpClient
@@ -692,31 +756,10 @@ public class GitlabProject extends GitlabComponent {
     }
 
     /**
-     * Two {@link GitlabProject}s are equal if and only if they have the same id
+     * This extends {@link GitlabQuery} and supports query global projects.
      *
-     * @param o the reference object with which to compare.
-     * @return if the two merge request belong to the same project and have the same merge request id
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        GitlabProject that = (GitlabProject) o;
-        return id == that.id;
-    }
-
-    /**
-     * Two {@link GitlabProject}es will have the same hashcode if they have the same id
+     * Build this query with setters and call {@code query()} to execute query.
      *
-     * @return a hash code value for this object.
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    /**
-     * Class to query {@link GitlabProject} globally
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#list-all-projects
      * <p>
@@ -729,7 +772,8 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set a archived parameter to limit the result by archived status
+         * Returns a query that returns only archived projects if archived is
+         * true.
          *
          * @param archived archived status
          * @return this {@link Query} with the given archived status
@@ -740,7 +784,8 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set a id to limit the results to projects with IDs greater than the specified ID
+         * Returns a query that returns only projects with IDs greater than
+         * given project id.
          *
          * @param idAfter a project id
          * @return this {@link Query} with the given project id
@@ -751,7 +796,8 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set a id to limit the results to projects with IDs less than the specified ID
+         * Returns a query that returns only projects with IDs less than given
+         * project id.
          *
          * @param idBefore a project id
          * @return this {@link Query} with the given project id
@@ -762,7 +808,8 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set a date to the query adn limit results to projects with last_activity after specified time
+         * Returns a query that returns only projects with last_activity after
+         * specified time.
          *
          * @param lastActivityAfter a date of last activity
          * @return this {@link Query} with the given date
@@ -773,7 +820,8 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set a date to the query adn limit results to projects with last_activity before specified time
+         * Returns a query that returns only projects with last_activity before
+         * specified time.
          *
          * @param lastActivityBefore a date of last activity
          * @return this {@link Query} with the given date
@@ -784,7 +832,8 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set a membership to the query and limit by projects that the current user is a member of
+         * Returns a query that returns only projects that the current user is
+         * a member of.
          *
          * @param membership whether or not to limit by membership
          * @return this {@link Query} with the given boolean whether or not is membership
@@ -795,7 +844,7 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set a minimal access level to the query and limit by current user minimal access level.
+         * Returns a query that matches current user's minimal access level.
          *
          * @param minAccessLevel minimal access level
          * @return this {@link Query} with the given boolean whether or not is membership
@@ -806,9 +855,19 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set a order by toe the query and return  projects ordered by id, name, path, created_at, updated_at, or
-         * last_activity_at fields. repository_size, storage_size, packages_size or wiki_size fields are only allowed
-         * for admins. Default is created_at.
+         * Returns a query that returns results in given order.
+         *
+         * order can be any of id, name, path, created_at, updated_at,
+         * last_activity_at fields. Default value is created_at.
+         *
+         * Note that admins can slo specify repository_size, storage_size,
+         * packages_size or wiki_size fields.
+         *
+         * @param orderBy a way to order all of the responds
+         * @return this {@link GitlabIssue.ProjectQuery} with orderby
+         */
+        /**
+         * Set a order by toe the query and return  projects ordered by
          *
          * @param orderBy how to order the response
          * @return this {@link Query} with the order by
@@ -819,7 +878,7 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set whether to retrieve project with owen by current user
+         * Returns a query that matches projects owned by current user
          *
          * @param owned owned by current user or not
          * @return this {@link Query} with the owned
@@ -830,7 +889,8 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set whether to limit projects where the repository checksum calculation has failed
+         * Returns a query that returns projects that fail to match checksum
+         * if repositoryChecksumFailed is true.
          *
          * @param repositoryChecksumFailed whether or not check sum failed
          * @return this {@link Query} with whether or not check sum failed
@@ -841,7 +901,8 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set whether to limit results to projects stored on repository_storage. (admins only)
+         * Returns a query that returns projects stored on repository_storage.
+         * (admins only)
          *
          * @param repositoryStorage whether repo is stored in repository storage
          * @return this {@link Query} with whether or project is in the repostory storage
@@ -852,7 +913,8 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * whether or not to include ancestor namespaces when matching search criteria. Default is false
+         * Returns a query that includes ancestor namespaces when matching
+         * search criteria if searchNamespaces is true. Default is false.
          *
          * @param searchNamespaces include ancestor namespaces or not
          * @return this {@link Query} with whether to include ancestor namespaces
@@ -863,10 +925,11 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set a search to the query and return list of projects matching the search criteria
+         * Returns a query that searches projects against their title and
+         * description.
          *
-         * @param search a search key word
-         * @return this {@link Query} with the search keyword
+         * @param search keyword to be searched
+         * @return this {@link GitlabIssue.ProjectQuery} with search
          */
         public Query withSearch(String search) {
             appendString("search", search);
@@ -874,7 +937,8 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set whether or not to return simple version of the response
+         * Returns a query that returns results in simple version if simple is
+         * true.
          *
          * @param simple whether or not o return simple version of the response
          * @return this {@link Query} with whether or not o return simple version of the response
@@ -885,10 +949,12 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set a sort to return projects sorted in asc or desc order. Default is desc
+         * Returns a query that returns results in sorted order.
          *
-         * @param sort how to sort the response
-         * @return this {@link Query} with the given sort
+         * Sort order can be any of "asc" or "desc". Default value is "desc".
+         *
+         * @param sort ways to sort the response
+         * @return this {@link GitlabIssue.ProjectQuery} with sort
          */
         public Query withSort(String sort) {
             appendString("sort", sort);
@@ -896,7 +962,8 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set whether to limit by projects starred by the current user
+         * Returns a query that returns projects starred by current user is
+         * starred is true.
          *
          * @param starred whether to limit by projects starred by the current user
          * @return this {@link Query} with whether to limit by projects starred by the current user
@@ -907,7 +974,8 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set whether or not to include project statistics
+         * Returns a query that returns results with statistics if statistics
+         * is true.
          *
          * @param statistics whether or not to include project statistics
          * @return this {@link Query} with whether or not to include project statistics
@@ -918,7 +986,9 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set a visibility to limit by visibility public, internal, or private
+         * Returns a query that sets visibility.
+         *
+         * visibility can be any of public, internal, or private.
          *
          * @param visibility visibility of the desired projects
          * @return this {@link Query} with given visibility
@@ -929,7 +999,8 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set whether to limit projects where the wiki checksum calculation has failed
+         * Returns a query that returns projects if the wiki checksum fails if
+         * checkSumFailed is true.
          *
          * @param checkSumFailed whether to limit projects where the wiki checksum calculation has failed
          * @return this {@link Query} with whether to limit projects where the wiki checksum calculation has failed
@@ -940,7 +1011,8 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set whether to include custom attributes in the response
+         * Returns a query that returns results with custom attributes if
+         * customAttributes is true.
          *
          * @param customAttributes whether to include custom attributes in the response
          * @return this {@link Query} with whether to include custom attributes in the response
@@ -951,7 +1023,8 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set whether to limit by enabled issues feature
+         * Returns a query that returns projects only if issues are enabled if
+         * mergeRequestsEnabled is true.
          *
          * @param issuesEnabled whether to limit by enabled issues feature
          * @return this {@link Query} with whether to limit by enabled issues feature
@@ -962,9 +1035,10 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set whether to limit by enabled merge request feature
+         * Returns a query that returns projects only if merge requests are
+         * enabled if mergeRequestsEnabled is true.
          *
-         * @param mergeRequestsEnabled whether to limit by enabled merge request  feature
+         * @param mergeRequestsEnabled whether to limit by enabled merge request feature
          * @return this {@link Query} with whether to limit by enabled merge request  feature
          */
         public Query withMergeRequestsEnabled(boolean mergeRequestsEnabled) {
@@ -973,7 +1047,7 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set programming language to limit by projects which use the given programming language
+         * Returns a query that matches given programming language.
          *
          * @param programmingLanguage intended programming language
          * @return this {@link Query} with the programming language
@@ -984,10 +1058,11 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Set pagination on top of the query
+         * Returns a query that specifies page number and size to return based
+         * on given pagination.
          *
          * @param pagination pagination object that defines page number and size
-         * @return this {@link Query} with the given pagination object
+         * @return this {@link GitlabBranch.ProjectQuery} with given pagination
          */
         @Override
         public Query withPagination(Pagination pagination) {
@@ -996,7 +1071,8 @@ public class GitlabProject extends GitlabComponent {
         }
 
         /**
-         * Get the URL suffix for the HTTP request
+         * Returns the URL suffix for the HTTP request.
+         *
          * <p>
          * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#list-all-projects
          * <p>

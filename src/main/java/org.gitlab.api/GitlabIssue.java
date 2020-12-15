@@ -16,18 +16,18 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This class is used to represent the gitlab issue.
- * <p>
- * This class also contains a {@link ProjectQuery} Class used to build query and get issues within a project and a {@link Query} class
- * to get issues globally.
- * <p>
- * This class support create, read, update and delete.
- * <p>
+ * This class serves as instance of Gitlab component Issue.
+ *
+ * To create, update, or delete this issue, call {@code create()},
+ * {@code update()}, or {@code delete()} explicitly.
+ *
+ * This supports query for issues globally or within {@link GitlabProject}.
+ * See {@link Query} and {@link ProjectQuery} respectively.
+ *
  * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabIssue extends GitlabComponent {
-
+public final class GitlabIssue extends GitlabComponent {
     @JsonIgnore
     private GitlabProject project;
     @JsonProperty("id")
@@ -80,20 +80,66 @@ public class GitlabIssue extends GitlabComponent {
     private int epicId;
 
     /**
-     * Construct the issue with name
+     * Constructs the {@link GitlabIssue} with title.
      *
-     * @param title title of the issue
+     * @param title this issue title
      */
     GitlabIssue(@JsonProperty("title") String title) {
         this.title = title;
     }
 
     /**
-     * Issue a HTTP request to the Gitlab API endpoint to create this {@link GitlabIssue} based on
-     * the fields in this {@link GitlabIssue} currently
+     * Returns a string representation of this {@link GitlabIssue} in the
+     * format of Gitlab component type and project id and issue title.
      *
-     * @return the created {@link GitlabIssue} component
-     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     * @return a string representation of this {@link GitlabIssue}
+     */
+    @Override
+    public String toString() {
+        return "GitlabIssue{" +
+                       "iid=" + iid +
+                       ", title=" + title +
+                       '}';
+    }
+
+    /**
+     * Returns the hash code value for this {@link GitlabIssue} identified by
+     * its belonged project and issue id.
+     *
+     * @return a hash code value for this object
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(projectId, iid);
+    }
+
+    /**
+     * Compares the specified {@code Object} with this {@link GitlabIssue}
+     * for equality. Note that two {@link GitlabIssue}s are equal if and only
+     * if they belong to the same project and have the same issue id.
+     *
+     * @param o object to be compared for equality with this {@link GitlabIssue}
+     * @return true if the specified Object is equal to this {@link GitlabIssue}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof GitlabIssue)) {
+            return false;
+        }
+        GitlabIssue that = (GitlabIssue) o;
+        return projectId == that.projectId && iid == that.iid;
+    }
+
+    /**
+     * Issues a HTTP request to Gitlab API endpoint to create an issue for its
+     * belonged project based on this {@link GitlabIssue}.
+     *
+     * @return the created {@link GitlabIssue} instance
+     * @throws GitlabException if {@link IOException} occurs or API endpoint fails
+     * to give a valid response (response code within [200,400))
      */
     public GitlabIssue create() {
         Body body = new Body()
@@ -106,10 +152,12 @@ public class GitlabIssue extends GitlabComponent {
     }
 
     /**
-     * Issue a HTTP request to the Gitlab API endpoint to delete this {@link GitlabIssue}
+     * Issues a HTTP request to Gitlab API endpoint to delete this
+     * {@link GitlabIssue} from its belonged project based on issue id.
      *
-     * @return the {@link GitlabIssue} component before deleted
-     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     * @return the {@link GitlabIssue} instance before deleted
+     * @throws GitlabException if {@link IOException} occurs or API endpoint fails
+     * to give a valid response (response code within [200,400))
      */
     public GitlabIssue delete() {
         httpClient.delete(String.format("/projects/%d/issues/%d", projectId, iid));
@@ -117,11 +165,12 @@ public class GitlabIssue extends GitlabComponent {
     }
 
     /**
-     * Issue a HTTP request to the Gitlab API endpoint to update this {@link GitlabIssue} based on
-     * the fields in this {@link GitlabIssue} currently
+     * Issues a HTTP request to Gitlab API endpoint to update this
+     * {@link GitlabIssue} based on its current fields.
      *
-     * @return the updated {@link GitlabIssue} component
-     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     * @return the updated {@link GitlabIssue} instance
+     * @throws GitlabException if {@link IOException} occurs or API endpoint fails
+     * to give a valid response (response code within [200,400))
      */
     public GitlabIssue update() {
         Body body = new Body()
@@ -134,11 +183,14 @@ public class GitlabIssue extends GitlabComponent {
     }
 
     /**
-     * Issue a HTTP request to the Gitlab API endpoint to close this {@link GitlabIssue}.
+     * Issues a HTTP request to Gitlab API endpoint to close this
+     * {@link GitlabIssue}.
+     *
      * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#edit-issue
      *
      * @return {@link GitlabIssue} after it is closed
-     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     * @throws GitlabException if {@link IOException} occurs or API endpoint fails
+     * to give a valid response (response code within [200,400))
      */
     public GitlabIssue close() {
         Body body = new Body().putString("state_event", "close");
@@ -146,11 +198,14 @@ public class GitlabIssue extends GitlabComponent {
     }
 
     /**
-     * Issue a HTTP request to the Gitlab API endpoint to reopen this {@link GitlabIssue}.
+     * Issues a HTTP request to Gitlab API endpoint to reopen this
+     * {@link GitlabIssue}.
+     *
      * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#edit-issue
      *
      * @return {@link GitlabIssue} after it is closed
-     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
+     * @throws GitlabException if {@link IOException} occurs or API endpoint fails
+     * to give a valid response (response code within [200,400))
      */
     public GitlabIssue reopen() {
         Body body = new Body().putString("state_event", "reopen");
@@ -159,7 +214,9 @@ public class GitlabIssue extends GitlabComponent {
     }
 
     /**
-     * Issue a HTTP request to the Gitlab API endpoint to get all related {@link GitlabMergeRequest} in this {@link GitlabIssue}
+     * Issues a HTTP request to Gitlab API endpoint to get all related
+     * {@link GitlabMergeRequest} within this {@link GitlabIssue}.
+     *
      * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#list-merge-requests-related-to-issue
      *
      * @return list of {@link GitlabMergeRequest} thats related to current issue
@@ -174,7 +231,10 @@ public class GitlabIssue extends GitlabComponent {
     }
 
     /**
-     * Issue a HTTP request to the Gitlab API endpoint to get all related {@link GitlabMergeRequest} that will be close this {@link GitlabIssue} on merge
+     * Issues a HTTP request to Gitlab API endpoint to get all related
+     * {@link GitlabMergeRequest} that will be close by this
+     * {@link GitlabIssue} on merge.
+     *
      * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#list-merge-requests-that-will-close-issue-on-merge
      *
      * @return list of {@link GitlabMergeRequest} that will close this {@link GitlabIssue} on merge
@@ -189,9 +249,9 @@ public class GitlabIssue extends GitlabComponent {
     }
 
     /**
-     * Lazily initialized project field
+     * Returns the project that this issue belongs to.
      *
-     * @return a {@link GitlabProject} created from id
+     * @return the {@link GitlabProject}
      */
     public GitlabProject getProject() {
         if (project == null) {
@@ -201,196 +261,196 @@ public class GitlabIssue extends GitlabComponent {
     }
 
     /**
-     * Get the internal id of the issue
+     * Returns the internal id of this issue.
      *
-     * @return the internal id of the issue
+     * @return the internal id of this issue
      */
     public int getIid() {
         return iid;
     }
 
     /**
-     * Get the author of the issue
+     * Returns the author of this issue.
      *
-     * @return author of the issue
+     * @return author of this issue
      */
     public GitlabUser getAuthor() {
         return author;
     }
 
     /**
-     * Get the description of the issue
+     * Returns the description of this issue.
      *
-     * @return description of the issue
+     * @return description of this issue
      */
     public String getDescription() {
         return description;
     }
 
     /**
-     * Get the state of the issue
+     * Returns the state of this issue.
      *
-     * @return current state of the issue
+     * @return the state string of this issue
      */
     public String getState() {
         return state;
     }
 
     /**
-     * Get a list of assginees of the issue
+     * Returns a list of assignees of this issue.
      *
-     * @return list of assginees
+     * @return a list of assignees
      */
     public List<GitlabUser> getAssignees() {
         return assignees;
     }
 
     /**
-     * Get number of up votes of the issue
+     * Returns the number of up votes of this issue.
      *
-     * @return number of up votes of the issue
+     * @return the number of up votes of this issue
      */
     public int getUpvotes() {
         return upvotes;
     }
 
     /**
-     * Get number of down votes of the issue
+     * Returns the number of down votes of this issue.
      *
-     * @return number of down votes of the issue
+     * @return the number of down votes of this issue
      */
     public int getDownvotes() {
         return downvotes;
     }
 
     /**
-     * Get the number of merge requests in the issue
+     * Returns the number of merge requests in this issue.
      *
-     * @return the number of merge requests in the issue
+     * @return the number of merge requests in this issue
      */
     public int getMergeRequestCount() {
         return mergeRequestCount;
     }
 
     /**
-     * Get the title of the issue
+     * Returns the title of this issue.
      *
-     * @return title of the issue
+     * @return title of this issue
      */
     public String getTitle() {
         return title;
     }
 
     /**
-     * Get the date when issue is updated
+     * Returns the date when this issue was updated.
      *
-     * @return the date when issue is updated
+     * @return the date when this issue was updated
      */
     public ZonedDateTime getUpdatedAt() {
         return updatedAt;
     }
 
     /**
-     * Get the date when issue is created
+     * Returns the date when this issue was created.
      *
-     * @return date when issue is created
+     * @return the date when this issue was created
      */
     public ZonedDateTime getCreatedAt() {
         return createdAt;
     }
 
     /**
-     * Get the date when issue is closed
+     * Returns the date when this issue was closed.
      *
-     * @return get the date when issue is closed
+     * @return the date when issue was closed
      */
     public ZonedDateTime getClosedAt() {
         return closedAt;
     }
 
     /**
-     * Get the user who closed the issue
+     * Returns the user who closed this issue.
      *
-     * @return {@link GitlabUser} who closed the issue
+     * @return {@link GitlabUser} who closed this issue
      */
     public GitlabUser getClosedBy() {
         return closedBy;
     }
 
     /**
-     * Get whether current user is subscribed to the issue
+     * Tests if current user has subscribed to this issue.
      *
-     * @return whether current user is subscribed to the issue
+     * @return true if current user has subscribed to this issue
      */
     public boolean isSubscribed() {
         return subscribed;
     }
 
     /**
-     * Get the due date of the issue
+     * Returns the due date of this issue.
      *
-     * @return due date of the issue
+     * @return due date of this issue
      */
     public LocalDate getDueDate() {
         return dueDate;
     }
 
     /**
-     * Get the web url of the issue
+     * Returns the web url of this issue.
      *
-     * @return web url of the issue
+     * @return web url of this issue
      */
     public String getWebUrl() {
         return webUrl;
     }
 
     /**
-     * Get whether current issue have tasks
+     * Tests if this issue has tasks
      *
-     * @return whether current issue have tasks
+     * @return true if this issue has tasks
      */
     public boolean hasTasks() {
         return hasTasks;
     }
 
     /**
-     * Get the epic id of the current issue
+     * Returns the epic id of this issue.
      *
-     * @return epic id of the current issue
+     * @return epic id of this issue
      */
     public int getEpicId() {
         return epicId;
     }
 
     /**
-     * Get the project id of the current issue
+     * Returns the project id of this issue.
      *
-     * @return project id of the current issue
+     * @return project id of this issue
      */
     public int getProjectId() {
         return projectId;
     }
 
     /**
-     * Get all the labels of the current issue
+     * Returns the list of labels of this issue.
      *
-     * @return all the labels of the current issue
+     * @return a list of labels of this issue
      */
     public List<String> getLabels() {
         return labels;
     }
 
     /**
-     * Get the id of the current issue
+     * Returns the id of this issue.
      *
-     * @return id of the current issue
+     * @return id of this issue
      */
     public int getId() {
         return id;
     }
 
     /**
-     * Attach a project to this {@link GitlabIssue}
+     * Attaches a project to this {@link GitlabIssue}.
      *
      * @param project the project to be attached
      * @return this {@link GitlabIssue}
@@ -403,14 +463,13 @@ public class GitlabIssue extends GitlabComponent {
     }
 
     /*
-     * Setters
-     * There will be no Setter for projectId, id, author, upvotes, downvotes, mergeRequestCount, updatedAt, createdAt,
-     * closedAt, closedBy, subscribed, webUrl, hasTasks, epicId
-     *
+     * Note that there will be no setters for projectId, id, author, upvotes,
+     * downvotes, mergeRequestCount, updatedAt, createdAt, closedAt, closedBy,
+     * subscribed, webUrl, hasTasks, epicId because they are not modifiable.
      */
 
     /**
-     * Set the description of the current issue
+     * Sets the description of this issue.
      *
      * @param description new description
      * @return issue with new description
@@ -421,7 +480,7 @@ public class GitlabIssue extends GitlabComponent {
     }
 
     /**
-     * Set the assignees of the current issue
+     * Sets the assignees of this issue.
      *
      * @param assignees new assignees
      * @return issue with new assignees
@@ -432,7 +491,7 @@ public class GitlabIssue extends GitlabComponent {
     }
 
     /**
-     * Set the title of the current issue
+     * Sets the title of this issue.
      *
      * @param title new title
      * @return issue with new title
@@ -443,7 +502,7 @@ public class GitlabIssue extends GitlabComponent {
     }
 
     /**
-     * Set the dueDate of the current issue
+     * Sets the dueDate of this issue.
      *
      * @param dueDate new dueDate
      * @return issue with new dueDate
@@ -454,7 +513,7 @@ public class GitlabIssue extends GitlabComponent {
     }
 
     /**
-     * Set the labels of the current issue
+     * Sets the labels of this issue.
      *
      * @param labels new labels
      * @return issue with new labels
@@ -466,10 +525,10 @@ public class GitlabIssue extends GitlabComponent {
 
 
     /**
-     * Set a httpClient to the current {@link GitlabAPIClient}
+     * Sets a httpClient to the this {@link GitlabIssue}.
      *
      * @param httpClient a http client used for making http request
-     * @return {@link GitlabIssue} with the httpClient
+     * @return {@link GitlabIssue} with httpClient
      */
     @Override
     GitlabIssue withHttpClient(HttpClient httpClient) {
@@ -478,44 +537,11 @@ public class GitlabIssue extends GitlabComponent {
     }
 
     /**
-     * The string representation of this {@link GitlabIssue}
+     * This extends {@link GitlabQuery} and supports query issues within a
+     * {@link GitlabProject} with searching scope and range.
      *
-     * @return the string representation of this {@link GitlabIssue}
-     */
-    @Override
-    public String toString() {
-        return "GitlabIssue{" +
-                "iid=" + iid +
-                ", title=" + title +
-                '}';
-    }
-
-    /**
-     * Two {@link GitlabIssue}s are equal if and only if they belong to the same project and have the issue id
+     * Build this query with setters and call {@code query()} to execute query.
      *
-     * @param o the reference object with which to compare.
-     * @return if the two issues belong to the same project and have the issue id
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        GitlabIssue that = (GitlabIssue) o;
-        return projectId == that.projectId && iid == that.iid;
-    }
-
-    /**
-     * Two {@link GitlabIssue}s will have the same hashcode if they belong to the same project and have the same issue id
-     *
-     * @return a hash code value for this object.
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash(projectId, iid);
-    }
-
-    /**
-     * Class to query {@link GitlabIssue} in a given {@link GitlabProject}
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#list-project-issues
      * <p>
@@ -531,11 +557,15 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set parameter to return issues assigned to the given user id. Mutually exclusive with assignee_username.
+         * Returns a query that returns issues assigned to the given user id.
+         *
+         * This should not be used with {@code withAssigneeUsernames}
+         * simultaneously.
+         *
          * None returns unassigned issues. Any returns issues with an assignee.
          *
          * @param assigneeId id of the assignee
-         * @return this {@link ProjectQuery} with the given assignee id
+         * @return this {@link ProjectQuery} with given assignee
          */
         public ProjectQuery withAssigneeId(int assigneeId) {
             appendInt("assignee_id", assigneeId);
@@ -543,12 +573,15 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set list of username to return issues assigned to the given username. Similar to assignee_id and mutually
-         * exclusive with assignee_id. In GitLab CE, the assignee_username array should only contain a single value.
-         * Otherwise, an invalid parameter error is returned.
+         * Returns a query that returns issues assigned to the given username.
+         *
+         * This should not be used with {@code withAssigneeId} simultaneously.
+         *
+         * In GitLab CE, the assignee_username array should only contain a
+         * single value. Otherwise, an invalid parameter error is returned.
          *
          * @param assigneeUsernames id of the assignee
-         * @return this {@link ProjectQuery} with the given assigneeUsernames
+         * @return this {@link ProjectQuery} with given assignees
          */
         public ProjectQuery withAssigneeUsernames(List<String> assigneeUsernames) {
             appendStrings("assignee_username", assigneeUsernames);
@@ -556,11 +589,15 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set author id to return issues created by the given user id. Mutually exclusive with author_username.
-         * Combine with scope=all or scope=assigned_to_me
+         * Returns a query that returns issues authored by user specified by
+         * authorId.
+         *
+         * This should not be used with {@code withAuthorUsername} simultaneously.
+         *
+         * Combine with scope=all or scope=assigned_to_me.
          *
          * @param authorId id of the author
-         * @return this {@link ProjectQuery} with the given author id
+         * @return this {@link ProjectQuery} with given author
          */
         public ProjectQuery withAuthorId(int authorId) {
             appendInt("author_id", authorId);
@@ -568,11 +605,13 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set author id to return issues created by the given user username. Mutually exclusive with
-         * author_username. Combine with scope=all or scope=assigned_to_me
+         * Returns a query that returns issues authored by user specified by
+         * username.
+         *
+         * This should not be used with {@code withAuthorId} simultaneously.
          *
          * @param authorUsername username of the author
-         * @return this {@link ProjectQuery} with the given author authorUsername
+         * @return this {@link ProjectQuery} with given author
          */
         public ProjectQuery withAuthorUsername(String authorUsername) {
             appendString("author_username", authorUsername);
@@ -580,10 +619,11 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * aSetwhether or not to filter confidential or public issues
+         * Returns a query that filters confidential or public issues
+         * if confidential is true.
          *
          * @param confidential whether or not to filter confidential or public issues
-         * @return this {@link ProjectQuery} with the boolean
+         * @return this {@link ProjectQuery} with confidential
          */
         public ProjectQuery withConfidential(boolean confidential) {
             appendBoolean("confidential", confidential);
@@ -591,10 +631,10 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set date to return issues created on or after the given time.
+         * Returns a query that returns issues created on or after given date.
          *
-         * @param createdAfter a date to get issues after this date
-         * @return this {@link ProjectQuery} with the date
+         * @param createdAfter date to get issues since this date
+         * @return this {@link ProjectQuery} with date
          */
         public ProjectQuery withCreatedAfter(ZonedDateTime createdAfter) {
             appendDateTime("created_after", createdAfter);
@@ -602,10 +642,10 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set date to return issues created on or before the given time.
+         * Returns a query that returns issues created on or before given date.
          *
-         * @param createdBefore a date to get issues before this date
-         * @return this {@link ProjectQuery} with the date
+         * @param createdBefore date to get issues until this date
+         * @return this {@link ProjectQuery} with date
          */
         public ProjectQuery withCreatedBefore(ZonedDateTime createdBefore) {
             appendDateTime("created_before", createdBefore);
@@ -613,11 +653,13 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Due date could be 0(no due date), overdue, week, month or next_month_and_previous_two_weeks according to
-         * gitlab api.
+         * Returns a query that returns issues matching the du date.
+         *
+         * Due date can be any of 0 (no due date), overdue, week, month or
+         * next_month_and_previous_two_weeks.
          *
          * @param dueDate due date
-         * @return this {@link ProjectQuery} with the due date
+         * @return this {@link ProjectQuery} with due date
          */
         public ProjectQuery withDueDate(String dueDate) {
             appendString("due_date", dueDate);
@@ -625,10 +667,10 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return only the issues having the given iid
+         * Returns a query that only returns issues having the given iid
          *
          * @param iids list of internal ids
-         * @return this {@link ProjectQuery} with the iids
+         * @return this {@link ProjectQuery} with iids
          */
         public ProjectQuery withIids(List<Integer> iids) {
             appendInts("iids", iids);
@@ -636,10 +678,13 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * The milestone title. None lists all issues with no milestone. Any lists all issues that have an assigned milestone.
+         * Returns a query that matches given milestone title.
+         *
+         * None lists all issues with no milestone. Any lists all issues that
+         * have an assigned milestone.
          *
          * @param milestone mile stone title
-         * @return this {@link ProjectQuery} with the milestone
+         * @return this {@link ProjectQuery} with milestone
          */
         public ProjectQuery withMilestone(String milestone) {
             appendString("milestone", milestone);
@@ -648,11 +693,14 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Comma-separated list of label names, issues must have all labels to be returned. None lists all issues with
-         * no labels. Any lists all issues with at least one label.
+         * Returns a query that matches given labels.
+         *
+         * Labels are represented as comma-separated list of label names.
+         * None lists all issues with no labels. Any lists all issues with at
+         * least one label.
          *
          * @param labels list of labels
-         * @return this {@link ProjectQuery} with the list of labels
+         * @return this {@link ProjectQuery} with list of labels
          */
         public ProjectQuery withLabels(List<String> labels) {
             appendStrings("labels", labels);
@@ -661,11 +709,13 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues reacted by the authenticated user by the given emoji. None returns issues not given a reaction.
-         * Any returns issues given at least one reaction.
+         * Returns a query that matches my reaction emoji.
+         *
+         * None returns issues not given a reaction. Any returns issues given
+         * at least one reaction.
          *
          * @param myReactionEmoji reaction image
-         * @return this {@link ProjectQuery} with the reaction emoji
+         * @return this {@link ProjectQuery} with reaction emoji
          */
         public ProjectQuery withMyReactionEmoji(String myReactionEmoji) {
             appendString("my_reaction_emoji", myReactionEmoji);
@@ -673,11 +723,13 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * return issues only from non-archived projects. If false, the response returns issues from both archived
-         * and non-archived projects. Default is true
+         * Returns a query that only returns issues from non-archived projects.
          *
-         * @param nonArchived whether the respod are arichived
-         * @return this {@link ProjectQuery} with the boolean
+         * If nonArchived is false, the response returns issues from both
+         * archived and non-archived projects. Default value is true.
+         *
+         * @param nonArchived whether the responses are archived
+         * @return this {@link ProjectQuery} with boolean
          */
         public ProjectQuery withNonArchived(boolean nonArchived) {
             appendBoolean("non_archived", nonArchived);
@@ -685,11 +737,14 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues that do not match the parameters supplied. Accepts: labels, milestone, author_id,
-         * author_username, assignee_id, assignee_username, my_reaction_emoji
+         * Returns a query that returns issues that do not match the parameters
+         * supplied.
+         *
+         * Accepts: labels, milestone, author_id, author_username, assignee_id,
+         * assignee_username, my_reaction_emoji.
          *
          * @param not whether to include such filter
-         * @return this {@link ProjectQuery} with the boolean
+         * @return this {@link ProjectQuery} with boolean
          */
         public ProjectQuery withNot(String not) {
             appendString("not", not);
@@ -697,11 +752,14 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues ordered by created_at, updated_at, priority, due_date, relative_position, label_priority,
-         * milestone_due, popularity, weight fields. Default is created_at
+         * Returns a query that returns results in given order.
+         *
+         * Order can be any of created_at, updated_at, priority, due_date,
+         * relative_position, label_priority, milestone_due, popularity, weight
+         * fields. Default value is created_at.
          *
          * @param orderBy a way to order all of the responds
-         * @return this {@link ProjectQuery} with the orderby
+         * @return this {@link ProjectQuery} with orderby
          */
         public ProjectQuery withOrderBy(String orderBy) {
             appendString("order_by", orderBy);
@@ -709,11 +767,14 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues for the given scope: created_by_me, assigned_to_me or all. Defaults to created_by_me
-         * For versions before 11.0, use the now deprecated created-by-me or assigned-to-me scopes instead.
+         * Returns a query that returns issues for given scope.
+         *
+         * Scope can be any of: created_by_me, assigned_to_me or all.
+         * Defaults to created_by_me. For versions before 11.0, use the now
+         * deprecated created-by-me or assigned-to-me scopes instead.
          *
          * @param scope different scope in gitlab
-         * @return this {@link ProjectQuery} with the scope
+         * @return this {@link ProjectQuery} with scope
          */
         public ProjectQuery withScope(String scope) {
             appendString("scope", scope);
@@ -721,10 +782,11 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Search issues against their title and description
+         * Returns a query that searches issues against their title and
+         * description.
          *
          * @param search keyword to be searched
-         * @return this {@link ProjectQuery} with the search
+         * @return this {@link ProjectQuery} with search
          */
         public ProjectQuery withSearch(String search) {
             appendString("search", search);
@@ -732,10 +794,12 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues sorted in asc or desc order. Default is desc
+         * Returns a query that returns results in sorted order.
+         *
+         * Sort order can be any of "asc" or "desc". Default value is "desc".
          *
          * @param sort ways to sort the response
-         * @return this {@link ProjectQuery} with the sort
+         * @return this {@link ProjectQuery} with sort
          */
         public ProjectQuery withSort(String sort) {
             appendString("sort", sort);
@@ -743,10 +807,10 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues updated on or after the given time.
+         * Returns a query that returns issues updated on or after given time.
          *
-         * @param updatedAfter a date that all issue should be updated after
-         * @return this {@link ProjectQuery} with the date
+         * @param updatedAfter date that all issue should be updated after
+         * @return this {@link ProjectQuery} with date
          */
         public ProjectQuery withUpdatedAfter(ZonedDateTime updatedAfter) {
             appendDateTime("updated_after", updatedAfter);
@@ -754,10 +818,10 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues updated on or before the given time.
+         * Returns a query that returns issues updated on or before given time.
          *
-         * @param updatedBefore a date that all issue should be updated before
-         * @return this {@link ProjectQuery} with the date
+         * @param updatedBefore date that all issue should be updated before
+         * @return this {@link ProjectQuery} with date
          */
         public ProjectQuery withUpdatedBefore(ZonedDateTime updatedBefore) {
             appendDateTime("updated_before", updatedBefore);
@@ -765,11 +829,13 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues with the specified weight. None returns issues with no weight assigned. Any returns issues
+         * Returns a query that returns issues with specified weight.
+         *
+         * None returns issues with no weight assigned. Any returns issues
          * with a weight assigned.
          *
          * @param weight weight parameter
-         * @return this {@link ProjectQuery} with the weight
+         * @return this {@link ProjectQuery} with weight
          */
         public ProjectQuery withWeight(int weight) {
             appendInt("weight", weight);
@@ -777,10 +843,11 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set whether or not to return labels with detail
+         * Returns a query that returns issues with label details if
+         * labelsDetails is true.
          *
          * @param labelsDetails whether or not to return labels with detail
-         * @return this {@link ProjectQuery} with the boolean
+         * @return this {@link ProjectQuery} with labelsDetails
          */
         public ProjectQuery withLabelsDetails(boolean labelsDetails) {
             appendBoolean("with_labels_details", labelsDetails);
@@ -788,10 +855,11 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set pagination on top of the query
+         * Returns a query that specifies page number and size to return based
+         * on given pagination.
          *
          * @param pagination pagination object that defines page number and size
-         * @return this {@link ProjectQuery} with the given pagination object
+         * @return this {@link GitlabBranch.ProjectQuery} with given pagination
          */
         @Override
         public ProjectQuery withPagination(Pagination pagination) {
@@ -800,7 +868,7 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Get the URL suffix for the HTTP request
+         * Returns the URL suffix for the HTTP request.
          *
          * <p>
          * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#list-project-issues
@@ -815,7 +883,8 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Bind the branch with the given {@link GitlabProject} after the response is parsed
+         * Binds the branch with given {@link GitlabProject} after the
+         * response is parsed.
          *
          * @param component - one {@link GitlabIssue} from the response
          */
@@ -827,7 +896,11 @@ public class GitlabIssue extends GitlabComponent {
     }
 
     /**
-     * Class to query {@link GitlabIssue} globally
+     * This extends {@link GitlabQuery} and supports query global
+     * {@link GitlabIssue}s with searching scope and range.
+     *
+     * Build this query with setters and call {@code query()} to execute query.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#list-issues
      * <p>
@@ -841,11 +914,15 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set parameter to return issues assigned to the given user id. Mutually exclusive with assignee_username.
+         * Returns a query that returns issues assigned to the given user id.
+         *
+         * This should not be used with {@code withAssigneeUsernames}
+         * simultaneously.
+         *
          * None returns unassigned issues. Any returns issues with an assignee.
          *
          * @param assigneeId id of the assignee
-         * @return this {@link Query} with the given assignee id
+         * @return this {@link ProjectQuery} with given assignee
          */
         public Query withAssigneeId(int assigneeId) {
             appendInt("assignee_id", assigneeId);
@@ -853,12 +930,15 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set list of username to return issues assigned to the given username. Similar to assignee_id and mutually
-         * exclusive with assignee_id. In GitLab CE, the assignee_username array should only contain a single value.
-         * Otherwise, an invalid parameter error is returned.
+         * Returns a query that returns issues assigned to the given username.
+         *
+         * This should not be used with {@code withAssigneeId} simultaneously.
+         *
+         * In GitLab CE, the assignee_username array should only contain a
+         * single value. Otherwise, an invalid parameter error is returned.
          *
          * @param assigneeUsernames id of the assignee
-         * @return this {@link Query} with the given assigneeUsernames
+         * @return this {@link ProjectQuery} with given assignees
          */
         public Query withAssigneeUsernames(List<String> assigneeUsernames) {
             appendStrings("assignee_username", assigneeUsernames);
@@ -866,11 +946,15 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set author id to return issues created by the given user id. Mutually exclusive with author_username.
-         * Combine with scope=all or scope=assigned_to_me
+         * Returns a query that returns issues authored by user specified by
+         * authorId.
+         *
+         * This should not be used with {@code withAuthorUsername} simultaneously.
+         *
+         * Combine with scope=all or scope=assigned_to_me.
          *
          * @param authorId id of the author
-         * @return this {@link Query} with the given author id
+         * @return this {@link ProjectQuery} with given author
          */
         public Query withAuthorId(int authorId) {
             appendInt("author_id", authorId);
@@ -878,11 +962,13 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set author id to return issues created by the given user username. Mutually exclusive with
-         * author_username. Combine with scope=all or scope=assigned_to_me
+         * Returns a query that returns issues authored by user specified by
+         * username.
+         *
+         * This should not be used with {@code withAuthorId} simultaneously.
          *
          * @param authorUsername username of the author
-         * @return this {@link Query} with the given author authorUsername
+         * @return this {@link ProjectQuery} with given author
          */
         public Query withAuthorUsername(String authorUsername) {
             appendString("author_username", authorUsername);
@@ -890,10 +976,11 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set whether or not to filter confidential or public issues
+         * Returns a query that filters confidential or public issues
+         * if confidential is true.
          *
          * @param confidential whether or not to filter confidential or public issues
-         * @return this {@link Query} with the boolean
+         * @return this {@link ProjectQuery} with confidential
          */
         public Query withConfidential(boolean confidential) {
             appendBoolean("confidential", confidential);
@@ -901,10 +988,10 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set a date to return issues created on or after the given time.
+         * Returns a query that returns issues created on or after given date.
          *
-         * @param createdAfter a date to get issues after this date
-         * @return this {@link Query} with the date
+         * @param createdAfter date to get issues since this date
+         * @return this {@link ProjectQuery} with date
          */
         public Query withCreatedAfter(ZonedDateTime createdAfter) {
             appendDateTime("created_after", createdAfter);
@@ -912,10 +999,10 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set date to return issues created on or before the given time.
+         * Returns a query that returns issues created on or before given date.
          *
-         * @param createdBefore a date to get issues before this date
-         * @return this {@link Query} with the date
+         * @param createdBefore date to get issues until this date
+         * @return this {@link ProjectQuery} with date
          */
         public Query withCreatedBefore(ZonedDateTime createdBefore) {
             appendDateTime("created_before", createdBefore);
@@ -923,11 +1010,13 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Due date could be 0(no due date), overdue, week, month or next_month_and_previous_two_weeks according to
-         * gitlab api.
+         * Returns a query that returns issues matching the du date.
+         *
+         * Due date can be any of 0 (no due date), overdue, week, month or
+         * next_month_and_previous_two_weeks.
          *
          * @param dueDate due date
-         * @return this {@link Query} with the due date
+         * @return this {@link ProjectQuery} with due date
          */
         public Query withDueDate(String dueDate) {
             appendString("due_date", dueDate);
@@ -935,10 +1024,10 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return only the issues having the given iid
+         * Returns a query that only returns issues having the given iid
          *
          * @param iids list of internal ids
-         * @return this {@link Query} with the iids
+         * @return this {@link ProjectQuery} with iids
          */
         public Query withIids(List<Integer> iids) {
             appendInts("iids", iids);
@@ -947,11 +1036,13 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Modify the scope of the search attribute. title, description, or a string joining them with comma.
-         * Default is title,description
+         * Returns a quert that modifies the scope of the search attribute,
+         * title, description, or a string joining them with comma.
+         *
+         * Default is title, description.
          *
          * @param in scope of the search
-         * @return this {@link Query} with the scope
+         * @return this {@link Query} with scope
          */
         public Query withIn(String in) {
             appendString("in", in);
@@ -960,11 +1051,16 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues assigned to the given iteration ID. None returns issues that do not belong to an iteration.
-         * Any returns issues that belong to an iteration. Mutually exclusive with iteration_title.
+         * Returns a query that returns issues assigned to given iteration ID.
+         *
+         * None returns issues that do not belong to an iteration. Any returns
+         * issues that belong to an iteration.
+         *
+         * This should not be used with {@code withIterationTitle}
+         * simultaneously.
          *
          * @param iterationId iteration id
-         * @return this {@link Query} with the iteration id
+         * @return this {@link Query} with iteration id
          */
         public Query withIterationId(int iterationId) {
             appendInt("iteration_id", iterationId);
@@ -973,11 +1069,16 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues assigned to the given iteration ID. None returns issues that do not belong to an iteration.
-         * Any returns issues that belong to an iteration. Mutually exclusive with iteration_title.
+         * Returns a query that returns issues assigned to given iteration Title.
+         *
+         * None returns issues that do not belong to an iteration. Any returns
+         * issues that belong to an iteration.
+         *
+         * This should not be used with {@code withIterationId}
+         * simultaneously.
          *
          * @param iterationTitle iteration title
-         * @return this {@link Query} with the iteration title
+         * @return this {@link Query} with iteration title
          */
         public Query withIterationTitle(String iterationTitle) {
 
@@ -987,10 +1088,13 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * The milestone title. None lists all issues with no milestone. Any lists all issues that have an assigned milestone.
+         * Returns a query that matches for milestone title.
+         *
+         * None lists all issues with no milestone. Any lists all issues that
+         * have an assigned milestone.
          *
          * @param milestone mile stone title
-         * @return this {@link Query} with the milestone
+         * @return this {@link ProjectQuery} with milestone
          */
         public Query withMilestone(String milestone) {
             appendString("milestone", milestone);
@@ -999,11 +1103,14 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Comma-separated list of label names, issues must have all labels to be returned. None lists all issues with
-         * no labels. Any lists all issues with at least one label.
+         * Returns a query that matches given labels.
+         *
+         * Labels are represented as comma-separated list of label names.
+         * None lists all issues with no labels. Any lists all issues with at
+         * least one label.
          *
          * @param labels list of labels
-         * @return this {@link Query} with the list of labels
+         * @return this {@link ProjectQuery} with list of labels
          */
         public Query withLabels(List<String> labels) {
             appendStrings("labels", labels);
@@ -1012,11 +1119,13 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues reacted by the authenticated user by the given emoji. None returns issues not given a reaction.
-         * Any returns issues given at least one reaction.
+         * Returns a query that matches my reaction emoji.
+         *
+         * None returns issues not given a reaction. Any returns issues given
+         * at least one reaction.
          *
          * @param myReactionEmoji reaction image
-         * @return this {@link Query} with the reaction emoji
+         * @return this {@link ProjectQuery} with reaction emoji
          */
         public Query withMyReactionEmoji(String myReactionEmoji) {
             appendString("my_reaction_emoji", myReactionEmoji);
@@ -1024,11 +1133,13 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * return issues only from non-archived projects. If false, the response returns issues from both archived
-         * and non-archived projects. Default is true
+         * Returns a query that only returns issues from non-archived projects.
          *
-         * @param nonArchived whether the respod are arichived
-         * @return this {@link Query} with the boolean
+         * If nonArchived is false, the response returns issues from both
+         * archived and non-archived projects. Default value is true.
+         *
+         * @param nonArchived whether the responses are archived
+         * @return this {@link ProjectQuery} with boolean
          */
         public Query withNonArchived(boolean nonArchived) {
             appendBoolean("non_archived", nonArchived);
@@ -1036,11 +1147,14 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues that do not match the parameters supplied. Accepts: labels, milestone, author_id,
-         * author_username, assignee_id, assignee_username, my_reaction_emoji
+         * Returns a query that returns issues that do not match the parameters
+         * supplied.
+         *
+         * Accepts: labels, milestone, author_id, author_username, assignee_id,
+         * assignee_username, my_reaction_emoji.
          *
          * @param not whether to include such filter
-         * @return this {@link Query} with the boolean
+         * @return this {@link ProjectQuery} with string value not
          */
         public Query withNot(String not) {
             appendString("not", not);
@@ -1048,11 +1162,14 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues ordered by created_at, updated_at, priority, due_date, relative_position, label_priority,
-         * milestone_due, popularity, weight fields. Default is created_at
+         * Returns a query that returns results in given order.
+         *
+         * Order can be any of created_at, updated_at, priority, due_date,
+         * relative_position, label_priority, milestone_due, popularity, weight
+         * fields. Default value is created_at.
          *
          * @param orderBy a way to order all of the responds
-         * @return this {@link Query} with the orderby
+         * @return this {@link ProjectQuery} with orderby
          */
         public Query withOrderBy(String orderBy) {
             appendString("order_by", orderBy);
@@ -1060,11 +1177,14 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues for the given scope: created_by_me, assigned_to_me or all. Defaults to created_by_me
-         * For versions before 11.0, use the now deprecated created-by-me or assigned-to-me scopes instead.
+         * Returns a query that returns issues for given scope.
+         *
+         * Scope can be any of: created_by_me, assigned_to_me or all.
+         * Defaults to created_by_me. For versions before 11.0, use the now
+         * deprecated created-by-me or assigned-to-me scopes instead.
          *
          * @param scope different scope in gitlab
-         * @return this {@link Query} with the scope
+         * @return this {@link ProjectQuery} with scope
          */
         public Query withScope(String scope) {
             appendString("scope", scope);
@@ -1072,10 +1192,11 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Search issues against their title and description
+         * Returns a query that searches issues against their title and
+         * description.
          *
          * @param search keyword to be searched
-         * @return this {@link Query} with the search
+         * @return this {@link ProjectQuery} with search
          */
         public Query withSearch(String search) {
             appendString("search", search);
@@ -1083,10 +1204,12 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues sorted in asc or desc order. Default is desc
+         * Returns a query that returns results in sorted order.
+         *
+         * Sort order can be any of "asc" or "desc". Default value is "desc".
          *
          * @param sort ways to sort the response
-         * @return this {@link Query} with the sort
+         * @return this {@link ProjectQuery} with sort
          */
         public Query withSort(String sort) {
             appendString("sort", sort);
@@ -1094,10 +1217,10 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues updated on or after the given time.
+         * Returns a query that returns issues updated on or after given time.
          *
-         * @param updatedAfter a date that all issue should be updated after
-         * @return this {@link Query} with the date
+         * @param updatedAfter date that all issue should be updated after
+         * @return this {@link ProjectQuery} with date
          */
         public Query withUpdatedAfter(ZonedDateTime updatedAfter) {
             appendDateTime("updated_after", updatedAfter);
@@ -1105,10 +1228,10 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues updated on or before the given time.
+         * Returns a query that returns issues updated on or before given time.
          *
-         * @param updatedBefore a date that all issue should be updated before
-         * @return this {@link Query} with the date
+         * @param updatedBefore date that all issue should be updated before
+         * @return this {@link ProjectQuery} with date
          */
         public Query withUpdatedBefore(ZonedDateTime updatedBefore) {
             appendDateTime("updated_before", updatedBefore);
@@ -1116,11 +1239,13 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Return issues with the specified weight. None returns issues with no weight assigned. Any returns issues
+         * Returns a query that returns issues with specified weight.
+         *
+         * None returns issues with no weight assigned. Any returns issues
          * with a weight assigned.
          *
          * @param weight weight parameter
-         * @return this {@link Query} with the weight
+         * @return this {@link ProjectQuery} with weight
          */
         public Query withWeight(int weight) {
             appendInt("weight", weight);
@@ -1128,10 +1253,11 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set whether or not to return labels with detail
+         * Returns a query that returns issues with label details if
+         * labelsDetails is true.
          *
          * @param labelsDetails whether or not to return labels with detail
-         * @return this {@link Query} with the boolean
+         * @return this {@link ProjectQuery} with boolean
          */
         public Query withLabelsDetails(boolean labelsDetails) {
             appendBoolean("with_labels_details", labelsDetails);
@@ -1139,10 +1265,11 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Set pagination on top of the query
+         * Returns a query that specifies page number and size to return based
+         * on given pagination.
          *
          * @param pagination pagination object that defines page number and size
-         * @return this {@link Query} with the given pagination object
+         * @return this {@link GitlabBranch.ProjectQuery} with given pagination
          */
         @Override
         public Query withPagination(Pagination pagination) {
@@ -1151,7 +1278,8 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         /**
-         * Get the URL suffix for the HTTP request
+         * Returns the URL suffix for the HTTP request
+         *
          * <p>
          * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#list-issues
          * <p>
@@ -1165,7 +1293,6 @@ public class GitlabIssue extends GitlabComponent {
         }
 
         @Override
-        void bind(GitlabIssue component) {
-        }
+        void bind(GitlabIssue component) {}
     }
 }
