@@ -1,9 +1,6 @@
 package org.gitlab.api.test;
 
-import org.gitlab.api.GitlabAPIClient;
-import org.gitlab.api.GitlabException;
-import org.gitlab.api.GitlabIssue;
-import org.gitlab.api.GitlabProject;
+import org.gitlab.api.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +32,6 @@ public class GitlabIssueTest {
     }
 
     @Test
-        // CRURDR
     void testSequentialCRUD() {
         GitlabIssue issue1 = project.newIssue("issue1").create();
         assertEquals("issue1", project.getIssue(issue1.getIid()).getTitle());
@@ -48,7 +44,6 @@ public class GitlabIssueTest {
     }
 
     @Test
-        // CRDR
     void testSequentialCRD() {
         GitlabIssue issue1 = project.newIssue("issue1").create();
         assertEquals("issue1", project.getIssue(issue1.getIid()).getTitle());
@@ -59,7 +54,6 @@ public class GitlabIssueTest {
     }
 
     @Test
-        //CRURDDR
     void testDuplicateDelete() {
         GitlabIssue issue1 = project.newIssue("issue1").create();
         assertEquals("issue1", project.getIssue(issue1.getIid()).getTitle());
@@ -76,7 +70,6 @@ public class GitlabIssueTest {
     }
 
     @Test
-        //CRUURDR
     void testDuplicateUpdate() {
         GitlabIssue issue1 = project.newIssue("issue1").create();
         assertEquals("issue1", project.getIssue(issue1.getIid()).getTitle());
@@ -92,7 +85,6 @@ public class GitlabIssueTest {
     }
 
     @Test
-        //Update a non-exist object
     void testMultipleUpdate() {
         assertThrows(GitlabException.class, () -> {
             project.getIssue(12345).withTitle("issue1").update();
@@ -117,37 +109,6 @@ public class GitlabIssueTest {
         assertFalse(issue1.equals(issue2));
         issue1.delete();
         issue2.delete();
-    }
-
-    @Test
-    void testToString() {
-        GitlabIssue issue1 = project.newIssue("issue1").create();
-        issue1.withDescription("a new issue");
-        String expected = "GitlabIssue{" +
-                "id=" + issue1.getId() +
-                ", iid=" + issue1.getIid() +
-                ", projectId=" + issue1.getProjectId() +
-                ", author=" + issue1.getAuthor() +
-                ", description=" + issue1.getDescription() +
-                ", state=" + issue1.getState() +
-                ", assignees=" + issue1.getAssignees() +
-                ", upvotes=" + issue1.getUpvotes() +
-                ", downvotes=" + issue1.getDownvotes() +
-                ", mergeRequestCount=" + issue1.getMergeRequestCount() +
-                ", title=" + issue1.getTitle() +
-                ", labels=" + issue1.getLabels() +
-                ", updatedAt=" + issue1.getUpdatedAt() +
-                ", createdAt=" + issue1.getCreatedAt() +
-                ", closedAt=" + issue1.getClosedAt() +
-                ", closedBy=" + issue1.getClosedBy() +
-                ", subscribed=" + issue1.isSubscribed() +
-                ", dueDate=" + issue1.getDueDate() +
-                ", webUrl=" + issue1.getWebUrl() +
-                ", hasTasks=" + issue1.hasTasks() +
-                ", epicId=" + issue1.getEpicId() +
-                '}';
-        assertEquals(expected, issue1.toString());
-        issue1.delete();
     }
 
     @Test
@@ -224,4 +185,5 @@ public class GitlabIssueTest {
         issue2.delete();
         issue3.delete();
     }
+
 }

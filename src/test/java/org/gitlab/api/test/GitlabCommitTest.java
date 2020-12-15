@@ -2,6 +2,7 @@ package org.gitlab.api.test;
 
 import org.gitlab.api.GitlabAPIClient;
 import org.gitlab.api.GitlabCommit;
+import org.gitlab.api.GitlabException;
 import org.gitlab.api.GitlabProject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,8 +40,7 @@ public class GitlabCommitTest {
         });
         List<GitlabProject> projects = CLIENT.getUserProjectsQuery(CLIENT.getCurrentUser().getUsername()).query();
         for (GitlabProject p : projects) {
-            List<GitlabCommit> commits = p.getCommitsQuery().query();
-            assertTrue(commits.size() >= 0);
+            assertDoesNotThrow(()->{p.getCommitsQuery().query();});
         }
     }
 }

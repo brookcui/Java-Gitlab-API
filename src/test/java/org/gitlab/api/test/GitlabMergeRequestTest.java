@@ -39,7 +39,6 @@ public class GitlabMergeRequestTest {
     }
 
     @Test
-        // CRURDR
     void testSequentialCRUD() {
         GitlabMergeRequest mergeRequest = project.newMergeRequest(src.getName(), target.getName(), "req1").create();
         assertEquals("req1", project.getMergeRequest(mergeRequest.getIid()).getTitle());
@@ -52,7 +51,6 @@ public class GitlabMergeRequestTest {
     }
 
     @Test
-        // CRDR
     void testSequentialCRD() {
         GitlabMergeRequest mergeRequest = project.newMergeRequest(src.getName(), target.getName(), "req1").create();
         assertEquals("req1", project.getMergeRequest(mergeRequest.getIid()).getTitle());
@@ -63,7 +61,6 @@ public class GitlabMergeRequestTest {
     }
 
     @Test
-        //CCRDR
     void testDuplicateCreate() {
         GitlabMergeRequest mergeRequest = project.newMergeRequest(src.getName(), target.getName(), "req1").create();
         assertThrows(GitlabException.class,
@@ -78,7 +75,6 @@ public class GitlabMergeRequestTest {
     }
 
     @Test
-        //CRDDR
     void testDuplicateDelete() {
         GitlabMergeRequest mergeRequest = project.newMergeRequest(src.getName(), target.getName(), "req1").create();
         assertEquals("req1", project.getMergeRequest(mergeRequest.getIid()).getTitle());
@@ -91,7 +87,6 @@ public class GitlabMergeRequestTest {
     }
 
     @Test
-        //CRUURDR
     void testDuplicateUpdate() {
         GitlabMergeRequest mergeRequest = project.newMergeRequest(src.getName(), target.getName(), "req1").create();
         assertEquals("req1", project.getMergeRequest(mergeRequest.getIid()).getTitle());
@@ -133,36 +128,6 @@ public class GitlabMergeRequestTest {
 
         mergeRequest1.delete();
         mergeRequest2.delete();
-    }
-
-    @Test
-    void testToString() {
-        GitlabMergeRequest mergeRequest = project.newMergeRequest(src.getName(), target.getName(), "req1").create();
-        String expected = "GitlabMergeRequest{" +
-                "sourceBranch=" + mergeRequest.getSourceBranch() +
-                ", id=" + mergeRequest.getId() +
-                ", iid=" + mergeRequest.getIid() +
-                ", projectId=" + mergeRequest.getProjectId() +
-                ", author=" + mergeRequest.getAuthor() +
-                ", description=" + mergeRequest.getDescription() +
-                ", state=" + mergeRequest.getState() +
-                ", assignees=" + mergeRequest.getAssignees() +
-                ", upvotes=" + mergeRequest.getUpvotes() +
-                ", downvotes=" + mergeRequest.getDownvotes() +
-                ", mergeRequestCount=" + mergeRequest.getMergeRequestCount() +
-                ", title=" + mergeRequest.getTitle() +
-                ", updatedAt=" + mergeRequest.getUpdatedAt() +
-                ", createdAt=" + mergeRequest.getCreatedAt() +
-                ", closedAt=" + mergeRequest.getClosedAt() +
-                ", closedBy=" + mergeRequest.getClosedBy() +
-                ", subscribed=" + mergeRequest.isSubscribed() +
-                ", webUrl=" + mergeRequest.getWebUrl() +
-                ", targetBranch=" + mergeRequest.getTargetBranch() +
-                ", labels=" + mergeRequest.getLabels() +
-                '}';
-        assertEquals(expected, mergeRequest.toString());
-
-        mergeRequest.delete();
     }
 
     @Test
@@ -215,7 +180,8 @@ public class GitlabMergeRequestTest {
         assertEquals(1, res1.size());
 
         // Invalid query field
-        List<GitlabMergeRequest> res2 = project.getMergeRequestsQuery().withCreatedAfter(ZonedDateTime.now()).query();
+        List<GitlabMergeRequest> res2 =
+                project.getMergeRequestsQuery().withCreatedAfter(ZonedDateTime.now().plusDays(1)).query();
         assertEquals(0, res2.size());
 
         // Sort
@@ -227,9 +193,7 @@ public class GitlabMergeRequestTest {
 
         // Order by
         List<GitlabMergeRequest> res4 = project.getMergeRequestsQuery().
-                withTargetBranch("master").
-                                                       withOrderBy("created_at").
-                                                       query();
+                withTargetBranch("master").withOrderBy("created_at").query();
         assertEquals(2, res4.size());
         assertEquals(mergeRequest3.getIid(), res4.get(0).getIid());
         assertEquals(mergeRequest2.getIid(), res4.get(1).getIid());

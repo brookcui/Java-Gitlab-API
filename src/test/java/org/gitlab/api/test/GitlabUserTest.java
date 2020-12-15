@@ -45,32 +45,6 @@ public class GitlabUserTest {
     }
 
     @Test
-    void testToString() {
-        GitlabUser currentUser = CLIENT.getCurrentUser();
-        String expected = "GitlabUser{" +
-                "id=" + currentUser.getId() +
-                ", username=" + currentUser.getUsername() +
-                ", name=" + currentUser.getName() +
-                ", state=" + currentUser.getState() +
-                ", avatarUrl=" + currentUser.getAvatarUrl() +
-                ", webUrl=" + currentUser.getWebUrl() +
-                ", createdAt=" + currentUser.getCreatedAt() +
-                ", bio=" + currentUser.getBio() +
-                ", bioHtml=" + currentUser.getBioHtml() +
-                ", publicEmail=" + currentUser.getPublicEmail() +
-                ", skype=" + currentUser.getSkype() +
-                ", linkedin=" + currentUser.getLinkedin() +
-                ", twitter=" + currentUser.getTwitter() +
-                ", websiteUrl=" + currentUser.getWebsiteUrl() +
-                ", organization=" + currentUser.getOrganization() +
-                ", jobTitle=" + currentUser.getJobTitle() +
-                '}';
-
-        assertEquals(expected, currentUser.toString());
-
-    }
-
-    @Test
     void testQuery() {
         GitlabUser currentUser = CLIENT.getCurrentUser();
         List<GitlabUser> users1 = project.getUsersQuery().query();
