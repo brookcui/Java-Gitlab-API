@@ -1,6 +1,9 @@
 package org.gitlab.api.test;
 
-import org.gitlab.api.*;
+import org.gitlab.api.GitlabAPIClient;
+import org.gitlab.api.GitlabException;
+import org.gitlab.api.GitlabIssue;
+import org.gitlab.api.GitlabProject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,30 +28,38 @@ public class GitlabIssueTest {
         project = CLIENT.newProject("test" + num).create();
 
     }
+
     @AfterEach
     void cleanup() {
         project.delete();
     }
 
-    @Test // CRURDR
+    @Test
+        // CRURDR
     void testSequentialCRUD() {
         GitlabIssue issue1 = project.newIssue("issue1").create();
         assertEquals("issue1", project.getIssue(issue1.getIid()).getTitle());
         issue1 = issue1.withDescription("a new issue").update();
         assertEquals("a new issue", project.getIssue(issue1.getIid()).getDescription());
         GitlabIssue issueDeleted = issue1.delete();
-        assertThrows(GitlabException.class, ()->{project.getIssue(issueDeleted.getIid());});
+        assertThrows(GitlabException.class, () -> {
+            project.getIssue(issueDeleted.getIid());
+        });
     }
 
-    @Test // CRDR
+    @Test
+        // CRDR
     void testSequentialCRD() {
         GitlabIssue issue1 = project.newIssue("issue1").create();
         assertEquals("issue1", project.getIssue(issue1.getIid()).getTitle());
         GitlabIssue issueDeleted = issue1.delete();
-        assertThrows(GitlabException.class, ()->{project.getIssue(issueDeleted.getIid());});
+        assertThrows(GitlabException.class, () -> {
+            project.getIssue(issueDeleted.getIid());
+        });
     }
 
-    @Test //CRURDDR
+    @Test
+        //CRURDDR
     void testDuplicateDelete() {
         GitlabIssue issue1 = project.newIssue("issue1").create();
         assertEquals("issue1", project.getIssue(issue1.getIid()).getTitle());
@@ -56,11 +67,16 @@ public class GitlabIssueTest {
         assertEquals("a new issue", project.getIssue(issue1.getIid()).getDescription());
         GitlabIssue issueDeleted1 = issue1.delete();
         assertNotNull(issueDeleted1);
-        assertThrows(GitlabException.class, ()->{issue1.delete();});
-        assertThrows(GitlabException.class, ()->{project.getIssue(issue1.getIid()).getTitle();});
+        assertThrows(GitlabException.class, () -> {
+            issue1.delete();
+        });
+        assertThrows(GitlabException.class, () -> {
+            project.getIssue(issue1.getIid()).getTitle();
+        });
     }
 
-    @Test //CRUURDR
+    @Test
+        //CRUURDR
     void testDuplicateUpdate() {
         GitlabIssue issue1 = project.newIssue("issue1").create();
         assertEquals("issue1", project.getIssue(issue1.getIid()).getTitle());
@@ -70,14 +86,23 @@ public class GitlabIssueTest {
         assertEquals("a new issue2", project.getIssue(issue1.getIid()).getDescription());
         GitlabIssue issueDeleted1 = issue1.delete();
         assertNotNull(issueDeleted1);
-        assertThrows(GitlabException.class, ()->{project.getIssue(issue1.getIid()).getTitle();});
+        assertThrows(GitlabException.class, () -> {
+            project.getIssue(issue1.getIid()).getTitle();
+        });
     }
 
-    @Test //Update a non-exist object
+    @Test
+        //Update a non-exist object
     void testMultipleUpdate() {
-        assertThrows(GitlabException.class, ()->{project.getIssue(12345).withTitle("issue1").update();});
-        assertThrows(GitlabException.class, ()->{project.getIssue(12345).withDescription("a new issue1").update();});
-        assertThrows(GitlabException.class, ()->{project.getIssue(12345).withDueDate(LocalDate.now()).update();});
+        assertThrows(GitlabException.class, () -> {
+            project.getIssue(12345).withTitle("issue1").update();
+        });
+        assertThrows(GitlabException.class, () -> {
+            project.getIssue(12345).withDescription("a new issue1").update();
+        });
+        assertThrows(GitlabException.class, () -> {
+            project.getIssue(12345).withDueDate(LocalDate.now()).update();
+        });
     }
 
     @Test

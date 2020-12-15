@@ -1,9 +1,12 @@
 package org.gitlab.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -19,7 +22,6 @@ import java.util.Objects;
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class GitlabUser extends GitlabComponent {
-
     @JsonProperty(value = "id")
     private final int id;
     @JsonProperty(value = "username")
@@ -33,7 +35,9 @@ public class GitlabUser extends GitlabComponent {
     @JsonProperty(value = "web_url")
     private String webUrl;
     @JsonProperty(value = "created_at")
-    private LocalDateTime createdAt;
+    @JsonDeserialize(using = DateUtil.ZonedDeserializer.class)
+    @JsonSerialize(using = DateUtil.ZonedSerializer.class)
+    private ZonedDateTime createdAt;
     @JsonProperty(value = "bio")
     private String bio;
     @JsonProperty(value = "bio_html")
@@ -134,7 +138,7 @@ public class GitlabUser extends GitlabComponent {
      *
      * @return created date of the current user
      */
-    public LocalDateTime getCreatedAt() {
+    public ZonedDateTime getCreatedAt() {
         return createdAt;
     }
 
@@ -218,6 +222,7 @@ public class GitlabUser extends GitlabComponent {
     public String getJobTitle() {
         return jobTitle;
     }
+
     /**
      * The string representation of this {@link GitlabUser}
      *
@@ -229,19 +234,6 @@ public class GitlabUser extends GitlabComponent {
                 "id=" + id +
                 ", username=" + username +
                 ", name=" + name +
-                ", state=" + state +
-                ", avatarUrl=" + avatarUrl +
-                ", webUrl=" + webUrl +
-                ", createdAt=" + createdAt +
-                ", bio=" + bio +
-                ", bioHtml=" + bioHtml +
-                ", publicEmail=" + publicEmail +
-                ", skype=" + skype +
-                ", linkedin=" + linkedin +
-                ", twitter=" + twitter +
-                ", websiteUrl=" + websiteUrl +
-                ", organization=" + organization +
-                ", jobTitle=" + jobTitle +
                 '}';
     }
 
@@ -289,6 +281,7 @@ public class GitlabUser extends GitlabComponent {
      * <p>
      * GET /users
      */
+    @JsonIgnoreType
     public static class Query extends GitlabQuery<GitlabUser> {
         Query(HttpClient httpClient) {
             super(httpClient, GitlabUser[].class);
@@ -356,7 +349,7 @@ public class GitlabUser extends GitlabComponent {
          * @return The URL suffix to query {@link GitlabUser}
          */
         @Override
-        public String getTailUrl() {
+        String getTailUrl() {
             return "/users";
         }
 
@@ -373,6 +366,7 @@ public class GitlabUser extends GitlabComponent {
      * <p>
      * GET /projects/:id/users
      */
+    @JsonIgnoreType
     public static class ProjectQuery extends GitlabQuery<GitlabUser> {
         private final int projectId;
 
@@ -421,10 +415,11 @@ public class GitlabUser extends GitlabComponent {
          * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#get-project-users
          * <p>
          * GET /projects/:id/users
+         *
          * @return The URL suffix to query {@link GitlabUser} in the given {@link GitlabProject}
          */
         @Override
-        public String getTailUrl() {
+        String getTailUrl() {
             return String.format("/projects/%d/users", projectId);
         }
 

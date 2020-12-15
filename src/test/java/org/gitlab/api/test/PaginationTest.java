@@ -25,18 +25,10 @@ class PaginationTest {
         assertDoesNotThrow(() -> {
             Pagination.of(100, 1);
         });
-        assertThrows(IllegalArgumentException.class, () -> {
-            Pagination.of(-1, 5);
-        });
-        assertThrows(IllegalArgumentException.class, () -> {
-            Pagination.of(1, 0);
-        });
-        assertThrows(IllegalArgumentException.class, () -> {
-            Pagination.of(1, 200);
-        });
-        assertThrows(IllegalArgumentException.class, () -> {
-            Pagination.of(-1, -1);
-        });
+        assertThrows(IllegalArgumentException.class, () -> Pagination.of(-1, 5));
+        assertThrows(IllegalArgumentException.class, () -> Pagination.of(1, 0));
+        assertThrows(IllegalArgumentException.class, () -> Pagination.of(1, 200));
+        assertThrows(IllegalArgumentException.class, () -> Pagination.of(-1, -1));
     }
 
     @Test

@@ -1,5 +1,8 @@
 package org.gitlab.api.test;
-import org.gitlab.api.*;
+
+import org.gitlab.api.GitlabAPIClient;
+import org.gitlab.api.GitlabProject;
+import org.gitlab.api.GitlabUser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,18 +11,21 @@ import java.util.List;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 public class GitlabUserTest {
     private static final GitlabAPIClient CLIENT = new GitlabAPIClient
             .Builder("https://gitlab.com")
             .withAccessToken(System.getenv("TOKEN"))
             .build();
     private GitlabProject project;
+
     @BeforeEach
     void setup() {
         Random ran = new Random();
         String num = String.valueOf(ran.nextInt(100));
         project = CLIENT.newProject("test" + num).create();
     }
+
     @AfterEach
     void cleanup() {
         project.delete();
@@ -35,7 +41,7 @@ public class GitlabUserTest {
     void testEqual() {
         GitlabUser currentUser = CLIENT.getCurrentUser();
         GitlabUser user = CLIENT.getUser(CLIENT.getProject(23057280).getOwner().getId());
-        assertTrue(currentUser.equals(user));
+        assertEquals(user, currentUser);
     }
 
     @Test

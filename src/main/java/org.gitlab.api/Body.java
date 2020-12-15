@@ -14,7 +14,7 @@ class Body {
     /**
      * The formatter specially for the Gitlab API format
      */
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateUtil.DATE_FORMATTER;
     /**
      * The internal map
      */
@@ -40,7 +40,7 @@ class Body {
      * @return this Body
      */
     Body putDate(String key, LocalDate value) {
-        map.put(key, value == null ? null : value.format(FORMATTER));
+        map.put(key, value == null ? null : value.format(DATE_FORMATTER));
         return this;
     }
 

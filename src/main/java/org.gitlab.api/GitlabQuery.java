@@ -5,9 +5,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -24,12 +21,11 @@ abstract class GitlabQuery<T extends GitlabComponent> {
     /**
      * The date formatter specifically for the Gitlab API
      */
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateUtil.DATE_FORMATTER;
     /**
      * The time formatter specifically for the Gitlab API
      */
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter
-            .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateUtil.DATE_TIME_ZONED_FORMATTER;
     /**
      * The type representing a array of the given {@link GitlabComponent}
      */
@@ -46,7 +42,7 @@ abstract class GitlabQuery<T extends GitlabComponent> {
      * Construct the query by the Gitlab httpClienturation and the expected type for the query response
      *
      * @param httpClient - the {@link HttpClient} to be used
-     * @param type   - the expected array type for the query response
+     * @param type       - the expected array type for the query response
      */
     GitlabQuery(HttpClient httpClient, Class<T[]> type) {
         this.httpClient = httpClient;
@@ -58,7 +54,7 @@ abstract class GitlabQuery<T extends GitlabComponent> {
      *
      * @return the tail url of the request, e.g. /projects
      */
-    public abstract String getTailUrl();
+    abstract String getTailUrl();
 
     /**
      * For a component to bind with the parent component after it is parsed
@@ -93,7 +89,7 @@ abstract class GitlabQuery<T extends GitlabComponent> {
      *
      * @return entire url, e.g. /projects?owned=true
      */
-    public String getEntireUrl() {
+    String getEntireUrl() {
         return getTailUrl() + toString();
     }
 
@@ -184,10 +180,9 @@ abstract class GitlabQuery<T extends GitlabComponent> {
      * @param dateTime value of the parameter
      * @return GitlabQuery with the new parameter added
      */
-    protected GitlabQuery<T> appendDateTime(String name, LocalDateTime dateTime) {
+    protected GitlabQuery<T> appendDateTime(String name, ZonedDateTime dateTime) {
         if (dateTime != null) {
-            ZonedDateTime time = dateTime.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneOffset.UTC);
-            return appendString(name, DATE_TIME_FORMATTER.format(time));
+            return appendString(name, DATE_TIME_FORMATTER.format(dateTime));
         }
         return this;
     }

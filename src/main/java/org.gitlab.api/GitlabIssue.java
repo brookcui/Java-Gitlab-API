@@ -1,12 +1,16 @@
 package org.gitlab.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -50,12 +54,19 @@ public class GitlabIssue extends GitlabComponent {
     @JsonProperty("labels")
     private List<String> labels = new ArrayList<>();
     @JsonProperty("updated_at")
-    private LocalDateTime updatedAt;
+    @JsonDeserialize(using = DateUtil.ZonedDeserializer.class)
+    @JsonSerialize(using = DateUtil.ZonedSerializer.class)
+    private ZonedDateTime updatedAt;
     @JsonProperty("created_at")
-    private LocalDateTime createdAt;
+    @JsonDeserialize(using = DateUtil.ZonedDeserializer.class)
+    @JsonSerialize(using = DateUtil.ZonedSerializer.class)
+    private ZonedDateTime createdAt;
     @JsonProperty("closed_at")
-    private LocalDateTime closedAt;
+    @JsonDeserialize(using = DateUtil.ZonedDeserializer.class)
+    @JsonSerialize(using = DateUtil.ZonedSerializer.class)
+    private ZonedDateTime closedAt;
     @JsonProperty("closed_by")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     private GitlabUser closedBy;
     @JsonProperty("subscribed")
     private boolean subscribed;
@@ -275,7 +286,7 @@ public class GitlabIssue extends GitlabComponent {
      *
      * @return the date when issue is updated
      */
-    public LocalDateTime getUpdatedAt() {
+    public ZonedDateTime getUpdatedAt() {
         return updatedAt;
     }
 
@@ -284,7 +295,7 @@ public class GitlabIssue extends GitlabComponent {
      *
      * @return date when issue is created
      */
-    public LocalDateTime getCreatedAt() {
+    public ZonedDateTime getCreatedAt() {
         return createdAt;
     }
 
@@ -293,7 +304,7 @@ public class GitlabIssue extends GitlabComponent {
      *
      * @return get the date when issue is closed
      */
-    public LocalDateTime getClosedAt() {
+    public ZonedDateTime getClosedAt() {
         return closedAt;
     }
 
@@ -377,6 +388,7 @@ public class GitlabIssue extends GitlabComponent {
     public int getId() {
         return id;
     }
+
     /**
      * Attach a project to this {@link GitlabIssue}
      *
@@ -473,27 +485,8 @@ public class GitlabIssue extends GitlabComponent {
     @Override
     public String toString() {
         return "GitlabIssue{" +
-                "id=" + id +
-                ", iid=" + iid +
-                ", projectId=" + projectId +
-                ", author=" + author +
-                ", description=" + description +
-                ", state=" + state +
-                ", assignees=" + assignees +
-                ", upvotes=" + upvotes +
-                ", downvotes=" + downvotes +
-                ", mergeRequestCount=" + mergeRequestCount +
+                "iid=" + iid +
                 ", title=" + title +
-                ", labels=" + labels +
-                ", updatedAt=" + updatedAt +
-                ", createdAt=" + createdAt +
-                ", closedAt=" + closedAt +
-                ", closedBy=" + closedBy +
-                ", subscribed=" + subscribed +
-                ", dueDate=" + dueDate +
-                ", webUrl=" + webUrl +
-                ", hasTasks=" + hasTasks +
-                ", epicId=" + epicId +
                 '}';
     }
 
@@ -510,6 +503,7 @@ public class GitlabIssue extends GitlabComponent {
         GitlabIssue that = (GitlabIssue) o;
         return projectId == that.projectId && iid == that.iid;
     }
+
     /**
      * Two {@link GitlabIssue}s will have the same hashcode if they belong to the same project and have the same issue id
      *
@@ -527,6 +521,7 @@ public class GitlabIssue extends GitlabComponent {
      * <p>
      * GET /projects/:id/issues
      */
+    @JsonIgnoreType
     public static class ProjectQuery extends GitlabQuery<GitlabIssue> {
         private final GitlabProject project;
 
@@ -601,7 +596,7 @@ public class GitlabIssue extends GitlabComponent {
          * @param createdAfter a date to get issues after this date
          * @return this {@link ProjectQuery} with the date
          */
-        public ProjectQuery withCreatedAfter(LocalDateTime createdAfter) {
+        public ProjectQuery withCreatedAfter(ZonedDateTime createdAfter) {
             appendDateTime("created_after", createdAfter);
             return this;
         }
@@ -612,7 +607,7 @@ public class GitlabIssue extends GitlabComponent {
          * @param createdBefore a date to get issues before this date
          * @return this {@link ProjectQuery} with the date
          */
-        public ProjectQuery withCreatedBefore(LocalDateTime createdBefore) {
+        public ProjectQuery withCreatedBefore(ZonedDateTime createdBefore) {
             appendDateTime("created_before", createdBefore);
             return this;
         }
@@ -753,7 +748,7 @@ public class GitlabIssue extends GitlabComponent {
          * @param updatedAfter a date that all issue should be updated after
          * @return this {@link ProjectQuery} with the date
          */
-        public ProjectQuery withUpdatedAfter(LocalDateTime updatedAfter) {
+        public ProjectQuery withUpdatedAfter(ZonedDateTime updatedAfter) {
             appendDateTime("updated_after", updatedAfter);
             return this;
         }
@@ -764,7 +759,7 @@ public class GitlabIssue extends GitlabComponent {
          * @param updatedBefore a date that all issue should be updated before
          * @return this {@link ProjectQuery} with the date
          */
-        public ProjectQuery withUpdatedBefore(LocalDateTime updatedBefore) {
+        public ProjectQuery withUpdatedBefore(ZonedDateTime updatedBefore) {
             appendDateTime("updated_before", updatedBefore);
             return this;
         }
@@ -815,7 +810,7 @@ public class GitlabIssue extends GitlabComponent {
          * @return The URL suffix to query {@link GitlabIssue} in the given {@link GitlabProject}
          */
         @Override
-        public String getTailUrl() {
+        String getTailUrl() {
             return String.format("/projects/%d/issues", project.getId());
         }
 
@@ -838,6 +833,7 @@ public class GitlabIssue extends GitlabComponent {
      * <p>
      * GET /issues
      */
+    @JsonIgnoreType
     public static class Query extends GitlabQuery<GitlabIssue> {
 
         Query(HttpClient httpClient) {
@@ -910,7 +906,7 @@ public class GitlabIssue extends GitlabComponent {
          * @param createdAfter a date to get issues after this date
          * @return this {@link Query} with the date
          */
-        public Query withCreatedAfter(LocalDateTime createdAfter) {
+        public Query withCreatedAfter(ZonedDateTime createdAfter) {
             appendDateTime("created_after", createdAfter);
             return this;
         }
@@ -921,7 +917,7 @@ public class GitlabIssue extends GitlabComponent {
          * @param createdBefore a date to get issues before this date
          * @return this {@link Query} with the date
          */
-        public Query withCreatedBefore(LocalDateTime createdBefore) {
+        public Query withCreatedBefore(ZonedDateTime createdBefore) {
             appendDateTime("created_before", createdBefore);
             return this;
         }
@@ -1103,7 +1099,7 @@ public class GitlabIssue extends GitlabComponent {
          * @param updatedAfter a date that all issue should be updated after
          * @return this {@link Query} with the date
          */
-        public Query withUpdatedAfter(LocalDateTime updatedAfter) {
+        public Query withUpdatedAfter(ZonedDateTime updatedAfter) {
             appendDateTime("updated_after", updatedAfter);
             return this;
         }
@@ -1114,7 +1110,7 @@ public class GitlabIssue extends GitlabComponent {
          * @param updatedBefore a date that all issue should be updated before
          * @return this {@link Query} with the date
          */
-        public Query withUpdatedBefore(LocalDateTime updatedBefore) {
+        public Query withUpdatedBefore(ZonedDateTime updatedBefore) {
             appendDateTime("updated_before", updatedBefore);
             return this;
         }
@@ -1160,10 +1156,11 @@ public class GitlabIssue extends GitlabComponent {
          * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#list-issues
          * <p>
          * GET /issues
+         *
          * @return The URL suffix to query {@link GitlabIssue}
          */
         @Override
-        public String getTailUrl() {
+        String getTailUrl() {
             return "/issues";
         }
 

@@ -1,17 +1,20 @@
 package org.gitlab.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 /**
  * This class is used to represent the gitlab project.
- *
+ * <p>
  * This class also contains a {@link Query} class to get projects globally and a {@link UserQuery} to query projects
  * owned by a specific user
  * <p>
@@ -21,6 +24,7 @@ import java.util.Objects;
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class GitlabProject extends GitlabComponent {
+    @JsonProperty("id")
     private int id; // required
     private String description;
     @JsonProperty("name_with_namespace")
@@ -57,9 +61,13 @@ public class GitlabProject extends GitlabComponent {
     @JsonProperty("wiki_enabled")
     private boolean wikiEnabled;
     @JsonProperty("created_at")
-    private LocalDateTime createdAt;
+    @JsonDeserialize(using = DateUtil.ZonedDeserializer.class)
+    @JsonSerialize(using = DateUtil.ZonedSerializer.class)
+    private ZonedDateTime createdAt;
     @JsonProperty("last_activity_at")
-    private LocalDateTime lastActivityAt;
+    @JsonDeserialize(using = DateUtil.ZonedDeserializer.class)
+    @JsonSerialize(using = DateUtil.ZonedSerializer.class)
+    private ZonedDateTime lastActivityAt;
     @JsonProperty("creator_id")
     private int creatorId;
     @JsonProperty("archived")
@@ -98,7 +106,7 @@ public class GitlabProject extends GitlabComponent {
      */
     public GitlabIssue getIssue(int issueIId) {
         return httpClient.get(String.format("/projects/%d/issues/%d", id, issueIId), GitlabIssue.class)
-                .withProject(this);
+                         .withProject(this);
     }
 
     /**
@@ -127,7 +135,7 @@ public class GitlabProject extends GitlabComponent {
      */
     public GitlabCommit getCommit(String sha) {
         return httpClient.get(String.format("/projects/%d/repository/commits/%s", id, sha), GitlabCommit.class)
-                .withProject(this);
+                         .withProject(this);
     }
 
 
@@ -139,12 +147,12 @@ public class GitlabProject extends GitlabComponent {
      * GET /projects/:id/repository/branches/:branch
      *
      * @param name - the name of the branch
-     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      * @return the {@link GitlabBranch} of the given branch name
+     * @throws GitlabException if {@link IOException} occurs or the response code is not in [200,400)
      */
     public GitlabBranch getBranch(String name) {
         return httpClient.get(String.format("/projects/%d/repository/branches/%s", id, name), GitlabBranch.class)
-                .withProject(this);
+                         .withProject(this);
     }
 
     /**
@@ -188,7 +196,7 @@ public class GitlabProject extends GitlabComponent {
     public GitlabMergeRequest getMergeRequest(int mergeRequestIId) {
         return httpClient.get(
                 String.format("/projects/%d/merge_requests/%d", id, mergeRequestIId), GitlabMergeRequest.class)
-                .withProject(this);
+                         .withProject(this);
     }
 
     /**
@@ -491,7 +499,7 @@ public class GitlabProject extends GitlabComponent {
      *
      * @return created date
      */
-    public LocalDateTime getCreatedAt() {
+    public ZonedDateTime getCreatedAt() {
         return createdAt;
     }
 
@@ -500,7 +508,7 @@ public class GitlabProject extends GitlabComponent {
      *
      * @return date of last activity
      */
-    public LocalDateTime getLastActivityAt() {
+    public ZonedDateTime getLastActivityAt() {
         return lastActivityAt;
     }
 
@@ -667,34 +675,9 @@ public class GitlabProject extends GitlabComponent {
     public String toString() {
         return "GitlabProject{" +
                 "id=" + id +
-                ", description=" + description +
-                ", nameWithNamespace=" + nameWithNamespace +
-                ", pathWithNamespace=" + pathWithNamespace +
-                ", defaultBranch=" + defaultBranch +
-                ", visibility=" + visibility +
-                ", sshUrlToRepo=" + sshUrlToRepo +
-                ", httpUrlToRepo=" + httpUrlToRepo +
-                ", webUrl=" + webUrl +
-                ", readmeUrl=" + readmeUrl +
-                ", tagList=" + tagList +
-                ", owner=" + owner +
                 ", name=" + name +
-                ", path=" + path +
-                ", issuesEnabled=" + issuesEnabled +
-                ", openIssuesCount=" + openIssuesCount +
-                ", mergeRequestsEnabled=" + mergeRequestsEnabled +
-                ", jobsEnabled=" + jobsEnabled +
-                ", wikiEnabled=" + wikiEnabled +
-                ", createdAt=" + createdAt +
-                ", lastActivityAt=" + lastActivityAt +
-                ", creatorId=" + creatorId +
-                ", archived=" + archived +
-                ", forksCount=" + forksCount +
-                ", starCount=" + starCount +
-                ", publicJobs=" + publicJobs +
                 '}';
     }
-
 
     /**
      * Set a httpClient to the current {@link GitlabAPIClient}
@@ -721,6 +704,7 @@ public class GitlabProject extends GitlabComponent {
         GitlabProject that = (GitlabProject) o;
         return id == that.id;
     }
+
     /**
      * Two {@link GitlabProject}es will have the same hashcode if they have the same id
      *
@@ -738,6 +722,7 @@ public class GitlabProject extends GitlabComponent {
      * <p>
      * GET /projects
      */
+    @JsonIgnoreType
     public static class Query extends GitlabQuery<GitlabProject> {
         Query(HttpClient httpClient) {
             super(httpClient, GitlabProject[].class);
@@ -782,7 +767,7 @@ public class GitlabProject extends GitlabComponent {
          * @param lastActivityAfter a date of last activity
          * @return this {@link Query} with the given date
          */
-        public Query withLastActivityAfter(LocalDateTime lastActivityAfter) {
+        public Query withLastActivityAfter(ZonedDateTime lastActivityAfter) {
             appendDateTime("last_activity_after", lastActivityAfter);
             return this;
         }
@@ -793,7 +778,7 @@ public class GitlabProject extends GitlabComponent {
          * @param lastActivityBefore a date of last activity
          * @return this {@link Query} with the given date
          */
-        public Query withLastActivityBefore(LocalDateTime lastActivityBefore) {
+        public Query withLastActivityBefore(ZonedDateTime lastActivityBefore) {
             appendDateTime("last_activity_before", lastActivityBefore);
             return this;
         }
@@ -1016,10 +1001,11 @@ public class GitlabProject extends GitlabComponent {
          * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#list-all-projects
          * <p>
          * GET /projects
+         *
          * @return The URL suffix to query {@link GitlabProject}
          */
         @Override
-        public String getTailUrl() {
+        String getTailUrl() {
             return "/projects";
         }
 
@@ -1036,8 +1022,10 @@ public class GitlabProject extends GitlabComponent {
      * <p>
      * GET /users/:user_id/projects
      */
+    @JsonIgnoreType
     public static class UserQuery extends Query {
         private final String usernameOrId;
+
         UserQuery(HttpClient httpClient, String usernameOrId) {
             super(httpClient);
             this.usernameOrId = usernameOrId;
@@ -1049,11 +1037,12 @@ public class GitlabProject extends GitlabComponent {
          * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#list-user-projects
          * <p>
          * GET /users/:user_id/projects
+         *
          * @return The URL suffix to query {@link GitlabProject}
          */
         @Override
-        public String getTailUrl() {
-            return String.format("/users/%s/projects",usernameOrId);
+        String getTailUrl() {
+            return String.format("/users/%s/projects", usernameOrId);
         }
     }
 }
