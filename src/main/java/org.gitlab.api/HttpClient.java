@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * This class is used to send HTTP request to the with the given Gitlab httpClienturation,
+ * This class is used to send HTTP request to the with the given Gitlab httpClient,
  * and then deserialize the JSON response to the corresponding {@link GitlabComponent} class.
  */
 class HttpClient {
@@ -28,10 +28,6 @@ class HttpClient {
             .registerModule(new JavaTimeModule())
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     /**
-     * The internal OkHttpClient
-     */
-    private final OkHttpClient client;
-    /**
      * The default media type to be sent in PUT and POST
      */
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
@@ -39,26 +35,13 @@ class HttpClient {
      * The empty body to be used for PUT and POST
      */
     private static final RequestBody EMPTY_BODY = RequestBody.create("", null);
-
+    /**
+     * The internal OkHttpClient
+     */
+    private final OkHttpClient client;
     private final String apiPrefix;
     private final String authHeaderName;
     private final String authHeaderValue;
-
-    /**
-     * Given the tailUrl, e.g. /projects/1234,
-     * return the entire API url based on {@link #apiPrefix}
-     * e.g. https://gitlab.com/api/v4/projects/1234
-     *
-     * @param tailUrl the API tail Url, e.g.  /projects/1234
-     * @return the entire API url based on apiPrefix
-     * e.g. https://gitlab.com/api/v4/projects/1234
-     */
-    private String getAPIUrl(String tailUrl) {
-        if (!tailUrl.startsWith("/")) {
-            tailUrl = "/" + tailUrl;
-        }
-        return apiPrefix + tailUrl;
-    }
 
     /**
      * Initialize the {@link HttpClient} based on timeouts, proxy, api endpoint namespace as well as the authentication.
@@ -81,6 +64,56 @@ class HttpClient {
             authHeaderValue = null;
         }
 
+    }
+
+    /**
+     * Create a new object of the given type from the JSON response
+     *
+     * @param response the JSON response
+     * @param type     the type for deserialization
+     * @param <T>      the type
+     * @return the newly created {@link GitlabComponent}
+     * @throws GitlabException if {@link IOException} occurs
+     */
+    private static <T> T create(String response, Class<T> type) {
+        try {
+            return MAPPER.readValue(response, type);
+        } catch (IOException e) {
+            throw new GitlabException("Response cannot be parsed", e);
+        }
+    }
+
+    /**
+     * Update a given object from the JSON response
+     *
+     * @param response the JSON response
+     * @param object   the object to be updated
+     * @param <T>      the type
+     * @return the updated object
+     * @throws GitlabException if {@link IOException} occurs
+     */
+    private static <T> T update(String response, T object) {
+        try {
+            return MAPPER.readerForUpdating(object).readValue(response);
+        } catch (IOException e) {
+            throw new GitlabException("Response cannot be parsed", e);
+        }
+    }
+
+    /**
+     * Given the tailUrl, e.g. /projects/1234,
+     * return the entire API url based on {@link #apiPrefix}
+     * e.g. https://gitlab.com/api/v4/projects/1234
+     *
+     * @param tailUrl the API tail Url, e.g.  /projects/1234
+     * @return the entire API url based on apiPrefix
+     * e.g. https://gitlab.com/api/v4/projects/1234
+     */
+    private String getAPIUrl(String tailUrl) {
+        if (!tailUrl.startsWith("/")) {
+            tailUrl = "/" + tailUrl;
+        }
+        return apiPrefix + tailUrl;
     }
 
     /**
@@ -182,40 +215,6 @@ class HttpClient {
             List<T> instances = Arrays.asList(array);
             instances.forEach(instance -> instance.withHttpClient(this));
             return instances;
-        } catch (IOException e) {
-            throw new GitlabException("Response cannot be parsed", e);
-        }
-    }
-
-    /**
-     * Create a new object of the given type from the JSON response
-     *
-     * @param response the JSON response
-     * @param type     the type for deserialization
-     * @param <T>      the type
-     * @return the newly created {@link GitlabComponent}
-     * @throws GitlabException if {@link IOException} occurs
-     */
-    private static <T> T create(String response, Class<T> type) {
-        try {
-            return MAPPER.readValue(response, type);
-        } catch (IOException e) {
-            throw new GitlabException("Response cannot be parsed", e);
-        }
-    }
-
-    /**
-     * Update a given object from the JSON response
-     *
-     * @param response the JSON response
-     * @param object   the object to be updated
-     * @param <T>      the type
-     * @return the updated object
-     * @throws GitlabException if {@link IOException} occurs
-     */
-    private static <T> T update(String response, T object) {
-        try {
-            return MAPPER.readerForUpdating(object).readValue(response);
         } catch (IOException e) {
             throw new GitlabException("Response cannot be parsed", e);
         }

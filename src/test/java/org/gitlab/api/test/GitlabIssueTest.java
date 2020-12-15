@@ -25,30 +25,35 @@ public class GitlabIssueTest {
         project = CLIENT.newProject("test" + num).create();
 
     }
+
     @AfterEach
     void cleanup() {
         project.delete();
     }
 
-    @Test // CRURDR
+    @Test
     void testSequentialCRUD() {
         GitlabIssue issue1 = project.newIssue("issue1").create();
         assertEquals("issue1", project.getIssue(issue1.getIid()).getTitle());
         issue1 = issue1.withDescription("a new issue").update();
         assertEquals("a new issue", project.getIssue(issue1.getIid()).getDescription());
         GitlabIssue issueDeleted = issue1.delete();
-        assertThrows(GitlabException.class, ()->{project.getIssue(issueDeleted.getIid());});
+        assertThrows(GitlabException.class, () -> {
+            project.getIssue(issueDeleted.getIid());
+        });
     }
 
-    @Test // CRDR
+    @Test
     void testSequentialCRD() {
         GitlabIssue issue1 = project.newIssue("issue1").create();
         assertEquals("issue1", project.getIssue(issue1.getIid()).getTitle());
         GitlabIssue issueDeleted = issue1.delete();
-        assertThrows(GitlabException.class, ()->{project.getIssue(issueDeleted.getIid());});
+        assertThrows(GitlabException.class, () -> {
+            project.getIssue(issueDeleted.getIid());
+        });
     }
 
-    @Test //CRURDDR
+    @Test
     void testDuplicateDelete() {
         GitlabIssue issue1 = project.newIssue("issue1").create();
         assertEquals("issue1", project.getIssue(issue1.getIid()).getTitle());
@@ -56,11 +61,15 @@ public class GitlabIssueTest {
         assertEquals("a new issue", project.getIssue(issue1.getIid()).getDescription());
         GitlabIssue issueDeleted1 = issue1.delete();
         assertNotNull(issueDeleted1);
-        assertThrows(GitlabException.class, ()->{issue1.delete();});
-        assertThrows(GitlabException.class, ()->{project.getIssue(issue1.getIid()).getTitle();});
+        assertThrows(GitlabException.class, () -> {
+            issue1.delete();
+        });
+        assertThrows(GitlabException.class, () -> {
+            project.getIssue(issue1.getIid()).getTitle();
+        });
     }
 
-    @Test //CRUURDR
+    @Test
     void testDuplicateUpdate() {
         GitlabIssue issue1 = project.newIssue("issue1").create();
         assertEquals("issue1", project.getIssue(issue1.getIid()).getTitle());
@@ -70,14 +79,22 @@ public class GitlabIssueTest {
         assertEquals("a new issue2", project.getIssue(issue1.getIid()).getDescription());
         GitlabIssue issueDeleted1 = issue1.delete();
         assertNotNull(issueDeleted1);
-        assertThrows(GitlabException.class, ()->{project.getIssue(issue1.getIid()).getTitle();});
+        assertThrows(GitlabException.class, () -> {
+            project.getIssue(issue1.getIid()).getTitle();
+        });
     }
 
-    @Test //Update a non-exist object
+    @Test
     void testMultipleUpdate() {
-        assertThrows(GitlabException.class, ()->{project.getIssue(12345).withTitle("issue1").update();});
-        assertThrows(GitlabException.class, ()->{project.getIssue(12345).withDescription("a new issue1").update();});
-        assertThrows(GitlabException.class, ()->{project.getIssue(12345).withDueDate(LocalDate.now()).update();});
+        assertThrows(GitlabException.class, () -> {
+            project.getIssue(12345).withTitle("issue1").update();
+        });
+        assertThrows(GitlabException.class, () -> {
+            project.getIssue(12345).withDescription("a new issue1").update();
+        });
+        assertThrows(GitlabException.class, () -> {
+            project.getIssue(12345).withDueDate(LocalDate.now()).update();
+        });
     }
 
     @Test
@@ -92,37 +109,6 @@ public class GitlabIssueTest {
         assertFalse(issue1.equals(issue2));
         issue1.delete();
         issue2.delete();
-    }
-
-    @Test
-    void testToString() {
-        GitlabIssue issue1 = project.newIssue("issue1").create();
-        issue1.withDescription("a new issue");
-        String expected = "GitlabIssue{" +
-                "id=" + issue1.getId() +
-                ", iid=" + issue1.getIid() +
-                ", projectId=" + issue1.getProjectId() +
-                ", author=" + issue1.getAuthor() +
-                ", description=" + issue1.getDescription() +
-                ", state=" + issue1.getState() +
-                ", assignees=" + issue1.getAssignees() +
-                ", upvotes=" + issue1.getUpvotes() +
-                ", downvotes=" + issue1.getDownvotes() +
-                ", mergeRequestCount=" + issue1.getMergeRequestCount() +
-                ", title=" + issue1.getTitle() +
-                ", labels=" + issue1.getLabels() +
-                ", updatedAt=" + issue1.getUpdatedAt() +
-                ", createdAt=" + issue1.getCreatedAt() +
-                ", closedAt=" + issue1.getClosedAt() +
-                ", closedBy=" + issue1.getClosedBy() +
-                ", subscribed=" + issue1.isSubscribed() +
-                ", dueDate=" + issue1.getDueDate() +
-                ", webUrl=" + issue1.getWebUrl() +
-                ", hasTasks=" + issue1.hasTasks() +
-                ", epicId=" + issue1.getEpicId() +
-                '}';
-        assertEquals(expected, issue1.toString());
-        issue1.delete();
     }
 
     @Test
@@ -199,4 +185,5 @@ public class GitlabIssueTest {
         issue2.delete();
         issue3.delete();
     }
+
 }

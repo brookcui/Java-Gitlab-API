@@ -7,6 +7,7 @@ public class GitlabException extends RuntimeException {
 
     /**
      * Constructor of the gitlab exception
+     *
      * @param cause cause of the exception
      */
     public GitlabException(Throwable cause) {
@@ -15,8 +16,9 @@ public class GitlabException extends RuntimeException {
 
     /**
      * Constructor of the gitlab exception
+     *
      * @param message error message
-     * @param cause cause of the exception
+     * @param cause   cause of the exception
      */
     public GitlabException(String message, Throwable cause) {
         super(message, cause);
@@ -24,6 +26,7 @@ public class GitlabException extends RuntimeException {
 
     /**
      * Constructor of the gitlab exception
+     *
      * @param message error message
      */
     public GitlabException(String message) {

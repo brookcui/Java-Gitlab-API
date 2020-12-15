@@ -33,9 +33,7 @@ class GitlabProjectTest {
         assertEquals(projectName, project.getName());
         GitlabProject deletedProject = project.delete();
         assertEquals(project, deletedProject);
-        assertThrows(GitlabException.class, () -> {
-            project.delete();
-        });
+        assertThrows(GitlabException.class, project::delete);
     }
 
     @Test

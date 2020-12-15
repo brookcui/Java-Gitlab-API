@@ -3,10 +3,13 @@ package org.gitlab.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -49,11 +52,17 @@ public class GitlabMergeRequest extends GitlabComponent {
     private int mergeRequestCount;
     private String title; // required
     @JsonProperty("updated_at")
-    private LocalDateTime updatedAt;
+    @JsonDeserialize(using = DateUtil.ZonedDeserializer.class)
+    @JsonSerialize(using = DateUtil.ZonedSerializer.class)
+    private ZonedDateTime updatedAt;
     @JsonProperty("created_at")
-    private LocalDateTime createdAt;
+    @JsonDeserialize(using = DateUtil.ZonedDeserializer.class)
+    @JsonSerialize(using = DateUtil.ZonedSerializer.class)
+    private ZonedDateTime createdAt;
     @JsonProperty("closed_at")
-    private LocalDateTime closedAt;
+    @JsonDeserialize(using = DateUtil.ZonedDeserializer.class)
+    @JsonSerialize(using = DateUtil.ZonedSerializer.class)
+    private ZonedDateTime closedAt;
     @JsonProperty("closed_by")
     private GitlabUser closedBy;
     @JsonProperty("subscribed")
@@ -285,7 +294,7 @@ public class GitlabMergeRequest extends GitlabComponent {
      *
      * @return time when the merge request is updated
      */
-    public LocalDateTime getUpdatedAt() {
+    public ZonedDateTime getUpdatedAt() {
         return updatedAt;
     }
 
@@ -294,7 +303,7 @@ public class GitlabMergeRequest extends GitlabComponent {
      *
      * @return time when the merge request is created
      */
-    public LocalDateTime getCreatedAt() {
+    public ZonedDateTime getCreatedAt() {
         return createdAt;
     }
 
@@ -303,7 +312,7 @@ public class GitlabMergeRequest extends GitlabComponent {
      *
      * @return time when the merge request is closed
      */
-    public LocalDateTime getClosedAt() {
+    public ZonedDateTime getClosedAt() {
         return closedAt;
     }
 
@@ -381,6 +390,7 @@ public class GitlabMergeRequest extends GitlabComponent {
     public int getIid() {
         return iid;
     }
+
     /**
      * Attach a project to this {@link GitlabMergeRequest}
      *
@@ -455,26 +465,8 @@ public class GitlabMergeRequest extends GitlabComponent {
     @Override
     public String toString() {
         return "GitlabMergeRequest{" +
-                "sourceBranch=" + sourceBranch +
-                ", id=" + id +
-                ", iid=" + iid +
-                ", projectId=" + projectId +
-                ", author=" + author +
-                ", description=" + description +
-                ", state=" + state +
-                ", assignees=" + assignees +
-                ", upvotes=" + upvotes +
-                ", downvotes=" + downvotes +
-                ", mergeRequestCount=" + mergeRequestCount +
+                "iid=" + iid +
                 ", title=" + title +
-                ", updatedAt=" + updatedAt +
-                ", createdAt=" + createdAt +
-                ", closedAt=" + closedAt +
-                ", closedBy=" + closedBy +
-                ", subscribed=" + subscribed +
-                ", webUrl=" + webUrl +
-                ", targetBranch=" + targetBranch +
-                ", labels=" + labels +
                 '}';
     }
 
@@ -521,6 +513,7 @@ public class GitlabMergeRequest extends GitlabComponent {
      * <p>
      * GET /projects/:id/merge_requests
      */
+    @JsonIgnoreType
     public static class ProjectQuery extends GitlabQuery<GitlabMergeRequest> {
         private final GitlabProject project;
 
@@ -662,7 +655,7 @@ public class GitlabMergeRequest extends GitlabComponent {
          * @param createdAfter get all merge requests after the date
          * @return the project query with the given created after
          */
-        public ProjectQuery withCreatedAfter(LocalDateTime createdAfter) {
+        public ProjectQuery withCreatedAfter(ZonedDateTime createdAfter) {
             appendDateTime("created_after", createdAfter);
             return this;
         }
@@ -673,7 +666,7 @@ public class GitlabMergeRequest extends GitlabComponent {
          * @param createdBefore get all merge requests before the date
          * @return the project query with the given created before
          */
-        public ProjectQuery withCreatedBefore(LocalDateTime createdBefore) {
+        public ProjectQuery withCreatedBefore(ZonedDateTime createdBefore) {
             appendDateTime("created_before", createdBefore);
             return this;
         }
@@ -684,7 +677,7 @@ public class GitlabMergeRequest extends GitlabComponent {
          * @param updatedAfter get all merge requests updated after the date
          * @return the project query with the given updated after
          */
-        public ProjectQuery withUpdatedAfter(LocalDateTime updatedAfter) {
+        public ProjectQuery withUpdatedAfter(ZonedDateTime updatedAfter) {
             appendDateTime("updated_after", updatedAfter);
             return this;
         }
@@ -695,7 +688,7 @@ public class GitlabMergeRequest extends GitlabComponent {
          * @param updatedBefore get all merge requests updated before the date
          * @return the project query with the given updated before
          */
-        public ProjectQuery withUpdatedBefore(LocalDateTime updatedBefore) {
+        public ProjectQuery withUpdatedBefore(ZonedDateTime updatedBefore) {
             appendDateTime("updated_before", updatedBefore);
             return this;
         }
@@ -836,7 +829,7 @@ public class GitlabMergeRequest extends GitlabComponent {
          * @return The URL suffix to query {@link GitlabMergeRequest} in the given {@link GitlabProject}
          */
         @Override
-        public String getTailUrl() {
+        String getTailUrl() {
             return String.format("/projects/%d/merge_requests", project.getId());
         }
 
@@ -859,6 +852,7 @@ public class GitlabMergeRequest extends GitlabComponent {
      * <p>
      * GET /merge_requests
      */
+    @JsonIgnoreType
     public static class Query extends GitlabQuery<GitlabMergeRequest> {
 
         Query(HttpClient httpClient) {
@@ -976,7 +970,7 @@ public class GitlabMergeRequest extends GitlabComponent {
          * @param createdAfter get all merge requests after the date
          * @return the query with the given created after
          */
-        public Query withCreatedAfter(LocalDateTime createdAfter) {
+        public Query withCreatedAfter(ZonedDateTime createdAfter) {
             appendDateTime("created_after", createdAfter);
             return this;
         }
@@ -987,7 +981,7 @@ public class GitlabMergeRequest extends GitlabComponent {
          * @param createdBefore get all merge requests before the date
          * @return the query with the given created before
          */
-        public Query withCreatedBefore(LocalDateTime createdBefore) {
+        public Query withCreatedBefore(ZonedDateTime createdBefore) {
             appendDateTime("created_before", createdBefore);
             return this;
         }
@@ -998,7 +992,7 @@ public class GitlabMergeRequest extends GitlabComponent {
          * @param updatedAfter get all merge requests updated after the date
          * @return the query with the given updated after
          */
-        public Query withUpdatedAfter(LocalDateTime updatedAfter) {
+        public Query withUpdatedAfter(ZonedDateTime updatedAfter) {
             appendDateTime("updated_after", updatedAfter);
             return this;
         }
@@ -1009,7 +1003,7 @@ public class GitlabMergeRequest extends GitlabComponent {
          * @param updatedBefore get all merge requests updated before the date
          * @return the query with the given updated before
          */
-        public Query withUpdatedBefore(LocalDateTime updatedBefore) {
+        public Query withUpdatedBefore(ZonedDateTime updatedBefore) {
             appendDateTime("updated_before", updatedBefore);
             return this;
         }
@@ -1181,7 +1175,7 @@ public class GitlabMergeRequest extends GitlabComponent {
          * @param deployedBefore a date to add to the query
          * @return the query with the given date
          */
-        public Query withDeployedBefore(LocalDateTime deployedBefore) {
+        public Query withDeployedBefore(ZonedDateTime deployedBefore) {
             appendDateTime("deployed_before", deployedBefore);
             return this;
         }
@@ -1192,7 +1186,7 @@ public class GitlabMergeRequest extends GitlabComponent {
          * @param deployedAfter a date to add to the query
          * @return the query with the given date
          */
-        public Query withDeployedAfter(LocalDateTime deployedAfter) {
+        public Query withDeployedAfter(ZonedDateTime deployedAfter) {
             appendDateTime("deployed_after", deployedAfter);
             return this;
         }
@@ -1207,7 +1201,7 @@ public class GitlabMergeRequest extends GitlabComponent {
          * @return The URL suffix to query {@link GitlabMergeRequest}
          */
         @Override
-        public String getTailUrl() {
+        String getTailUrl() {
             return "/merge_requests";
         }
 

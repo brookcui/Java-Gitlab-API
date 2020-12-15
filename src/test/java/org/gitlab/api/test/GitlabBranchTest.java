@@ -37,10 +37,10 @@ class GitlabBranchTest {
         assertEquals(project.getName(), branch.getProject().getName());
         assertEquals("master", branch.getRef());
         assertEquals(project.getName(), branch.getProject().getName());
-        assertEquals(false, branch.isDefault());
-        assertEquals(false, branch.isMerged());
-        assertEquals(false, branch.isProtected());
-        assertEquals(true, branch.canPush());
+        assertFalse(branch.isDefault());
+        assertFalse(branch.isMerged());
+        assertFalse(branch.isProtected());
+        assertTrue(branch.canPush());
         GitlabBranch deletedBranch = branch.delete();
         assertNotNull(deletedBranch);
         assertEquals(branch, deletedBranch);
@@ -66,9 +66,7 @@ class GitlabBranchTest {
         GitlabBranch deletedBranch = branch.delete();
         assertNotNull(deletedBranch);
         assertEquals(branch, deletedBranch);
-        assertThrows(GitlabException.class, () -> {
-            branch.delete();
-        });
+        assertThrows(GitlabException.class, branch::delete);
     }
 
     @Test

@@ -2,6 +2,7 @@ package org.gitlab.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.IOException;
@@ -21,6 +22,8 @@ import java.util.Objects;
 public class GitlabBranch extends GitlabComponent {
     @JsonProperty("name")
     private final String name;
+    @JsonIgnore
+    private final String ref;
     @JsonProperty("merged")
     private boolean merged;
     @JsonProperty("protected")
@@ -35,9 +38,6 @@ public class GitlabBranch extends GitlabComponent {
     private GitlabCommit commit; // corresponds to branch name or commit SHA to create branch from
     @JsonIgnore
     private GitlabProject project;
-
-    @JsonIgnore
-    private final String ref;
 
     /**
      * Constructor of gitlab branch
@@ -168,12 +168,6 @@ public class GitlabBranch extends GitlabComponent {
     public String toString() {
         return "GitlabBranch{" +
                 "name=" + name +
-                ", merged=" + merged +
-                ", isProtected=" + isProtected +
-                ", isDefault=" + isDefault +
-                ", canPush=" + canPush +
-                ", webUrl=" + webUrl +
-                ", commit=" + commit +
                 '}';
     }
 
@@ -208,6 +202,7 @@ public class GitlabBranch extends GitlabComponent {
     /**
      * Attach a project to this {@link GitlabBranch}
      * It will link the commit to the project as well
+     *
      * @param project the project to be attached
      * @return this {@link GitlabBranch}
      */
@@ -231,6 +226,7 @@ public class GitlabBranch extends GitlabComponent {
         return this;
     }
 
+
     /**
      * Class to query {@link GitlabBranch} in a given {@link GitlabProject}
      * <p>
@@ -238,6 +234,7 @@ public class GitlabBranch extends GitlabComponent {
      * <p>
      * GET /projects/:id/repository/branches
      */
+    @JsonIgnoreType
     public static class ProjectQuery extends GitlabQuery<GitlabBranch> {
         /**
          * The project to query {@link GitlabBranch} from
@@ -288,7 +285,7 @@ public class GitlabBranch extends GitlabComponent {
          * @return The URL suffix to query {@link GitlabBranch} in the given {@link GitlabProject}
          */
         @Override
-        public String getTailUrl() {
+        String getTailUrl() {
             return String.format("/projects/%d/repository/branches", project.getId());
         }
 

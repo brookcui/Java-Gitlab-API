@@ -2,14 +2,11 @@ package org.gitlab.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,17 +39,20 @@ public class GitlabCommit extends GitlabComponent {
     private String committerName;
     @JsonProperty("committer_email")
     private String committerEmail;
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     @JsonProperty("created_at")
-    private LocalDateTime createdAt;
+    @JsonDeserialize(using = DateUtil.OffsetDeserializer.class)
+    @JsonSerialize(using = DateUtil.OffsetSerializer.class)
+    private ZonedDateTime createdAt;
     @JsonProperty("message")
     private String message;
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     @JsonProperty("committed_date")
-    private LocalDateTime committedDate;
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonDeserialize(using = DateUtil.OffsetDeserializer.class)
+    @JsonSerialize(using = DateUtil.OffsetSerializer.class)
+    private ZonedDateTime committedDate;
     @JsonProperty("authored_date")
-    private LocalDateTime authoredDate;
+    @JsonDeserialize(using = DateUtil.OffsetDeserializer.class)
+    @JsonSerialize(using = DateUtil.OffsetSerializer.class)
+    private ZonedDateTime authoredDate;
     @JsonProperty("status")
     private String status;
     @JsonProperty("web_url")
@@ -79,18 +79,6 @@ public class GitlabCommit extends GitlabComponent {
         return "GitlabCommit{" +
                 "id=" + id +
                 ", parentIds=" + parentIds +
-                ", shortId=" + shortId +
-                ", title=" + title +
-                ", authorName=" + authorName +
-                ", authorEmail=" + authorEmail +
-                ", committerName=" + committerName +
-                ", committerEmail=" + committerEmail +
-                ", createdAt=" + createdAt +
-                ", message=" + message +
-                ", committedDate=" + committedDate +
-                ", authoredDate=" + authoredDate +
-                ", status=" + status +
-                ", webUrl=" + webUrl +
                 '}';
     }
 
@@ -190,7 +178,7 @@ public class GitlabCommit extends GitlabComponent {
      *
      * @return the date on when the commit is created
      */
-    public LocalDateTime getCreatedAt() {
+    public ZonedDateTime getCreatedAt() {
         return createdAt;
     }
 
@@ -208,7 +196,7 @@ public class GitlabCommit extends GitlabComponent {
      *
      * @return Get the date that the commit is committed
      */
-    public LocalDateTime getCommittedDate() {
+    public ZonedDateTime getCommittedDate() {
         return committedDate;
     }
 
@@ -217,7 +205,7 @@ public class GitlabCommit extends GitlabComponent {
      *
      * @return the date that a commit is authored
      */
-    public LocalDateTime getAuthoredDate() {
+    public ZonedDateTime getAuthoredDate() {
         return authoredDate;
     }
 
@@ -285,6 +273,7 @@ public class GitlabCommit extends GitlabComponent {
      * <p>
      * GET /projects/:id/repository/commits
      */
+    @JsonIgnoreType
     public static class ProjectQuery extends GitlabQuery<GitlabCommit> {
         private final GitlabProject project;
 
@@ -310,7 +299,7 @@ public class GitlabCommit extends GitlabComponent {
          * @param since date in in ISO 8601 format YYYY-MM-DDTHH:MM:SSZ
          * @return {@link ProjectQuery} with the since
          */
-        public ProjectQuery withSince(LocalDateTime since) {
+        public ProjectQuery withSince(ZonedDateTime since) {
             appendDateTime("since", since);
             return this;
         }
@@ -321,7 +310,7 @@ public class GitlabCommit extends GitlabComponent {
          * @param until date in in ISO 8601 format YYYY-MM-DDTHH:MM:SSZ
          * @return {@link ProjectQuery} with the before
          */
-        public ProjectQuery withUntil(LocalDateTime until) {
+        public ProjectQuery withUntil(ZonedDateTime until) {
             appendDateTime("until", until);
             return this;
         }
@@ -396,7 +385,7 @@ public class GitlabCommit extends GitlabComponent {
          * @return The URL suffix to query {@link GitlabCommit} in the given {@link GitlabProject}
          */
         @Override
-        public String getTailUrl() {
+        String getTailUrl() {
             return String.format("/projects/%d/repository/commits", project.getId());
         }
 
@@ -410,28 +399,4 @@ public class GitlabCommit extends GitlabComponent {
             component.withProject(project);
         }
     }
-
-
-    /**
-     * Helper class to deserialize a date time
-     */
-    private static class LocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
-        /**
-         * Deserialize a date time in a json parser
-         *
-         * @param jsonParser             json parser
-         * @param deserializationContext context to deserialize the datetime
-         * @return a deserialized datetime
-         */
-        @Override
-        public LocalDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) {
-            try {
-                return ZonedDateTime.parse(jsonParser.getText()).toLocalDateTime();
-            } catch (IOException e) {
-                // should never happen unless Gitlab changes their date format in their API
-                throw new GitlabException(e);
-            }
-        }
-    }
-
 }
