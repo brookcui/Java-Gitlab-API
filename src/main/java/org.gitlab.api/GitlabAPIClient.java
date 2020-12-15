@@ -5,49 +5,58 @@ import java.net.Proxy;
 import java.net.URLEncoder;
 
 /**
- * This class is the top level of all {@link GitlabComponent} can be constructed using builder pattern.
+ * This class implements Gitlab API client that keeps endpoint, HTTP request
+ * configurations, and authentication information (in the form of tokens).
+ *
+ * To get a instance of API client, use {@code GitlabAPIClient.Builder} to
+ * construct needed fields and note that the endpoint must be specified.
+ *
+ * The can get project by projectId or namespace, and user used by userId or
+ * current user who is using the API. This can also get query builder for
+ * issues, users, projects, merge-requests, and projected owned by current
+ * user.
  */
 public final class GitlabAPIClient {
     /**
-     * The Gitlab endpoint to be used
+     * The endpoint to communicate with Gitlab API.
      */
     private final String endpoint;
     /**
-     * The Gitlab authenticated method to be used
+     * The authentication method to call Gitlab API.
      */
     private final AuthMethod authMethod;
     /**
-     * The Gitlab token to be used
+     * The token to authenticate requests with Gitlab API.
      */
     private final String token;
 
     /**
-     * The api namespace to be used
+     * The API namespace.
      */
     private final String apiNamespace;
     /**
-     * The read timeout to be used in milliseconds
+     * The read timeout of HTTP requests in milliseconds.
      */
     private final int readTimeout;
     /**
-     * The write timeout to be used in milliseconds
+     * The write timeout of HTTP requests in milliseconds.
      */
     private final int writeTimeout;
     /**
-     * The connection timeout to be used in milliseconds
+     * The connection timeout of HTTP requests in milliseconds.
      */
     private final int connectionTimeout;
     /**
-     * The proxy to be used
+     * The proxy for API calls.
      */
     private final Proxy proxy;
     /**
-     * The http client to be used
+     * The HTTP client helper.
      */
     private final HttpClient httpClient;
 
     /**
-     * Construct the {@link GitlabAPIClient} based on the {@link Builder}
+     * Construct the {@link GitlabAPIClient} based on the {@link Builder}.
      *
      * @param builder the builder
      */
@@ -64,79 +73,81 @@ public final class GitlabAPIClient {
     }
 
     /**
-     * Get the current endpoint
+     * Returns API endpoint.
      *
-     * @return endpoint
+     * @return the endpoint
      */
     String getEndpoint() {
         return endpoint;
     }
 
     /**
-     * Get the current used {@link AuthMethod}
+     * Returns current {@link AuthMethod}.
      *
-     * @return the current used {@link AuthMethod}
+     * @return the {@link AuthMethod}
      */
     public AuthMethod getAuthMethod() {
         return authMethod;
     }
 
     /**
-     * Get the current used token
+     * Returns current token.
      *
-     * @return the current used token
+     * @return the token
      */
     String getToken() {
         return token;
     }
 
     /**
-     * Get the current used api namespace
+     * Returns current API namespace.
      *
-     * @return the current used api namespace
+     * @return the API namespace
      */
     String getApiNamespace() {
         return apiNamespace;
     }
 
     /**
-     * Get the current used {@link Proxy}
+     * Returns current {@link Proxy}.
      *
-     * @return the current used {@link Proxy}
+     * @return the {@link Proxy}
      */
     Proxy getProxy() {
         return proxy;
     }
 
     /**
-     * Get the current used read timeout in milliseconds
+     * Returns current read timeout in milliseconds.
      *
-     * @return the current used read timeout in milliseconds
+     * @return read timeout in milliseconds
      */
     int getReadTimeout() {
         return readTimeout;
     }
 
     /**
-     * Get the current used write timeout in milliseconds
+     * Returns current write timeout in milliseconds.
      *
-     * @return the current used write timeout in milliseconds
+     * @return write timeout in milliseconds
      */
     int getWriteTimeout() {
         return writeTimeout;
     }
 
     /**
-     * Get the current used write timeout in milliseconds
+     * Returns current connection timeout in milliseconds.
      *
-     * @return the current used write timeout in milliseconds
+     * @return connection timeout in milliseconds
      */
     int getConnectionTimeout() {
         return connectionTimeout;
     }
 
     /**
-     * Get a {@link GitlabIssue.Query} that can be used to query issues of the current authenticated user
+     * Returns a {@link GitlabIssue.Query} that can build query options and
+     * execute query for issues related to current authenticated user.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/issues.html#list-issues
      * <p>
@@ -149,7 +160,9 @@ public final class GitlabAPIClient {
     }
 
     /**
-     * Get a {@link GitlabUser.Query} that can be used to query users
+     * Returns a {@link GitlabUser.Query} that can build query options and
+     * execute query for users.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/users.html#list-users
      * <p>
@@ -162,7 +175,9 @@ public final class GitlabAPIClient {
     }
 
     /**
-     * Get a {@link GitlabProject.Query} that can be used to query projects of the current authenticated user
+     * Returns a {@link GitlabProject.Query} that can build query options and
+     * execute query for projects visible to current authenticated user.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#list-all-projects
      * <p>
@@ -175,7 +190,10 @@ public final class GitlabAPIClient {
     }
 
     /**
-     * Get a {@link GitlabMergeRequest.Query} that can be used to query merge requests of the current authenticated user
+     * Returns a {@link GitlabMergeRequest.Query} that can build query options
+     * and execute query for merge requests related to current authenticated
+     * user.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/merge_requests.html#list-merge-requests
      * <p>
@@ -188,8 +206,10 @@ public final class GitlabAPIClient {
     }
 
     /**
-     * Get a {@link GitlabProject.UserQuery} that can be used to query projects owned by the given user
-     * that are accessible by the current authenticated user
+     * Returns a {@link GitlabProject.UserQuery} that can build query options
+     * and execute query for projects owned by user specified by username and
+     * who are visible to current authenticated user.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#list-user-projects
      * <p>
@@ -203,30 +223,31 @@ public final class GitlabAPIClient {
     }
 
     /**
-     * Get the project based on the given projectId
+     * Returns the project specified by projectId if exists.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#get-single-project
      * <p>
      * GET /projects/:id
      *
-     * @param projectId the ID of the a project
-     * @return the {@link GitlabProject} of the given projectId
+     * @param projectId the project Id
+     * @return the {@link GitlabProject} of given projectId
      */
     public GitlabProject getProject(int projectId) {
-
         return httpClient.get("/projects/" + projectId, GitlabProject.class);
     }
 
     /**
-     * Get the project based on the given a namespace and the project path
+     * Returns the project specified by namespace and projectPath if exists.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#get-single-project
      * <p>
      * GET /projects/:namespace/:project_path
      *
-     * @param namespace   namespace of the project
-     * @param projectPath path of the project
-     * @return the {@link GitlabProject} of the given namespace and path
+     * @param namespace   the project namespace
+     * @param projectPath the project path
+     * @return the {@link GitlabProject} of given namespace and path
      */
     public GitlabProject getProject(String namespace, String projectPath) {
         try {
@@ -238,92 +259,96 @@ public final class GitlabAPIClient {
     }
 
     /**
-     * Create a new project instance with a given name
+     * Returns a newly created {@link GitlabProject} with given project name
+     * that can build parameters for the new project and call
+     * {@link GitlabProject#create()} to create this project explicitly.
      *
-     * @param name Name for the new project
-     * @return a new {@link GitlabProject} instance with the given name
+     * @param projectName name of new project
+     * @return a {@link GitlabProject} instance
      */
-    public GitlabProject newProject(String name) {
-        return new GitlabProject(name).withHttpClient(httpClient);
+    public GitlabProject newProject(String projectName) {
+        return new GitlabProject(projectName).withHttpClient(httpClient);
     }
 
     /**
-     * Get the user based on the given userId
+     * Returns the user of given userId if exists.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/users.html
      * <p>
      * GET /users
      *
-     * @param userId id of the user
-     * @return Get {@link GitlabUser} with the given userId
+     * @param userId the user id
+     * @return {@link GitlabUser} with the given userId
      */
     public GitlabUser getUser(int userId) {
         return httpClient.get("/users/" + userId, GitlabUser.class);
     }
 
     /**
-     * Get the current authenticated user
+     * Returns the current authenticated user.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/users.html#list-current-user-for-normal-users
      * <p>
      * GET /user
      *
-     * @return the current authenticated {@link GitlabUser}
+     * @return {@link GitlabUser} of current authenticated user
      */
     public GitlabUser getCurrentUser() {
         return httpClient.get("/user", GitlabUser.class);
     }
 
     /**
-     * The builder is used to build a {@link GitlabAPIClient}
+     * This {@code Builder} is used to build {@link GitlabAPIClient} instance.
      */
     public static final class Builder {
         /**
-         * The default timeout in milliseconds
+         * The default timeout in milliseconds.
          */
         private static final int DEFAULT_TIMEOUT = 5000;
         /**
-         * Thee default API namespace
+         * Thee default API namespace.
          */
         private static final String DEFAULT_API_NAMESPACE = "/api/v4";
 
         /**
-         * The Gitlab endpoint to be used
+         * The Gitlab API endpoint.
          */
         private final String endpoint;
         /**
-         * The Gitlab authenticated method to be used
+         * The Gitlab authentication method.
          */
         private AuthMethod authMethod;
         /**
-         * The Gitlab token to be used
+         * The Gitlab token.
          */
         private String token;
 
         /**
-         * The api namespace to be used
+         * The API namespace.
          */
         private String apiNamespace = DEFAULT_API_NAMESPACE;
         /**
-         * The read timeout to be used in milliseconds
+         * The read timeout in milliseconds.
          */
         private int readTimeout = DEFAULT_TIMEOUT;
         /**
-         * The write timeout to be used in milliseconds
+         * The write timeout in milliseconds.
          */
         private int writeTimeout = DEFAULT_TIMEOUT;
         /**
          * /**
-         * The connection timeout to be used in milliseconds
+         * The connection timeout in milliseconds.
          */
         private int connectionTimeout = DEFAULT_TIMEOUT;
         /**
-         * The proxy to be used
+         * The proxy.
          */
         private Proxy proxy;
 
         /**
-         * Builder constructor
+         * Constructs the {@code GitlabAPIClient.Builder} instance.
          *
          * @param endpoint gitlab api endpoint
          */
@@ -332,10 +357,10 @@ public final class GitlabAPIClient {
         }
 
         /**
-         * Set Oauth2 token to the builder
+         * Sets Oauth2 token to the builder
          *
          * @param token Oauth2 token
-         * @return Builder with Oauth2 token
+         * @return {@code Builder} with Oauth2 token
          */
         public Builder withOAuth2Token(String token) {
             this.authMethod = AuthMethod.OAUTH2;
@@ -344,10 +369,10 @@ public final class GitlabAPIClient {
         }
 
         /**
-         * Set access token to the builder
+         * Sets access token to the builder
          *
          * @param token access token
-         * @return Builder with Oauth2 token
+         * @return {@code Builder} with Oauth2 token
          */
         public Builder withAccessToken(String token) {
             this.authMethod = AuthMethod.ACCESS_TOKEN;
@@ -356,10 +381,10 @@ public final class GitlabAPIClient {
         }
 
         /**
-         * Set readTimeout to the builder
+         * Sets readTimeout to the builder
          *
          * @param readTimeout read timeout in milliseconds
-         * @return Builder with readTimeout
+         * @return {@code Builder} with readTimeout
          */
         public Builder withReadTimeout(int readTimeout) {
             this.readTimeout = readTimeout;
@@ -367,10 +392,10 @@ public final class GitlabAPIClient {
         }
 
         /**
-         * Set writeTimeout to the builder
+         * Sets writeTimeout to the builder
          *
          * @param writeTimeout write timeout in milliseconds
-         * @return Builder with writeTimeout
+         * @return {@code Builder} with writeTimeout
          */
         public Builder withWriteTimeout(int writeTimeout) {
             this.writeTimeout = writeTimeout;
@@ -378,10 +403,10 @@ public final class GitlabAPIClient {
         }
 
         /**
-         * Set connectionTimeout to the builder
+         * Sets connectionTimeout to the builder
          *
          * @param connectionTimeout connection timeout in milliseconds
-         * @return Builder with connectionTimeout
+         * @return {@code Builder} with connectionTimeout
          */
         public Builder withConnectionTimeout(int connectionTimeout) {
             this.connectionTimeout = connectionTimeout;
@@ -389,10 +414,10 @@ public final class GitlabAPIClient {
         }
 
         /**
-         * Set proxy to the builder
+         * Sets proxy to the builder.
          *
          * @param proxy proxy
-         * @return Builder with proxy
+         * @return {@code Builder} with proxy
          */
         public Builder withProxy(Proxy proxy) {
             this.proxy = proxy;
@@ -400,10 +425,10 @@ public final class GitlabAPIClient {
         }
 
         /**
-         * Set apiNamespace to the builder
+         * Sets API namespace to the builder.
          *
          * @param apiNamespace api namespace
-         * @return Builder with apiNamespace
+         * @return {@code Builder} with apiNamespace
          */
         public Builder withApiNamespace(String apiNamespace) {
             this.apiNamespace = apiNamespace;
@@ -411,14 +436,13 @@ public final class GitlabAPIClient {
         }
 
         /**
-         * Build the {@link GitlabAPIClient} with current builder
+         * Returns the {@link GitlabAPIClient} instance built from this builder
+         * (with fields specified in this builder).
          *
-         * @return a {@link GitlabAPIClient} obtained from the builder
+         * @return a {@link GitlabAPIClient} instance
          */
         public GitlabAPIClient build() {
             return new GitlabAPIClient(this);
         }
     }
-
-
 }

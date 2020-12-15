@@ -1,7 +1,9 @@
 package org.gitlab.api;
 
 /**
- * This is the class to represent pagination in the gitlab api.
+ * This is the class that represents a pagination with page number and page
+ * size.
+ *
  * Gitlab Web API: https://docs.gitlab.com/ee/api/#pagination
  */
 public final class Pagination {
@@ -14,7 +16,7 @@ public final class Pagination {
      */
     private static final int MAX_PAGE_SIZE = 100;
     /**
-     * The default pagination is retrieve the first page with {@link #DEFAULT_PAGE_SIZE}
+     * The default pagination is retrieve the first page with {@link #DEFAULT_PAGE_SIZE}.
      */
     private static final Pagination DEFAULT_PAGINATION = new Pagination(1, DEFAULT_PAGE_SIZE);
     /**
@@ -22,12 +24,12 @@ public final class Pagination {
      */
     private final int pageNumber;
     /**
-     * The results per pages to be retrieved
+     * The results per pages to be retrieved.
      */
     private final int pageSize;
 
     /**
-     * Initialize the Pagination with page number and size
+     * Constructs the {@code Pagination} with page number and size.
      *
      * @param pageNumber the page number to be retrieved
      * @param pageSize   the results per pages to be retrieved
@@ -51,15 +53,15 @@ public final class Pagination {
      *
      * @param pageNumber page number (an integer starting from 1)
      * @param pageSize   items per page (can be any integer between 1 and 100, both inclusive)
-     * @return A {@code Pagination} object
+     * @return a {@code Pagination} object
      * @throws IllegalArgumentException if specified page number or page size out of valid range
      */
     public static Pagination of(int pageNumber, int pageSize) {
         if (pageSize < 1 || pageSize > MAX_PAGE_SIZE) {
-            throw new IllegalArgumentException("cannot have page size less than 1 or greater than " + MAX_PAGE_SIZE);
+            throw new IllegalArgumentException("cannot have non-positive page size or greater than " + MAX_PAGE_SIZE);
         }
         if (pageNumber < 0) {
-            throw new IllegalArgumentException("cannot have a negative page number");
+            throw new IllegalArgumentException("cannot have negative page number");
         }
         return new Pagination(pageNumber, pageSize);
     }
@@ -67,7 +69,7 @@ public final class Pagination {
     /**
      * Returns page number of this {@code Pagination}.
      *
-     * @return The page number
+     * @return the page number
      */
     public int getPageNumber() {
         return pageNumber;
@@ -76,7 +78,7 @@ public final class Pagination {
     /**
      * Returns page size of this {@code Pagination}.
      *
-     * @return The page size
+     * @return the page size
      */
     public int getPageSize() {
         return pageSize;

@@ -7,8 +7,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 /**
- * Top level interface that all of the gitlab components must extend.
- * By default read only, meaning it cannot be created, modified or deleted.
+ * This is an abstract class that Gitlab component classes must extend from.
+ * This supports binding component instance with HTTP client helper and
+ * converts component attributes into JSON format. This is made abstract
+ * because it should not be instantiated.
  */
 abstract class GitlabComponent {
     private static final ObjectMapper MAPPER = new ObjectMapper()
@@ -18,9 +20,9 @@ abstract class GitlabComponent {
     protected HttpClient httpClient;
 
     /**
-     * Associate a Gitlab http client to this component
+     * Binds given HTTP client helper to this component.
      *
-     * @param httpClient the HTTP client to be used
+     * @param httpClient the HTTP client to send HTTP requests
      * @return this component
      */
     GitlabComponent withHttpClient(HttpClient httpClient) {
@@ -29,11 +31,13 @@ abstract class GitlabComponent {
     }
 
     /**
-     * Return the the JSON representation of this {@link GitlabComponent}
+     * Returns the serialized attributes of this {@code GitlabComponent} in
+     * JSON format string.
      *
-     * @return the JSON representation of this {@link GitlabComponent}
+     * @return the JSON string
+     * @throws {@code JsonProcessingException} if failed to parse attributes into JSON
      */
-    public String toJson() {
+    public String toJsonString() {
         try {
             return MAPPER.writeValueAsString(this);
         } catch (JsonProcessingException e) {

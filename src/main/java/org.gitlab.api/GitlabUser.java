@@ -11,17 +11,18 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This class is used to represent the gitlab user.
- * <p>
- * This class also contains a {@link ProjectQuery} Class used to build query and get users in a project, as well as a
- * {@link Query} class to build query to get users globally.
- * <p>
- * This class is read only.
+ * This class serves as instance of Gitlab component User.
+ *
+ * This doesn't support create, update, and delete operations.
+ *
+ * This supports query for users globally or users within a project. See
+ * {@link Query} and {@link ProjectQuery}.
+ *
  * <p>
  * Gitlab Web API: https://docs.gitlab.com/ee/api/users.html
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabUser extends GitlabComponent {
+public final class GitlabUser extends GitlabComponent {
     @JsonProperty(value = "id")
     private final int id;
     @JsonProperty(value = "username")
@@ -58,7 +59,7 @@ public class GitlabUser extends GitlabComponent {
     private String jobTitle;
 
     /**
-     * Constructor a gitlab user instance
+     * Constructor the {@link GitlabUser} instance.
      *
      * @param id id of the user
      */
@@ -67,7 +68,53 @@ public class GitlabUser extends GitlabComponent {
     }
 
     /**
-     * Get a {@link GitlabProject.UserQuery} that can be used to query projects accessible by the current authenticated user
+     * Returns a string representation of this {@link GitlabUser} in the
+     * format of Gitlab component type and user id and username.
+     *
+     * @return a string representation of this {@link GitlabUser}
+     */
+    @Override
+    public String toString() {
+        return "GitlabUser{" +
+                       "id=" + id +
+                       ", username=" + username +
+                       ", name=" + name +
+                       '}';
+    }
+
+    /**
+     * Returns the hash code value for this {@link GitlabUser} identified
+     * by user id.
+     *
+     * @return a hash code value for this object
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    /**
+     * Compares the specified {@code Object} with this {@link GitlabUser}
+     * for equality. Note that two {@link GitlabUser}s are equal if and only
+     * if they have same user id.
+     *
+     * @param o object to be compared for equality with this {@link GitlabUser}
+     * @return true if the specified Object is equal to this {@link GitlabUser}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof GitlabUser)) {
+            return false;
+        }
+        GitlabUser that = (GitlabUser) o;
+        return id == that.id;
+    }
+
+    /**
+     * Returns a {@link GitlabProject.UserQuery} that can be used to query
+     * projects accessible by current user.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#list-user-projects
      * <p>
@@ -80,190 +127,151 @@ public class GitlabUser extends GitlabComponent {
     }
 
     /**
-     * Get the id of the current user
+     * Returns the id of this user.
      *
-     * @return id of the current user
+     * @return id of this user
      */
     public int getId() {
         return id;
     }
 
     /**
-     * Get the username of the current user
+     * Returns the username of this user.
      *
-     * @return username of the current user
+     * @return username of this user
      */
     public String getUsername() {
         return username;
     }
 
     /**
-     * Get the name of the current user
+     * Returns the name of this user.
      *
-     * @return name of the current user
+     * @return name of this user
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Get the state of the current user
+     * Returns the state of this user.
      *
-     * @return state of the current user
+     * @return state of this user
      */
     public String getState() {
         return state;
     }
 
     /**
-     * Get the avatar url of the current user
+     * Returns the avatar url of this user.
      *
-     * @return avatar url of the current user
+     * @return avatar url of this user
      */
     public String getAvatarUrl() {
         return avatarUrl;
     }
 
     /**
-     * Get the web url of the current user
+     * Returns the web url of this user.
      *
-     * @return web url of the current user
+     * @return web url of this user
      */
     public String getWebUrl() {
         return webUrl;
     }
 
     /**
-     * Get created date of the current user
+     * Get created date of this user.
      *
-     * @return created date of the current user
+     * @return created date of this user
      */
     public ZonedDateTime getCreatedAt() {
         return createdAt;
     }
 
     /**
-     * Get the bio of the current user
+     * Returns the bio of this user.
      *
-     * @return the bio of the current user
+     * @return the bio of this user
      */
     public String getBio() {
         return bio;
     }
 
     /**
-     * Get the bio in html of the current user
+     * Returns the bio in html of this user.
      *
-     * @return bio in html of the current user
+     * @return bio in html of this user
      */
     public String getBioHtml() {
         return bioHtml;
     }
 
     /**
-     * Get the public email of the current user
+     * Returns the public email of this user.
      *
-     * @return public email of the current user
+     * @return public email of this user
      */
     public String getPublicEmail() {
         return publicEmail;
     }
 
     /**
-     * Get the skype id of the current user
+     * Returns the skype id of this user.
      *
-     * @return skype id of the current user
+     * @return skype id of this user
      */
     public String getSkype() {
         return skype;
     }
 
     /**
-     * Get the linkedin account of the current user
+     * Returns the linkedin account of this user.
      *
-     * @return linkedin account of the current user
+     * @return linkedin account of this user
      */
     public String getLinkedin() {
         return linkedin;
     }
 
     /**
-     * Get the twitter account of the current user
+     * Returns the twitter account of this user.
      *
-     * @return twitter account of the current user
+     * @return twitter account of this user
      */
     public String getTwitter() {
         return twitter;
     }
 
     /**
-     * Get the website url of the current user
+     * Returns the website url of this user.
      *
-     * @return the website url of the current user
+     * @return the website url of this user
      */
     public String getWebsiteUrl() {
         return websiteUrl;
     }
 
     /**
-     * Get the organization of the current user
+     * Returns the organization of this user.
      *
-     * @return organization of the current user
+     * @return organization of this user
      */
     public String getOrganization() {
         return organization;
     }
 
     /**
-     * Get the job title of the current user
+     * Returns the job title of this user.
      *
-     * @return job title of the current user
+     * @return job title of this user
      */
     public String getJobTitle() {
         return jobTitle;
     }
 
     /**
-     * The string representation of this {@link GitlabUser}
-     *
-     * @return the string representation of this {@link GitlabUser}
-     */
-    @Override
-    public String toString() {
-        return "GitlabUser{" +
-                "id=" + id +
-                ", username=" + username +
-                ", name=" + name +
-                '}';
-    }
-
-    /**
-     * Two {@link GitlabUser}s are equal if and only if they have the same id
-     *
-     * @param o the reference object with which to compare.
-     * @return if and only if they have the same id
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        GitlabUser that = (GitlabUser) o;
-        return id == that.id;
-    }
-
-    /**
-     * Two {@link GitlabUser}s will have the same hashcode if they the same id
-     *
-     * @return a hash code value for this object.
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-
-
-    /**
-     * Set a httpClient to the current {@link GitlabAPIClient}
+     * Sets a httpClient to the current {@link GitlabAPIClient}.
      *
      * @param httpClient the {@link HttpClient} to be used
      * @return {@link GitlabUser} with the httpClient
@@ -274,8 +282,11 @@ public class GitlabUser extends GitlabComponent {
         return this;
     }
 
-    /**
-     * Class to query {@link GitlabUser}
+     /**
+     * This extends {@link GitlabQuery} and supports query global users.
+     *
+     * Build this query with setters and call {@code query()} to execute query.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/users.html#list-users
      * <p>
@@ -283,16 +294,18 @@ public class GitlabUser extends GitlabComponent {
      */
     @JsonIgnoreType
     public static class Query extends GitlabQuery<GitlabUser> {
+
         Query(HttpClient httpClient) {
             super(httpClient, GitlabUser[].class);
         }
 
         /**
-         * Set pagination on top of the query
-         *
-         * @param pagination pagination object that defines page number and size
-         * @return this {@link Query} with the given pagination object
-         */
+        * Returns a query that specifies page number and size to return based
+        * on given pagination.
+        *
+        * @param pagination pagination object that defines page number and size
+        * @return this {@link GitlabBranch.ProjectQuery} with given pagination
+        */
         @Override
         public Query withPagination(Pagination pagination) {
             appendPagination(pagination);
@@ -300,7 +313,7 @@ public class GitlabUser extends GitlabComponent {
         }
 
         /**
-         * Set a username to the query and limit the user by username
+         * Returns a query that matches given username.
          *
          * @param username username to query
          * @return this {@link Query} with the username
@@ -311,7 +324,7 @@ public class GitlabUser extends GitlabComponent {
         }
 
         /**
-         * Set whether to query active user
+         * Returns a query that returns users who are active if active is true.
          *
          * @param active whether user is active
          * @return this {@link Query} with whether user is active
@@ -322,7 +335,8 @@ public class GitlabUser extends GitlabComponent {
         }
 
         /**
-         * Set whether to query blocked user
+         * Returns a query that returns users who are blocked if blocked is
+         * true.
          *
          * @param blocked whether user is blocked
          * @return this {@link Query} with whether user is blocked
@@ -333,7 +347,8 @@ public class GitlabUser extends GitlabComponent {
         }
 
         /**
-         * Set whether to exclude internal which excludes alert bot and support bot
+         * Returns a query that excludes internal which excludes alert bot and
+         * support bot if excludeInternal is true.
          *
          * @param excludeInternal whether to excludes alert bot and support bot
          * @return this {@link Query} with whether user is blocked
@@ -344,7 +359,7 @@ public class GitlabUser extends GitlabComponent {
         }
 
         /**
-         * Get the URL suffix for the HTTP request
+         * Returns the URL suffix for the HTTP request.
          *
          * @return The URL suffix to query {@link GitlabUser}
          */
@@ -354,13 +369,15 @@ public class GitlabUser extends GitlabComponent {
         }
 
         @Override
-        void bind(GitlabUser component) {
-
-        }
+        void bind(GitlabUser component) {}
     }
 
     /**
-     * Class to query {@link GitlabUser} with httpClienturation and the {@link GitlabProject}
+     * This extends {@link GitlabQuery} and supports query users within a
+     * {@link GitlabProject}.
+     *
+     * Build this query with setters and call {@code query()} to execute query.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#get-project-users
      * <p>
@@ -376,10 +393,11 @@ public class GitlabUser extends GitlabComponent {
         }
 
         /**
-         * Set pagination on top of the query
+         * Returns a query that specifies page number and size to return based
+         * on given pagination.
          *
          * @param pagination pagination object that defines page number and size
-         * @return this {@link ProjectQuery} with the given pagination object
+         * @return this {@link GitlabBranch.ProjectQuery} with given pagination
          */
         @Override
         public ProjectQuery withPagination(Pagination pagination) {
@@ -388,10 +406,10 @@ public class GitlabUser extends GitlabComponent {
         }
 
         /**
-         * Set a search parameter to the query to search for a specific user
+         * Returns a query that searches users against keyword.
          *
-         * @param search specific user
-         * @return this {@link ProjectQuery} with the user specified
+         * @param search keyword to be searched
+         * @return this {@link GitlabIssue.ProjectQuery} with search
          */
         public ProjectQuery withSearch(String search) {
             appendString("search", search);
@@ -399,7 +417,7 @@ public class GitlabUser extends GitlabComponent {
         }
 
         /**
-         * Set a list of user ids to filter out
+         * Returns a query that filters out given user ids.
          *
          * @param skipUsers users to be skipped
          * @return this {@link ProjectQuery} with the list of users to be skipped
@@ -410,7 +428,8 @@ public class GitlabUser extends GitlabComponent {
         }
 
         /**
-         * Get the URL suffix for the HTTP request
+         * Returns the URL suffix for the HTTP request.
+         *
          * <p>
          * Gitlab Web API: https://docs.gitlab.com/ee/api/projects.html#get-project-users
          * <p>
@@ -424,8 +443,6 @@ public class GitlabUser extends GitlabComponent {
         }
 
         @Override
-        void bind(GitlabUser component) {
-
-        }
+        void bind(GitlabUser component) {}
     }
 }

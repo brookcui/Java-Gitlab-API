@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This class is used to construct a HTTP request body in a JSON format
+ * This class is used to construct a HTTP request body in JSON format.
  */
 class Body {
     /**

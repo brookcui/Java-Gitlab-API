@@ -1,6 +1,5 @@
 package org.gitlab.api;
 
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -11,27 +10,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 /**
- * An abstract class to query list of {@link GitlabComponent} based on some query conditions (query parameters)
+ * An abstract class to query subclasses of {@link GitlabComponent}s based on
+ * query conditions and parameters specified by users.
  *
  * @param <T> the expected {@link GitlabComponent} as the query result
  */
 abstract class GitlabQuery<T extends GitlabComponent> {
     /**
-     * The date formatter specifically for the Gitlab API
+     * The date formatter specifically for the Gitlab API.
      */
     private static final DateTimeFormatter DATE_FORMATTER = DateUtil.DATE_FORMATTER;
     /**
-     * The time formatter specifically for the Gitlab API
+     * The time formatter specifically for the Gitlab API.
      */
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateUtil.DATE_TIME_ZONED_FORMATTER;
     /**
-     * The type representing a array of the given {@link GitlabComponent}
+     * The type representing a array of the given {@link GitlabComponent}.
      */
 
     private final HttpClient httpClient;
     private final Class<T[]> type;
+
     /**
      * The type of params is:
      * Tuple<name, Pair<value, URLEncoder.encode(value, "UTF-8")>>

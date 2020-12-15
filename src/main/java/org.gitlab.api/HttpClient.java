@@ -57,8 +57,8 @@ class HttpClient {
                 .build();
         apiPrefix = gitlabAPIClient.getEndpoint() + gitlabAPIClient.getApiNamespace();
         if (gitlabAPIClient.getAuthMethod() != null) {
-            authHeaderName = gitlabAPIClient.getAuthMethod().headerName();
-            authHeaderValue = String.format(gitlabAPIClient.getAuthMethod().headerFormat(), gitlabAPIClient.getToken());
+            authHeaderName = gitlabAPIClient.getAuthMethod().getHeaderName();
+            authHeaderValue = String.format(gitlabAPIClient.getAuthMethod().getHeaderFormat(), gitlabAPIClient.getToken());
         } else {
             authHeaderName = null;
             authHeaderValue = null;
@@ -243,8 +243,6 @@ class HttpClient {
                 builder.addHeader(authHeaderName, authHeaderValue);
             }
             request = builder.build();
-            System.out.println("URL:" + request.url());
-            System.out.println("Body:" + request.body());
         } catch (JsonProcessingException e) {
             // should never happen
             throw new GitlabException("Cannot serialize", e);

@@ -13,16 +13,17 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This class is used to represent the gitlab commit.
- * <p>
- * This class also contains a {@link ProjectQuery} Class used to build query and get commits within a project.
- * <p>
- * This class is immutable and cannot be modified.
- * <p>
+ * This class serves as instance of Gitlab component Commit.
+ *
+ * This doesn't support create, update, and delete operations.
+ *
+ * This supports query for commits within {@link GitlabProject}. See
+ * {@link ProjectQuery}.
+ *
  * Gitlab Web API: https://docs.gitlab.com/ee/api/commits.html
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class GitlabCommit extends GitlabComponent {
+public final class GitlabCommit extends GitlabComponent {
     @JsonProperty("id")
     private final String id;
     @JsonProperty("parent_ids")
@@ -61,7 +62,7 @@ public class GitlabCommit extends GitlabComponent {
     private GitlabProject project;
 
     /**
-     * Constructor of the gitlab commit
+     * Constructs the {@link GitlabCommit} instance with SHA.
      *
      * @param id sha of the commit
      */
@@ -70,9 +71,10 @@ public class GitlabCommit extends GitlabComponent {
     }
 
     /**
-     * The string representation of this {@link GitlabCommit}
+     * Returns a string representation of this {@link GitlabCommit} in the
+     * format of Gitlab component type and id and also parent Id.
      *
-     * @return the string representation of this {@link GitlabCommit}
+     * @return a string representation of this {@link GitlabCommit}
      */
     @Override
     public String toString() {
@@ -83,9 +85,10 @@ public class GitlabCommit extends GitlabComponent {
     }
 
     /**
-     * Two {@link GitlabCommit}s will have the same hashcode if they belong to the same project and have the same id
+     * Returns the hash code value for this {@link GitlabCommit} identified by
+     * its belonged project and Id.
      *
-     * @return a hash code value for this object.
+     * @return a hash code value for this object
      */
     @Override
     public int hashCode() {
@@ -93,10 +96,12 @@ public class GitlabCommit extends GitlabComponent {
     }
 
     /**
-     * Two {@link GitlabProject}s are equal if and only if they belong to the same project and have the same id
+     * Compares the specified {@code Object} with this {@link GitlabCommit}
+     * for equality. Note that two {@link GitlabCommit}s are equal if and only
+     * if they belong to the same project and have the same Id.
      *
-     * @param o the reference object with which to compare.
-     * @return if the two commits belong to the same project and have the same commits
+     * @param o object to be compared for equality with this {@link GitlabCommit}
+     * @return true if the specified Object is equal to this {@link GitlabCommit}
      */
     @Override
     public boolean equals(Object o) {
@@ -111,52 +116,52 @@ public class GitlabCommit extends GitlabComponent {
     }
 
     /**
-     * Get the full commit hash of the current commit
+     * Returns the full commit hash of this commit.
      *
-     * @return the the full commit hash of the current commit
+     * @return the commit hash of this commit
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Get the current title of the commit
+     * Returns title of this commit.
      *
-     * @return the title of the commit
+     * @return the title string of this commit.
      */
     public String getTitle() {
         return title;
     }
 
     /**
-     * The the short version of the commit hash
+     * Returns the short version of the commit hash.
      *
-     * @return short version of the commit hash
+     * @return the short version of the commit hash of this commit
      */
     public String getShortId() {
         return shortId;
     }
 
     /**
-     * Get the name of the author
+     * Returns the name of the commit author.
      *
-     * @return author name
+     * @return author name string
      */
     public String getAuthorName() {
         return authorName;
     }
 
     /**
-     * Get the email of the author
+     * Returns the email of the commit author.
      *
-     * @return author email
+     * @return author email string
      */
     public String getAuthorEmail() {
         return authorEmail;
     }
 
     /**
-     * Get the name of the committer
+     * Returns the name of the committer.
      *
      * @return name of the committer
      */
@@ -165,7 +170,7 @@ public class GitlabCommit extends GitlabComponent {
     }
 
     /**
-     * Get the email of the committer
+     * Returns the email of the committer.
      *
      * @return email of the committer
      */
@@ -174,79 +179,81 @@ public class GitlabCommit extends GitlabComponent {
     }
 
     /**
-     * Get the date on when the commit is created
+     * Returns the date when the commit is created.
      *
-     * @return the date on when the commit is created
+     * @return the date when the commit is created
      */
     public ZonedDateTime getCreatedAt() {
         return createdAt;
     }
 
     /**
-     * Get the commit message of the commit
+     * Returns the commit message of the commit.
      *
-     * @return message of the commit
+     * @return commit message of this commit
      */
     public String getMessage() {
         return message;
     }
 
     /**
-     * Get the date that the commit is committed
+     * Returns the committed date of this commit.
      *
-     * @return Get the date that the commit is committed
+     * @return the committed date
      */
     public ZonedDateTime getCommittedDate() {
         return committedDate;
     }
 
     /**
-     * Get the date that a commit is authored
+     * Returns the authored date of this commit.
      *
-     * @return the date that a commit is authored
+     * @return the authored date
      */
     public ZonedDateTime getAuthoredDate() {
         return authoredDate;
     }
 
     /**
-     * Get the list sha of the parent commits
+     * Returns the list SHA of the parent commits.
      *
-     * @return list of commit sha
+     * @return a list of commit SHA
      */
     public List<String> getParentIds() {
         return parentIds;
     }
 
     /**
-     * Get the status of the commit
+     * Returns the status of the commit.
      *
-     * @return status of the commit
+     * @return the status string of the commit
      */
     public String getStatus() {
         return status;
     }
 
     /**
-     * Get the web url of the commit
+     * Returns the web url of the commit.
      *
-     * @return web url of the commit
+     * @return the web url of the commit
      */
     public String getWebUrl() {
         return webUrl;
     }
 
     /**
-     * Get the project that current commit belongs to
+     * Returns the project that current commit belongs to.
      *
-     * @return The {@link GitlabProject} that current commit belongs to
+     * @return the {@link GitlabProject} that this commit belongs to
      */
     public GitlabProject getProject() {
         return project;
     }
 
     /**
-     * @param httpClient httpClient used to make http requests
+     * Sets a httpClient to the this {@link GitlabCommit}.
+     *
+     * @param httpClient HTTP client helper to make http requests
      * @return {@link GitlabCommit} with the httpClient
      */
     @Override
@@ -256,7 +263,7 @@ public class GitlabCommit extends GitlabComponent {
     }
 
     /**
-     * Attach a project to this {@link GitlabCommit}
+     * Attaches a project to this {@link GitlabCommit}.
      *
      * @param project the project to be attached
      * @return this {@link GitlabCommit}
@@ -267,7 +274,12 @@ public class GitlabCommit extends GitlabComponent {
     }
 
     /**
-     * Class to query {@link GitlabCommit} in a given {@link GitlabProject}
+     * This extends {@link GitlabQuery} and supports query for
+     * {@link GitlabCommit}s within a {@link GitlabProject} with searching
+     * scope and range.
+     *
+     * Build this query with setters and call {@code query()} to execute query.
+     *
      * <p>
      * Gitlab Web API: https://docs.gitlab.com/ee/api/commits.html#list-repository-commits
      * <p>
@@ -283,10 +295,10 @@ public class GitlabCommit extends GitlabComponent {
         }
 
         /**
-         * Add the ref name to the query
+         * Returns a query that will match with given ref name.
          *
          * @param refName name of a repository branch, tag or revision range, or if not given the default branch
-         * @return {@link ProjectQuery} with the ref name
+         * @return this {@link ProjectQuery} with ref name
          */
         public ProjectQuery withRefName(String refName) {
             appendString("ref_name", refName);
@@ -294,10 +306,10 @@ public class GitlabCommit extends GitlabComponent {
         }
 
         /**
-         * add a date to the query and only commits after or on this date will be returned
+         * Returns a query that will only return commits after or on given date.
          *
          * @param since date in in ISO 8601 format YYYY-MM-DDTHH:MM:SSZ
-         * @return {@link ProjectQuery} with the since
+         * @return this {@link ProjectQuery} with given since date
          */
         public ProjectQuery withSince(ZonedDateTime since) {
             appendDateTime("since", since);
@@ -305,10 +317,10 @@ public class GitlabCommit extends GitlabComponent {
         }
 
         /**
-         * Set date to the query and only commits before or on this date will be returned
+         * Returns a query that will only return commits before or on given date.
          *
          * @param until date in in ISO 8601 format YYYY-MM-DDTHH:MM:SSZ
-         * @return {@link ProjectQuery} with the before
+         * @return this {@link ProjectQuery} with given until date
          */
         public ProjectQuery withUntil(ZonedDateTime until) {
             appendDateTime("until", until);
@@ -316,10 +328,10 @@ public class GitlabCommit extends GitlabComponent {
         }
 
         /**
-         * Set file path to the query
+         * Returns a query that will match with given file path.
          *
          * @param path the file path
-         * @return {@link ProjectQuery} with the the file path
+         * @return this {@link ProjectQuery} with given path
          */
         public ProjectQuery withPath(String path) {
             appendString("path", path);
@@ -327,10 +339,10 @@ public class GitlabCommit extends GitlabComponent {
         }
 
         /**
-         * Set stat to the query, stats about each commit will be added to the response
+         * Returns a query that will return stats of each commit in responses.
          *
          * @param withStats stat to add to the query
-         * @return {@link ProjectQuery} with the stats
+         * @return this {@link ProjectQuery} with given stats
          */
         public ProjectQuery withStats(boolean withStats) {
             appendBoolean("with_stats", withStats);
@@ -338,10 +350,11 @@ public class GitlabCommit extends GitlabComponent {
         }
 
         /**
-         * Set boolean to indicate whether to follow only the first parent commit upon seeing a merge commit
+         * Returns a query that will only return the first parent commit upon
+         * seeing a merge commit.
          *
          * @param firstParent whether or not to follow only the first parent
-         * @return {@link ProjectQuery} with the the boolean
+         * @return this {@link ProjectQuery} with given first parent
          */
         public ProjectQuery withFirstParent(boolean firstParent) {
             appendBoolean("first_parent", firstParent);
@@ -349,10 +362,11 @@ public class GitlabCommit extends GitlabComponent {
         }
 
         /**
-         * Add pagination on top of the query
+         * Returns a query that specifies page number and size to return based
+         * on given pagination.
          *
          * @param pagination pagination object that defines page number and size
-         * @return this {@link ProjectQuery} with the given pagination object
+         * @return this {@link ProjectQuery} with given pagination
          */
         @Override
         public ProjectQuery withPagination(Pagination pagination) {
@@ -361,7 +375,7 @@ public class GitlabCommit extends GitlabComponent {
         }
 
         /**
-         * List commits in order.
+         * Returns a query that sets commits order in given order.
          * <p>
          * Possible values: default, topo. Defaults to default, the commits are shown in reverse chronological order.
          *
@@ -373,9 +387,8 @@ public class GitlabCommit extends GitlabComponent {
             return this;
         }
 
-
         /**
-         * Get the URL suffix for the HTTP request
+         * Returns the URL suffix for this HTTP request.
          *
          * <p>
          * Gitlab Web API: https://docs.gitlab.com/ee/api/commits.html#list-repository-commits
@@ -390,7 +403,7 @@ public class GitlabCommit extends GitlabComponent {
         }
 
         /**
-         * Bind the commit with the given {@link GitlabProject} after the response is parsed
+         * Binds the commit with the given {@link GitlabProject} after the response is parsed
          *
          * @param component - one {@link GitlabCommit} from the response
          */
