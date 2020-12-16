@@ -21,13 +21,15 @@ GitlabAPIClient client = new GitlabAPIClient
 List<GitlabProject> projects = client.getUserProjectsQuery(client.getCurrentUser().getUsername()).query();
 for (GitlabProject project : projects) {
     System.out.println("ProjectID: " + p.getId() + " Title: " + p.getName());
-    }
+}
 ```
 ### Fork a Project
 ```java
 GitlabProject project = client.getProject("api", "team4");
 // fork a project
 GitlabProject projectForked = project.fork();
+// update project description
+projectForked.withDescription("new description").update();
 System.out.println("project " + projectForked.getId() + "forked from project " + project.getId());
 System.out.println("Project " +project.getId() + "is forked " + project.getForksCount() + " times");
 ```
@@ -42,19 +44,20 @@ req.decline();
 
 ### Query Issues
 ```java
-// Query all issues visible to current user
-List<GitlabIssue> allIssues = client.getIssuesQuery().query();
+// Query all issues visible to current and order by the creation date
+List<GitlabIssue> allIssues = client.getIssuesQuery().withOrderBy("created_at").query();
 // Query all issues under this project
 List<GitlabIssue> allProjectIssues = project.getIssuesQuery().query();
 // Query all issues visible to current user with pagination
 Pagination pagination = Pagination.of(1, 10);
-allIssues = CLIENT.getIssuesQuery().withPagination(pagination).query();
+allIssues = client.getIssuesQuery().withPagination(pagination).query();
 ```
 
-### Create Branch
+### Create and Delete Branch
 ```java
 GitlabProject project = client.getProject("api", "team4");
 GitlabBranch branch = project.newBranch("branch", "master").create();
+branch.delete();
 ```
 
 ### Reports
