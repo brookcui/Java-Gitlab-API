@@ -53,7 +53,7 @@ Pagination pagination = Pagination.of(1, 10);
 allIssues = client.getIssuesQuery().withPagination(pagination).query();
 ```
 
-### Create and Delete Branch
+### Create and a Delete Branch
 ```java
 GitlabProject project = client.getProject("api", "team4");
 GitlabBranch branch = project.newBranch("branch", "master").create();
