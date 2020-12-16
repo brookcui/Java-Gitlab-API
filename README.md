@@ -10,10 +10,10 @@ This project aims to improve [Java-Gitlab-API](https://github.com/timols/java-gi
 ### Authentication
 ```java
     // Connect to Gitlab via access token
-    GitlabAPIClient client = new GitlabAPIClient
-        .Builder("https://gitlab.com")
-        .withAccessToken(System.getenv("TOKEN"))
-        .build();
+        GitlabAPIClient client = new GitlabAPIClient
+                .Builder("https://gitlab.com")
+                .withAccessToken(System.getenv("TOKEN"))
+                .build();
 ```
 
 ### Get All Project of a User
@@ -25,19 +25,33 @@ This project aims to improve [Java-Gitlab-API](https://github.com/timols/java-gi
 ```
 ### Fork a Project
 ```java
-    GitlabProject project = client.getProject("my_project")
-    // fork a project
-    GitlabProject projectForked = project.fork();
-    System.out.println("project " + projectForked.getId() + "forked from project " + project.getId());
-    System.out.println("Project " +project.getId() + "is forked " + project.getForksCount() + " times");
+        GitlabProject project = client.getProject("api", "team4");
+        // fork a project
+        GitlabProject projectForked = project.fork();
+        System.out.println("project " + projectForked.getId() + "forked from project " + project.getId());
+        System.out.println("Project " +project.getId() + "is forked " + project.getForksCount() + " times");
 ```
 
 ### Decline a Merge Request
 ```java
-    GitlabProject project = client.getProject("my_project")
-    GitlabMergeRequest req = project.getMergeRequest("12345");
-    // Decline a merge request
-    req.decline();
+        GitlabProject project = client.getProject("api", "team4");
+        GitlabMergeRequest req = project.getMergeRequest(12345);
+        // Decline a merge request
+        req.decline();
+```
+
+### Query Issues
+```java
+        // Query all merge requests visible to current user
+        List<GitlabIssue> allIssues = CLIENT.getIssuesQuery().query();
+        // Query all issues under this project
+        List<GitlabIssue> allProjectIssues = project.getIssuesQuery().query();
+```
+
+### Create Branch
+```java
+        GitlabProject project = client.getProject("api", "team4");
+        GitlabBranch branch = project.newBranch("branch", "master").create();
 ```
 
 ### Reports
