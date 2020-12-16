@@ -16,9 +16,9 @@ GitlabAPIClient client = new GitlabAPIClient
     .build();
 ```
 
-### Get All Project of a User
+### Get All Projects for Current User
 ```java
-List<GitlabProject> projects = client.getUserProjectsQuery(client.getCurrentUser().getUsername()).query();
+List<GitlabProject> projects = client.getCurrentUser().getUserProjectsQuery().query();
 for (GitlabProject project : projects) {
     System.out.println("ProjectID: " + p.getId() + " Title: " + p.getName());
 }
@@ -31,7 +31,7 @@ GitlabProject projectForked = project.fork();
 // update project description
 projectForked.withDescription("new description").update();
 System.out.println("project " + projectForked.getId() + "forked from project " + project.getId());
-System.out.println("Project " +project.getId() + "is forked " + project.getForksCount() + " times");
+System.out.println("Project " + project.getId() + "is forked " + project.getForksCount() + " times");
 ```
 
 ### Decline a Merge Request
