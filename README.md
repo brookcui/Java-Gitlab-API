@@ -35,8 +35,8 @@ This project aims to improve [Java-Gitlab-API](https://github.com/timols/java-gi
 ### Decline a Merge Request
 ```java
     GitlabProject project = client.getProject("my_project")
-    GitlabMergeRequest req = project.getMergeRequest(mergeRequest.getIid());
-    // approve a request
+    GitlabMergeRequest req = project.getMergeRequest("12345");
+    // Decline a merge request
     req.decline();
 ```
 
