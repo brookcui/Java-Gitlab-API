@@ -21,7 +21,8 @@ public class GitlabBranchExample {
         if (branch1.isDefault()) System.out.println(branch1.getName() + " is the default branch");
 
         // query all branches under a project
-        List<GitlabBranch> branchesInProject = project.getBranchesQuery().query();
+        Pagination pagination = Pagination.of(1, 10);
+        List<GitlabBranch> branchesInProject = project.getBranchesQuery().withPagination(pagination).query();
         System.out.println(project.getName() + " has " + branchesInProject.size() + " branches");
 
         // delete branch (default branch cannot be deleted)
