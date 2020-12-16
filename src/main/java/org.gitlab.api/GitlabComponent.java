@@ -35,7 +35,6 @@ abstract class GitlabComponent {
      * JSON format string.
      *
      * @return the JSON string
-     * @throws {@code JsonProcessingException} if failed to parse attributes into JSON
      */
     public String toJsonString() {
         try {
