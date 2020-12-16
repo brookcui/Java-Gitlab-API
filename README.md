@@ -16,6 +16,14 @@ GitlabAPIClient client = new GitlabAPIClient
     .Builder("https://gitlab.com")
     .withAccessToken(System.getenv("TOKEN"))
     .build();
+
+// Or, use OAuth2 token for authentication and set connection timeouts.
+GitlabAPIClient client = new GitlabAPIClient
+    .Builder("https://gitlab.com")
+    .withOAuth2Token(System.getenv("TOKEN"))
+    .withReadTimeout(500)
+    .withWriteTimeout(500)
+    .build();
 ```
 
 ### Create/Read/Update/Delete a Project
