@@ -56,7 +56,8 @@ public class GitlabMergeRequestExample {
         req1.withTargetBranch(branch2.getName()).update();
 
         // query all merge requests
-        List<GitlabMergeRequest> requests = client.getMergeRequestsQuery().query();
+        Pagination pagination = Pagination.of(1, 20);
+        List<GitlabMergeRequest> requests = client.getMergeRequestsQuery().withPagination(pagination).query();
         System.out.println("Visible merge requests: " + requests.size());
         // query all merge requests under a project
         List<GitlabMergeRequest> requestsInProject = project.getMergeRequestsQuery().withState("opened").query();

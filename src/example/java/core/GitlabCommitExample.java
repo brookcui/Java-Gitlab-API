@@ -17,7 +17,9 @@ public class GitlabCommitExample {
         project.getCommit(sha);
 
         // query all merge requests under a project
-        List<GitlabCommit> commitsInProject = project.getCommitsQuery().withRefName("master").query();
+        Pagination pagination = Pagination.of(1, 20);
+        List<GitlabCommit> commitsInProject =
+                project.getCommitsQuery().withRefName("master").withPagination(pagination).query();
         System.out.println(project.getName() + " has " + commitsInProject.size() + " commits under master.");
     }
 }

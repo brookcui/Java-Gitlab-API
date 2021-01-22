@@ -18,7 +18,8 @@ public class GitlabUserExample {
                 + ", created at " + current.getCreatedAt().toString());
 
         // query all visible active users and get their email
-        List<GitlabUser> users = client.getUsersQuery().withActive(true).query();
+        Pagination pagination = Pagination.of(1, 50);
+        List<GitlabUser> users = client.getUsersQuery().withActive(true).withPagination(pagination).query();
         for (GitlabUser user : users) {
             System.out.println(user.getUsername() + " " + user.getPublicEmail());
         }

@@ -25,7 +25,8 @@ public class GitlabIssueExample {
         issue1.delete();
 
         // query all issues on Gitlab visible to current client
-        List<GitlabIssue> issues = client.getIssuesQuery().query();
+        Pagination pagination = Pagination.of(1, 20);
+        List<GitlabIssue> issues = client.getIssuesQuery().withPagination(pagination).query();
         System.out.println("Title of the first issue is " + issues.get(0).getTitle());
 
         // query all issues under a project
