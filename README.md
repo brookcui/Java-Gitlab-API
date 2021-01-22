@@ -1,6 +1,4 @@
-# f20-project-team4
-
-## Java-Gitlab-API
+# Java-Gitlab-API (Refactored)
 
 This project is a Java wrapper library for communicating with [Gitlab v4 REST API](https://docs.gitlab.com/ee/api/). This aims to fix the broken [Java-Gitlab-API](https://github.com/timols/java-gitlab-api) and provides new features to make it easy to use and learn for Gitlab API users. This supports querying, creating, updating, and deleting Gitlab components like Project, User, Issue, Branch, Commit, Merge-Request.
 
@@ -94,12 +92,4 @@ req.decline(); // to decline
 
 ### More Examples
 
-See more example code in [Client Code](https://github.com/cmu-api-design/f20-project-team4/tree/master/src/example/java/core).
-
-## Artifacts
-
-* [Final report](https://github.com/cmu-api-design/f20-project-team4/blob/master/paperwork/Final-Report.pdf)
-* [Proposal](https://github.com/cmu-api-design/f20-project-team4/blob/master/paperwork/Proposal.pdf)
-* [JavaDoc](https://apiteam4.gitlab.io/f20-project-team4/)
-* [Example Code](https://github.com/cmu-api-design/f20-project-team4/tree/master/src/example/java/core)
-* API evolution history is tracked by [Issues](https://github.com/cmu-api-design/f20-project-team4/issues).
+See more example code in [Client Code](src/example/java/core).
